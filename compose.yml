@@ -1,0 +1,73 @@
+# The local stack: `docker compose up` runs Postgres, the API on :8300 and the
+# worker that reads card photos. The web app runs beside it with `pnpm dev`
+# (http://localhost:5180); the native app with `pnpm --filter pets-mobile start`.
+#
+# From a phone on the same Wi-Fi: `HOST_IP=<your-lan-ip> docker compose up`
+# allowlists that address on the API.
+name: pets
+
+x-backend: &backend
+  build:
+    context: .
+    dockerfile: backend/Dockerfile
+    target: dev
+  env_file:
+    - path: ./backend/.env
+      required: false
+  environment: &backend-env
+    DJANGO_DEBUG: "True"
+    DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,pets${HOST_IP:+,${HOST_IP}}
+    CORS_ALLOWED_ORIGINS: http://localhost:5180,http://127.0.0.1:5180${HOST_IP:+,http://${HOST_IP}:5180}
+    WEB_APP_URL: http://localhost:5180
+    POSTGRES_HOST: pets-db
+    POSTGRES_PORT: "5432"
+    POSTGRES_DB: pets
+    POSTGRES_USER: pets
+    POSTGRES_PASSWORD: pets
+    # No AWS_STORAGE_BUCKET_NAME: media stays on disk, in the volume below.
+  volumes:
+    - ./backend:/app
+    - /app/.venv
+    - pets_media:/app/uploads
+  depends_on:
+    pets-db:
+      condition: service_healthy
+
+services:
+  pets-db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: pets
+      POSTGRES_USER: pets
+      POSTGRES_PASSWORD: pets
+    ports:
+      - "5435:5432"
+    volumes:
+      - pets_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pets"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  pets:
+    <<: *backend
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8300:8000"
+
+  pets-worker:
+    <<: *backend
+    command: python manage.py run_intake_worker
+    # It starts with the API, which migrates first: until the tables exist the
+    # worker exits and is started again.
+    restart: on-failure
+    depends_on:
+      pets:
+        condition: service_started
+
+volumes:
+  pets_pgdata:
+  pets_media:

@@ -1,0 +1,14 @@
+packages:
+  - web
+  - mobile
+  - packages/*
+
+# A flat node_modules, the arrangement Expo supports in a monorepo: Metro, the
+# native build and the autolinking expect React Native packages where npm
+# would put them.
+nodeLinker: hoisted
+
+allowBuilds:
+  esbuild: true
+  "@tailwindcss/oxide": true
+  unrs-resolver: true

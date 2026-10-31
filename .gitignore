@@ -1,0 +1,41 @@
+node_modules/
+dist/
+*.local
+.tmp/
+*.tsbuildinfo
+.vite/
+coverage/
+.expo/
+web-build/
+mobile/ios/
+mobile/android/
+
+# editor
+.vscode/*
+.idea/
+.DS_Store
+
+# logs
+*.log
+
+# env: secrets never enter the repository
+.env
+.env.*
+!.env.example
+# The web app's production API base is public (it ships in the bundle).
+!web/.env.production
+
+# python
+__pycache__/
+.venv/
+.pytest_cache/
+.ruff_cache/
+backend/uploads/
+backend/staticfiles/
+
+# The benchmark's evaluation set (card photos and their answer key) holds
+# third-party personal data: it is read from a path, never committed.
+backend/benchmark-data/
+*.HEIC
+*.heic
+gabarito*.json
