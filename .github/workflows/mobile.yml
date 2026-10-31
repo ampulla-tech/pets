@@ -1,0 +1,31 @@
+name: Mobile CI
+
+on:
+  push:
+    branches: [main]
+    paths: ["mobile/**", "packages/core/**", "pnpm-lock.yaml", ".github/workflows/mobile.yml"]
+  pull_request:
+    branches: [main]
+    paths: ["mobile/**", "packages/core/**", "pnpm-lock.yaml", ".github/workflows/mobile.yml"]
+
+concurrency:
+  group: mobile-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Type-check · Test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --filter "pets-mobile..." --filter pets
+      - run: pnpm --filter pets-mobile typecheck
+      - run: pnpm --filter pets-mobile test

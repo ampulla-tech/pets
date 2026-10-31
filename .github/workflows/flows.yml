@@ -1,0 +1,30 @@
+name: Diagrams CI
+
+# Renders every Mermaid block under docs/, so a broken diagram fails here
+# instead of landing as an unreadable code block.
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ["docs/**", ".github/workflows/flows.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-save @mermaid-js/mermaid-cli@11 puppeteer
+      - name: Render every Mermaid block
+        run: |
+          set -euo pipefail
+          echo '{"args":["--no-sandbox"]}' > /tmp/puppeteer.json
+          for file in $(grep -rl '```mermaid' docs); do
+            echo "rendering $file"
+            npx mmdc -p /tmp/puppeteer.json -i "$file" -o "/tmp/$(basename "$file" .md).svg"
+          done

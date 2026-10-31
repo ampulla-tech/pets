@@ -1,0 +1,58 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+    paths: ["backend/**", "backup/**", ".github/workflows/backend.yml"]
+  pull_request:
+    branches: [main]
+    paths: ["backend/**", "backup/**", ".github/workflows/backend.yml"]
+  workflow_dispatch:
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint · Migrations · Test
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: pets
+          POSTGRES_USER: pets
+          POSTGRES_PASSWORD: pets
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U pets" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    env:
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5432"
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - run: uv sync --dev --frozen
+      - name: Lint
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Migrations are complete
+        run: uv run python manage.py makemigrations --check --dry-run
+      - name: Test
+        run: uv run pytest
+
+  image:
+    name: Build the image
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f backend/Dockerfile --target prod -t pets-backend .
