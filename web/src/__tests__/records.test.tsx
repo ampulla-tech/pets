@@ -86,14 +86,13 @@ describe("vaccine", () => {
     ).toBe(false);
   });
 
-  it("edits a vaccine, keeps an inferred repeat date inferred, and deletes", async () => {
+  it("edits a vaccine and keeps an inferred repeat date inferred", async () => {
     const record = vaccine({ repeat_on_origin: "inferred" });
     const api = mockApi({
       ...animalRoutes(cat, [record]),
       "PUT /animals/a1/vaccines/v1": record,
-      "DELETE /animals/a1/vaccines/v1": reply(204),
     });
-    const { user, router } = renderApp("/animais/a1/registros/v1");
+    const { user } = renderApp("/animais/a1/registros/v1");
     expect(await screen.findByText("lido da linha de baixo")).toBeTruthy();
     expect((screen.getByLabelText(/Vencimento do lote/) as HTMLInputElement).value).toBe(
       "09/2027",
@@ -109,9 +108,17 @@ describe("vaccine", () => {
       repeat_on_origin: "inferred",
       lot_expiry: "2027-09",
     });
+  });
 
-    router.navigate("/animais/a1/registros/v1");
-    await user.click(await screen.findByRole("button", { name: "Apagar" }));
+  it("deletes a vaccine after confirming", async () => {
+    const record = vaccine({ repeat_on_origin: "inferred" });
+    const api = mockApi({
+      ...animalRoutes(cat, [record]),
+      "DELETE /animals/a1/vaccines/v1": reply(204),
+    });
+    const { user } = renderApp("/animais/a1/registros/v1");
+    expect(await screen.findByText("lido da linha de baixo")).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Apagar" }));
     await user.click(
       within(await screen.findByRole("alertdialog")).getByRole("button", {
         name: "Apagar",
