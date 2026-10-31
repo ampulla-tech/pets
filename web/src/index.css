@@ -1,0 +1,60 @@
+/**
+ * The web app's stylesheet: Tailwind v4, the shadcn/ui animation utilities,
+ * and the theme the shared package generates from its token source
+ * (packages/core). The variables are the ones shadcn/ui reads, plus the
+ * ok / soon / late tones of the reminders.
+ */
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@pets/core/theme.css";
+
+@source "./";
+
+/* shadcn/ui's base: Tailwind v4 draws borders in currentColor by default. */
+@layer base {
+  *,
+  ::after,
+  ::before {
+    border-color: var(--border);
+  }
+}
+
+html,
+body {
+  background: var(--background);
+  color: var(--foreground);
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+  min-height: 100dvh;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--primary);
+}
+
+/* The reminder a link pointed at (?assunto=) glows once, then stays marked. */
+@keyframes subject-glow {
+  from {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--primary) 30%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 2px var(--primary);
+  }
+}
+
+.subject-highlight {
+  animation: subject-glow 1.2s ease-out both;
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subject-highlight {
+    animation: none;
+  }
+}
