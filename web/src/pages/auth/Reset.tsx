@@ -28,7 +28,9 @@ function readPending(): PendingReset | null {
   }
 }
 
-const requestSchema = z.object({ email: z.string().trim().email(strings.auth.invalidEmail) });
+const requestSchema = z.object({
+  email: z.string().trim().email(strings.auth.invalidEmail),
+});
 const resetSchema = z.object({
   code: z.string().refine(isCode, strings.auth.codeInvalid),
   password: z.string().min(8, strings.auth.shortPassword),
@@ -53,7 +55,10 @@ export function Reset() {
         <RequestStep onSent={started} />
       )}
       <p className="mt-5 border-t pt-4 text-center text-sm">
-        <Link to={withReturn("/entrar", target)} className="font-medium text-primary hover:underline">
+        <Link
+          to={withReturn("/entrar", target)}
+          className="font-medium text-primary hover:underline"
+        >
           {strings.auth.signIn}
         </Link>
       </p>
@@ -63,7 +68,10 @@ export function Reset() {
 
 function RequestStep({ onSent }: { onSent: (pending: PendingReset) => void }) {
   const [failure, setFailure] = useState<string | null>(null);
-  const form = useForm({ resolver: zodResolver(requestSchema), defaultValues: { email: "" } });
+  const form = useForm({
+    resolver: zodResolver(requestSchema),
+    defaultValues: { email: "" },
+  });
   const onSubmit = form.handleSubmit(async ({ email }) => {
     setFailure(null);
     try {
@@ -76,7 +84,15 @@ function RequestStep({ onSent }: { onSent: (pending: PendingReset) => void }) {
     <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
       <p className="text-sm text-muted-foreground">{strings.auth.resetIntro}</p>
       <Field label={strings.auth.email} error={form.formState.errors.email?.message}>
-        {(control) => <Input {...control} type="email" autoComplete="email" inputMode="email" {...form.register("email")} />}
+        {(control) => (
+          <Input
+            {...control}
+            type="email"
+            autoComplete="email"
+            inputMode="email"
+            {...form.register("email")}
+          />
+        )}
       </Field>
       {failure ? <Notice tone="error">{failure}</Notice> : null}
       <Button type="submit" size="xl" disabled={form.formState.isSubmitting}>
@@ -97,7 +113,10 @@ function CodeStep({
 }) {
   const navigate = useNavigate();
   const [failure, setFailure] = useState<string | null>(null);
-  const form = useForm({ resolver: zodResolver(resetSchema), defaultValues: { code: "", password: "" } });
+  const form = useForm({
+    resolver: zodResolver(resetSchema),
+    defaultValues: { code: "", password: "" },
+  });
   const onSubmit = form.handleSubmit(async ({ code, password }) => {
     setFailure(null);
     try {
@@ -114,7 +133,11 @@ function CodeStep({
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
       <Notice tone="ok">{strings.auth.codeSent(pending.email)}</Notice>
-      <Field label={strings.auth.code} hint={strings.auth.codeHint} error={errors.code?.message}>
+      <Field
+        label={strings.auth.code}
+        hint={strings.auth.codeHint}
+        error={errors.code?.message}
+      >
         {(control) => (
           <Input
             {...control}
@@ -131,8 +154,19 @@ function CodeStep({
           />
         )}
       </Field>
-      <Field label={strings.auth.newPassword} hint={strings.auth.passwordHint} error={errors.password?.message}>
-        {(control) => <Input {...control} type="password" autoComplete="new-password" {...form.register("password")} />}
+      <Field
+        label={strings.auth.newPassword}
+        hint={strings.auth.passwordHint}
+        error={errors.password?.message}
+      >
+        {(control) => (
+          <Input
+            {...control}
+            type="password"
+            autoComplete="new-password"
+            {...form.register("password")}
+          />
+        )}
       </Field>
       {failure ? <Notice tone="error">{failure}</Notice> : null}
       <Button type="submit" size="xl" disabled={isSubmitting}>

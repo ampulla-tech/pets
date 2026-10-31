@@ -1,6 +1,19 @@
 import { Link } from "react-router";
-import { ClipboardList, NotebookPen, Pencil, Scale, ShieldPlus, Syringe } from "lucide-react";
-import { formatDate, formatKg, formatMonth, PARASITE_LABEL, RECORD_KIND_LABEL } from "@pets/core/domain";
+import {
+  ClipboardList,
+  NotebookPen,
+  Pencil,
+  Scale,
+  ShieldPlus,
+  Syringe,
+} from "lucide-react";
+import {
+  formatDate,
+  formatKg,
+  formatMonth,
+  PARASITE_LABEL,
+  RECORD_KIND_LABEL,
+} from "@pets/core/domain";
 import { strings } from "@pets/core/strings";
 import { AttachmentLink } from "@/components/AttachmentsField";
 import { editRecordPath, type RecordOut } from "@/lib/types";
@@ -32,28 +45,42 @@ export function RecordItem({
   const lines: string[] = [];
   if (record.kind === "vaccine") {
     if (record.brand) title = `${title} · ${record.brand}`;
-    lines.push(strings.records.against(record.diseases.map((code) => labels[code] ?? code).join(", ")));
-    if (record.lot) lines.push(`${strings.records.lotShort(record.lot)}${record.lot_expiry ? ` · ${formatMonth(record.lot_expiry)}` : ""}`);
+    lines.push(
+      strings.records.against(
+        record.diseases.map((code) => labels[code] ?? code).join(", "),
+      ),
+    );
+    if (record.lot)
+      lines.push(
+        `${strings.records.lotShort(record.lot)}${record.lot_expiry ? ` · ${formatMonth(record.lot_expiry)}` : ""}`,
+      );
     lines.push(repeatLine(record.repeat_on, record.repeat_on_origin));
     const vet = [record.vet_name, record.vet_crmv].filter(Boolean).join(" · ");
     if (vet) lines.push(vet);
   } else if (record.kind === "antiparasitic") {
     if (record.product) title = `${title} · ${record.product}`;
-    lines.push([PARASITE_LABEL[record.parasite], record.dose].filter(Boolean).join(" · "));
+    lines.push(
+      [PARASITE_LABEL[record.parasite], record.dose].filter(Boolean).join(" · "),
+    );
     lines.push(repeatLine(record.repeat_on, record.repeat_on_origin));
     if (record.vet_name) lines.push(record.vet_name);
-    if (record.weight_kg) lines.push(strings.records.weightAlso(formatKg(record.weight_kg)));
+    if (record.weight_kg)
+      lines.push(strings.records.weightAlso(formatKg(record.weight_kg)));
   } else if (record.kind === "weight") {
     title = `${title} · ${formatKg(record.kg)}`;
   } else if (record.kind === "note") {
     lines.push(record.text);
   } else if (record.kind === "visit") {
     if (record.clinic) title = `${title} · ${record.clinic}`;
-    for (const line of [record.reason, record.vet_name, record.notes]) if (line) lines.push(line);
+    for (const line of [record.reason, record.vet_name, record.notes])
+      if (line) lines.push(line);
   }
 
   return (
-    <article className="flex gap-3 rounded-2xl border bg-card p-3" aria-label={`${title} ${formatDate(record.date)}`}>
+    <article
+      className="flex gap-3 rounded-2xl border bg-card p-3"
+      aria-label={`${title} ${formatDate(record.date)}`}
+    >
       <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
         <Icon className="size-4" aria-hidden />
       </span>
@@ -63,7 +90,9 @@ export function RecordItem({
             <h3 className="font-semibold break-words">{title}</h3>
             <p className="text-xs text-muted-foreground">
               {formatDate(record.date)}
-              {record.created_by.email ? ` · ${strings.records.by(record.created_by.email)}` : ""}
+              {record.created_by.email
+                ? ` · ${strings.records.by(record.created_by.email)}`
+                : ""}
             </p>
           </div>
           {editable ? (
@@ -77,7 +106,10 @@ export function RecordItem({
           ) : null}
         </div>
         {lines.map((line, i) => (
-          <p key={i} className="text-sm whitespace-pre-line break-words text-foreground/90">
+          <p
+            key={i}
+            className="text-sm whitespace-pre-line break-words text-foreground/90"
+          >
             {line}
           </p>
         ))}

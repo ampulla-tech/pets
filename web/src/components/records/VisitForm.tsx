@@ -47,7 +47,11 @@ export function VisitForm({ animal, record }: RecordFormProps<VisitOut>) {
         attachment_ids: files.map((f) => f.id),
       };
       return record
-        ? updateVisit({ path: { animal_id: animal.id, record_id: record.id }, body, throwOnError: true })
+        ? updateVisit({
+            path: { animal_id: animal.id, record_id: record.id },
+            body,
+            throwOnError: true,
+          })
         : createVisit({ path: { animal_id: animal.id }, body, throwOnError: true });
     }),
   );
@@ -69,7 +73,13 @@ export function VisitForm({ animal, record }: RecordFormProps<VisitOut>) {
         {(control) => <TextArea {...control} rows={4} {...form.register("notes")} />}
       </Field>
       <AttachmentsField animalId={animal.id} value={files} onChange={setFiles} />
-      <FormFoot animalId={animal.id} kind="visit" record={record} failure={failure} submitting={isSubmitting} />
+      <FormFoot
+        animalId={animal.id}
+        kind="visit"
+        record={record}
+        failure={failure}
+        submitting={isSubmitting}
+      />
     </form>
   );
 }

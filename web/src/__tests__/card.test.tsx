@@ -4,12 +4,39 @@ import { mockApi, raw } from "./api";
 import { renderApp } from "./render";
 import { animal } from "./fixtures";
 
-const label = { id: "l1", name: "etiqueta.jpg", content_type: "image/jpeg", url: "https://media.test/etiqueta.jpg" };
+const label = {
+  id: "l1",
+  name: "etiqueta.jpg",
+  content_type: "image/jpeg",
+  url: "https://media.test/etiqueta.jpg",
+};
 const card = {
   animal: animal({ id: "g1", name: "GATA", sex: "female", coat: "Bege" }),
   rows: [
-    { subject: "felv", label: "FeLV", last_date: "2026-10-27", last_product: "Felocell FeLV", last_vet: "Dra. Exemplo", next_on: "2027-10-27", state: "scheduled", record_kind: "vaccine", record_id: "v1", photos: [label] },
-    { subject: "internal", label: "Verme interno", last_date: "2026-09-01", last_product: "Drontal", last_vet: "", next_on: null, state: "no_date", record_kind: "antiparasitic", record_id: "p1", photos: [] },
+    {
+      subject: "felv",
+      label: "FeLV",
+      last_date: "2026-10-27",
+      last_product: "Felocell FeLV",
+      last_vet: "Dra. Exemplo",
+      next_on: "2027-10-27",
+      state: "scheduled",
+      record_kind: "vaccine",
+      record_id: "v1",
+      photos: [label],
+    },
+    {
+      subject: "internal",
+      label: "Verme interno",
+      last_date: "2026-09-01",
+      last_product: "Drontal",
+      last_vet: "",
+      next_on: null,
+      state: "no_date",
+      record_kind: "antiparasitic",
+      record_id: "p1",
+      photos: [],
+    },
   ],
 };
 
@@ -36,14 +63,21 @@ describe("card", () => {
       }),
     });
     const created = vi.fn(() => "blob:pdf");
-    vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: created, revokeObjectURL: vi.fn() }));
+    vi.stubGlobal(
+      "URL",
+      Object.assign(URL, { createObjectURL: created, revokeObjectURL: vi.fn() }),
+    );
     const clicks: string[] = [];
-    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (this: HTMLAnchorElement) {
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
       clicks.push(this.download);
     });
     const { user } = renderApp("/animais/g1/carteirinha");
     await user.click(await screen.findByRole("button", { name: "Baixar PDF" }));
     await waitFor(() => expect(clicks).toEqual(["carteirinha-gata.pdf"]));
-    expect(api.to("GET /animals/g1/card.pdf")[0].headers.get("X-Session-Token")).toBe("token-1");
+    expect(api.to("GET /animals/g1/card.pdf")[0].headers.get("X-Session-Token")).toBe(
+      "token-1",
+    );
   });
 });

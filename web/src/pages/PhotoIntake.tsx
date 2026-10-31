@@ -13,7 +13,12 @@ import {
   type VaccineIn,
 } from "@pets/core/api/generated";
 import { getExtractionOptions, getExtractionQueryKey } from "@pets/core/api/query";
-import { formatMonth, parseKg, PARASITE_LABEL, RECORD_KIND_LABEL } from "@pets/core/domain";
+import {
+  formatMonth,
+  parseKg,
+  PARASITE_LABEL,
+  RECORD_KIND_LABEL,
+} from "@pets/core/domain";
 import { strings } from "@pets/core/strings";
 import { ChoiceGroup, Field } from "@/components/Field";
 import { ErrorState, Loading, Notice } from "@/components/Feedback";
@@ -117,11 +122,21 @@ function Picker({ animal }: { animal: AnimalOut }) {
             e.target.value = "";
           }}
         />
-        <Button type="button" variant="outline" size="xl" onClick={() => camera.current?.click()}>
+        <Button
+          type="button"
+          variant="outline"
+          size="xl"
+          onClick={() => camera.current?.click()}
+        >
           <Camera />
           {I.takePhoto}
         </Button>
-        <Button type="button" variant="outline" size="xl" onClick={() => gallery.current?.click()}>
+        <Button
+          type="button"
+          variant="outline"
+          size="xl"
+          onClick={() => gallery.current?.click()}
+        >
           <ImagePlus />
           {I.pickPhotos}
         </Button>
@@ -132,7 +147,11 @@ function Picker({ animal }: { animal: AnimalOut }) {
           <ul className="grid grid-cols-3 gap-2">
             {files.map((file, index) => (
               <li key={`${file.name}-${index}`} className="relative">
-                <img src={previews[index]} alt="" className="aspect-square w-full rounded-xl border object-cover" />
+                <img
+                  src={previews[index]}
+                  alt=""
+                  className="aspect-square w-full rounded-xl border object-cover"
+                />
                 <button
                   type="button"
                   aria-label={I.removePhoto(index + 1)}
@@ -161,7 +180,8 @@ function Reading({ animal, extractionId }: { animal: AnimalOut; extractionId: st
   const options = getExtractionOptions({ path: { extraction_id: extractionId } });
   const extraction = useQuery({
     ...options,
-    refetchInterval: (query) => (query.state.data?.status === "processing" ? 2000 : false),
+    refetchInterval: (query) =>
+      query.state.data?.status === "processing" ? 2000 : false,
   });
   const [retrying, setRetrying] = useState(false);
 
@@ -173,7 +193,9 @@ function Reading({ animal, extractionId }: { animal: AnimalOut; extractionId: st
     return (
       <div className="flex flex-col items-center gap-4 py-10 text-center">
         <Loader2 className="size-8 animate-spin text-primary" aria-hidden />
-        <p role="status" className="text-lg">{I.processing}</p>
+        <p role="status" className="text-lg">
+          {I.processing}
+        </p>
         <Photos extraction={data} />
       </div>
     );
@@ -181,30 +203,50 @@ function Reading({ animal, extractionId }: { animal: AnimalOut; extractionId: st
 
   if (data.status === "failed") {
     const reason =
-      data.error === "unconfigured" ? I.failedUnconfigured : data.error === "nothing_read" ? I.failedNothing : I.failedProvider;
+      data.error === "unconfigured"
+        ? I.failedUnconfigured
+        : data.error === "nothing_read"
+          ? I.failedNothing
+          : I.failedProvider;
     async function retry() {
       setRetrying(true);
       try {
-        const { data: next } = await retryExtraction({ path: { extraction_id: extractionId }, throwOnError: true });
-        queryClient.setQueryData(getExtractionQueryKey({ path: { extraction_id: extractionId } }), next);
+        const { data: next } = await retryExtraction({
+          path: { extraction_id: extractionId },
+          throwOnError: true,
+        });
+        queryClient.setQueryData(
+          getExtractionQueryKey({ path: { extraction_id: extractionId } }),
+          next,
+        );
       } finally {
         setRetrying(false);
       }
     }
     return (
       <div className="flex flex-col gap-5">
-        <div role="alert" className="flex flex-col gap-1 rounded-2xl border border-late/30 bg-late-tint p-4 text-late">
+        <div
+          role="alert"
+          className="flex flex-col gap-1 rounded-2xl border border-late/30 bg-late-tint p-4 text-late"
+        >
           <p className="font-semibold">{I.failedTitle}</p>
           <p className="text-sm">{reason}</p>
         </div>
         <Photos extraction={data} />
         <div className="flex flex-col gap-2">
-          <Button size="xl" variant="outline" onClick={() => void retry()} disabled={retrying}>
+          <Button
+            size="xl"
+            variant="outline"
+            onClick={() => void retry()}
+            disabled={retrying}
+          >
             <RotateCcw />
             {strings.app.retry}
           </Button>
           <Button asChild size="xl">
-            <Link to={newRecordPath(animal.id, "vaccine", `?leitura=${extractionId}`)}>{I.fillByHand}</Link>
+            <Link to={newRecordPath(animal.id, "vaccine", `?leitura=${extractionId}`)}>
+              {I.fillByHand}
+            </Link>
           </Button>
         </div>
       </div>
@@ -255,7 +297,11 @@ function Photos({ extraction }: { extraction: ExtractionOut }) {
       {extraction.photos.map((photo) => (
         <li key={photo.id} className="shrink-0">
           <a href={photo.url} target="_blank" rel="noreferrer">
-            <img src={photo.url} alt={photo.name} className="size-20 rounded-xl border object-cover" />
+            <img
+              src={photo.url}
+              alt={photo.name}
+              className="size-20 rounded-xl border object-cover"
+            />
           </a>
         </li>
       ))}
@@ -333,22 +379,34 @@ function ProposalCard({
     );
   }
 
-  const set = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((d) => ({ ...d, [key]: value }));
+  const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
+    setDraft((d) => ({ ...d, [key]: value }));
   const repeatChanged = draft.repeatOn !== (proposal.repeat_on.value ?? "");
   const inferred = proposal.repeat_on.origin === "inferred" && !repeatChanged;
 
   function validate(): ConfirmIn["record"] | null {
     const next: typeof errors = {};
     if (!draft.date) next.date = R.dateRequired;
-    if (proposal.kind === "vaccine" && !draft.diseases.length) next.diseases = R.diseasesRequired;
-    if (proposal.kind === "vaccine" && draft.lotExpiry.trim() && !monthValue(draft.lotExpiry)) next.lotExpiry = R.monthInvalid;
-    if (proposal.kind === "antiparasitic" && !draft.parasite) next.parasite = strings.app.required;
+    if (proposal.kind === "vaccine" && !draft.diseases.length)
+      next.diseases = R.diseasesRequired;
+    if (
+      proposal.kind === "vaccine" &&
+      draft.lotExpiry.trim() &&
+      !monthValue(draft.lotExpiry)
+    )
+      next.lotExpiry = R.monthInvalid;
+    if (proposal.kind === "antiparasitic" && !draft.parasite)
+      next.parasite = strings.app.required;
     if (proposal.kind === "weight" && !parseKg(draft.kg)) next.kg = R.kgInvalid;
     setErrors(next);
     if (Object.keys(next).length) return null;
     const repeat = {
       repeat_on: draft.repeatOn || null,
-      repeat_on_origin: draft.repeatOn ? (inferred ? ("inferred" as const) : ("written" as const)) : ("" as const),
+      repeat_on_origin: draft.repeatOn
+        ? inferred
+          ? ("inferred" as const)
+          : ("written" as const)
+        : ("" as const),
     };
     if (proposal.kind === "vaccine")
       return {
@@ -411,11 +469,19 @@ function ProposalCard({
   }
 
   const unread = (field: { read: boolean }) => (!field.read ? <Unread /> : null);
-  const text = (key: "brand" | "lot" | "vetName" | "vetCrmv" | "dose", label: string, field: { read: boolean }) => (
+  const text = (
+    key: "brand" | "lot" | "vetName" | "vetCrmv" | "dose",
+    label: string,
+    field: { read: boolean },
+  ) => (
     <Field label={label} error={errors[key]}>
       {(control) => (
         <>
-          <Input {...control} value={draft[key]} onChange={(e) => set(key, e.target.value)} />
+          <Input
+            {...control}
+            value={draft[key]}
+            onChange={(e) => set(key, e.target.value)}
+          />
           {unread(field)}
         </>
       )}
@@ -423,12 +489,20 @@ function ProposalCard({
   );
 
   return (
-    <section aria-label={title} className="flex flex-col gap-4 rounded-2xl border bg-card p-4">
+    <section
+      aria-label={title}
+      className="flex flex-col gap-4 rounded-2xl border bg-card p-4"
+    >
       <h3 className="font-semibold">{title}</h3>
       <Field label={R.date} error={errors.date}>
         {(control) => (
           <>
-            <Input {...control} type="date" value={draft.date} onChange={(e) => set("date", e.target.value)} />
+            <Input
+              {...control}
+              type="date"
+              value={draft.date}
+              onChange={(e) => set("date", e.target.value)}
+            />
             {unread(proposal.date)}
           </>
         )}
@@ -440,7 +514,10 @@ function ProposalCard({
             <legend className="mb-1.5 text-sm font-medium">{R.diseases}</legend>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {(catalog.data?.[animal.species] ?? []).map((disease) => (
-                <label key={disease.code} className="flex items-center gap-3 rounded-lg border border-input px-3 py-2 text-sm has-[:checked]:border-primary has-[:checked]:bg-accent">
+                <label
+                  key={disease.code}
+                  className="flex items-center gap-3 rounded-lg border border-input px-3 py-2 text-sm has-[:checked]:border-primary has-[:checked]:bg-accent"
+                >
                   <input
                     type="checkbox"
                     className="size-4"
@@ -448,7 +525,9 @@ function ProposalCard({
                     onChange={(e) =>
                       set(
                         "diseases",
-                        e.target.checked ? [...draft.diseases, disease.code] : draft.diseases.filter((c) => c !== disease.code),
+                        e.target.checked
+                          ? [...draft.diseases, disease.code]
+                          : draft.diseases.filter((c) => c !== disease.code),
                       )
                     }
                   />
@@ -457,7 +536,9 @@ function ProposalCard({
               ))}
             </div>
             {unread(proposal.diseases)}
-            {errors.diseases ? <p className="text-sm text-destructive">{errors.diseases}</p> : null}
+            {errors.diseases ? (
+              <p className="text-sm text-destructive">{errors.diseases}</p>
+            ) : null}
           </fieldset>
           {text("brand", R.brand, proposal.brand)}
           <div className="grid grid-cols-2 gap-3">
@@ -465,7 +546,12 @@ function ProposalCard({
             <Field label={R.lotExpiry} error={errors.lotExpiry}>
               {(control) => (
                 <>
-                  <Input {...control} value={draft.lotExpiry} placeholder={R.monthPlaceholder} onChange={(e) => set("lotExpiry", e.target.value)} />
+                  <Input
+                    {...control}
+                    value={draft.lotExpiry}
+                    placeholder={R.monthPlaceholder}
+                    onChange={(e) => set("lotExpiry", e.target.value)}
+                  />
                   {unread(proposal.lot_expiry)}
                 </>
               )}
@@ -496,7 +582,12 @@ function ProposalCard({
         <Field label={R.weightKg} error={errors.kg}>
           {(control) => (
             <>
-              <Input {...control} inputMode="decimal" value={draft.kg} onChange={(e) => set("kg", e.target.value)} />
+              <Input
+                {...control}
+                inputMode="decimal"
+                value={draft.kg}
+                onChange={(e) => set("kg", e.target.value)}
+              />
               {unread(proposal.weight_kg)}
             </>
           )}
@@ -508,9 +599,16 @@ function ProposalCard({
           <Field label={R.repeatOn}>
             {(control) => (
               <>
-                <Input {...control} type="date" value={draft.repeatOn} onChange={(e) => set("repeatOn", e.target.value)} />
+                <Input
+                  {...control}
+                  type="date"
+                  value={draft.repeatOn}
+                  onChange={(e) => set("repeatOn", e.target.value)}
+                />
                 {inferred && draft.repeatOn ? (
-                  <StatusBadge tone="soon" className="self-start">{R.repeatInferred}</StatusBadge>
+                  <StatusBadge tone="soon" className="self-start">
+                    {R.repeatInferred}
+                  </StatusBadge>
                 ) : null}
                 {unread(proposal.repeat_on)}
               </>
@@ -518,14 +616,21 @@ function ProposalCard({
           </Field>
           <div className="grid grid-cols-2 gap-3">
             {text("vetName", R.vet, proposal.vet_name)}
-            {proposal.kind === "vaccine" ? text("vetCrmv", R.crmv, proposal.vet_crmv) : null}
+            {proposal.kind === "vaccine"
+              ? text("vetCrmv", R.crmv, proposal.vet_crmv)
+              : null}
           </div>
         </>
       ) : null}
 
       {failure ? <Notice tone="error">{strings.app.genericError}</Notice> : null}
       <div className="grid grid-cols-2 gap-2">
-        <Button variant="outline" size="xl" disabled={busy} onClick={() => void discard()}>
+        <Button
+          variant="outline"
+          size="xl"
+          disabled={busy}
+          onClick={() => void discard()}
+        >
           <X />
           {I.discardLine}
         </Button>

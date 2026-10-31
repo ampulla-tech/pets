@@ -15,12 +15,18 @@ describe("vaccine", () => {
   it("offers only the species' diseases and saves the vaccine with its photo", async () => {
     const api = mockApi({
       ...animalRoutes(cat),
-      "POST /animals/a1/attachments": reply(201, [attachment("f1", "rotulo.jpg", "image/jpeg")]),
+      "POST /animals/a1/attachments": reply(201, [
+        attachment("f1", "rotulo.jpg", "image/jpeg"),
+      ]),
       "POST /animals/a1/vaccines": reply(201, vaccine()),
     });
     const { user, router } = renderApp("/animais/a1/registrar/vacina");
     const group = await screen.findByRole("group", { name: "Contra o quê" });
-    expect(within(group).getAllByRole("checkbox").map((c) => c.closest("label")!.textContent)).toEqual([
+    expect(
+      within(group)
+        .getAllByRole("checkbox")
+        .map((c) => c.closest("label")!.textContent),
+    ).toEqual([
       "Rinotraqueíte",
       "Calicivirose",
       "Panleucopenia",
@@ -34,10 +40,15 @@ describe("vaccine", () => {
     await user.type(screen.getByLabelText(/Marca/), "Nobivac");
     await user.type(screen.getByLabelText(/Partida/), "A12");
     await user.type(screen.getByLabelText(/Vencimento do lote/), "09/2027");
-    fireEvent.change(screen.getByLabelText(/Repetir em/), { target: { value: "2027-10-20" } });
+    fireEvent.change(screen.getByLabelText(/Repetir em/), {
+      target: { value: "2027-10-20" },
+    });
     await user.type(screen.getByLabelText(/Veterinário/), "Dra. Ana");
     await user.type(screen.getByLabelText(/CRMV/), "CRMV-SC 1");
-    await user.upload(screen.getByLabelText("Anexar foto ou PDF"), new File(["x"], "rotulo.jpg", { type: "image/jpeg" }));
+    await user.upload(
+      screen.getByLabelText("Anexar foto ou PDF"),
+      new File(["x"], "rotulo.jpg", { type: "image/jpeg" }),
+    );
     expect(await screen.findByText("rotulo.jpg")).toBeTruthy();
     await user.click(screen.getByRole("button", { name: "Salvar" }));
     await waitFor(() => expect(router.state.location.pathname).toBe("/animais/a1"));
@@ -66,9 +77,13 @@ describe("vaccine", () => {
   it("starts a new dose with the reminder's disease ticked", async () => {
     mockApi(animalRoutes(dog));
     renderApp("/animais/d1/registrar/vacina?assunto=rabies");
-    const rabies = (await screen.findByRole("checkbox", { name: "Raiva" })) as HTMLInputElement;
+    const rabies = (await screen.findByRole("checkbox", {
+      name: "Raiva",
+    })) as HTMLInputElement;
     expect(rabies.checked).toBe(true);
-    expect((screen.getByRole("checkbox", { name: "Cinomose" }) as HTMLInputElement).checked).toBe(false);
+    expect(
+      (screen.getByRole("checkbox", { name: "Cinomose" }) as HTMLInputElement).checked,
+    ).toBe(false);
   });
 
   it("edits a vaccine, keeps an inferred repeat date inferred, and deletes", async () => {
@@ -80,32 +95,56 @@ describe("vaccine", () => {
     });
     const { user, router } = renderApp("/animais/a1/registros/v1");
     expect(await screen.findByText("lido da linha de baixo")).toBeTruthy();
-    expect((screen.getByLabelText(/Vencimento do lote/) as HTMLInputElement).value).toBe("09/2027");
+    expect((screen.getByLabelText(/Vencimento do lote/) as HTMLInputElement).value).toBe(
+      "09/2027",
+    );
     await user.clear(screen.getByLabelText(/Partida/));
     await user.type(screen.getByLabelText(/Partida/), "B7");
     await user.click(screen.getByRole("button", { name: "Salvar" }));
     await waitFor(() => expect(api.to("PUT /animals/a1/vaccines/v1")).toHaveLength(1));
     const body = api.to("PUT /animals/a1/vaccines/v1")[0].json as Record<string, unknown>;
-    expect(body).toMatchObject({ lot: "B7", repeat_on: "2027-06-06", repeat_on_origin: "inferred", lot_expiry: "2027-09" });
+    expect(body).toMatchObject({
+      lot: "B7",
+      repeat_on: "2027-06-06",
+      repeat_on_origin: "inferred",
+      lot_expiry: "2027-09",
+    });
 
     router.navigate("/animais/a1/registros/v1");
     await user.click(await screen.findByRole("button", { name: "Apagar" }));
-    await user.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Apagar" }));
+    await user.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", {
+        name: "Apagar",
+      }),
+    );
     await waitFor(() => expect(api.to("DELETE /animals/a1/vaccines/v1")).toHaveLength(1));
   });
 });
 
 describe("antiparasitic, weight, note, visit", () => {
   it("saves an antiparasitic with the weight taken that day", async () => {
-    const api = mockApi({ ...animalRoutes(dog), "POST /animals/d1/antiparasitics": reply(201, {}) });
+    const api = mockApi({
+      ...animalRoutes(dog),
+      "POST /animals/d1/antiparasitics": reply(201, {}),
+    });
     const { user } = renderApp("/animais/d1/registrar/antiparasitario?assunto=external");
-    expect(((await screen.findByRole("radio", { name: "Pulga e carrapato" })) as HTMLInputElement).checked).toBe(true);
+    expect(
+      (
+        (await screen.findByRole("radio", {
+          name: "Pulga e carrapato",
+        })) as HTMLInputElement
+      ).checked,
+    ).toBe(true);
     await user.type(screen.getByLabelText(/Remédio/), "Bravecto");
     await user.type(screen.getByLabelText(/Dose/), "1 comprimido");
-    fireEvent.change(screen.getByLabelText(/Repetir em/), { target: { value: "2027-01-31" } });
+    fireEvent.change(screen.getByLabelText(/Repetir em/), {
+      target: { value: "2027-01-31" },
+    });
     await user.type(screen.getByLabelText(/Peso no dia/), "3,25");
     await user.click(screen.getByRole("button", { name: "Salvar" }));
-    await waitFor(() => expect(api.to("POST /animals/d1/antiparasitics")).toHaveLength(1));
+    await waitFor(() =>
+      expect(api.to("POST /animals/d1/antiparasitics")).toHaveLength(1),
+    );
     expect(api.to("POST /animals/d1/antiparasitics")[0].json).toMatchObject({
       parasite: "external",
       product: "Bravecto",
@@ -117,27 +156,41 @@ describe("antiparasitic, weight, note, visit", () => {
   });
 
   it("saves a weight typed with a comma", async () => {
-    const api = mockApi({ ...animalRoutes(cat), "POST /animals/a1/weights": reply(201, {}) });
+    const api = mockApi({
+      ...animalRoutes(cat),
+      "POST /animals/a1/weights": reply(201, {}),
+    });
     const { user } = renderApp("/animais/a1/registrar/peso");
     await user.type(await screen.findByLabelText("Peso (kg)"), "4,9");
     await user.click(screen.getByRole("button", { name: "Salvar" }));
     await waitFor(() => expect(api.to("POST /animals/a1/weights")).toHaveLength(1));
-    expect(api.to("POST /animals/a1/weights")[0].json).toMatchObject({ kg: "4.9", attachment_ids: [] });
+    expect(api.to("POST /animals/a1/weights")[0].json).toMatchObject({
+      kg: "4.9",
+      attachment_ids: [],
+    });
   });
 
   it("lets a guest write a note, without attachments", async () => {
-    const api = mockApi({ ...animalRoutes(animal({ role: "guest" })), "POST /animals/a1/notes": reply(201, {}) });
+    const api = mockApi({
+      ...animalRoutes(animal({ role: "guest" })),
+      "POST /animals/a1/notes": reply(201, {}),
+    });
     const { user } = renderApp("/animais/a1/registrar/observacao");
     await user.type(await screen.findByLabelText("Anotação"), "Comeu bem.");
     expect(screen.queryByLabelText("Anexar foto ou PDF")).toBeNull();
     await user.click(screen.getByRole("button", { name: "Salvar" }));
     await waitFor(() => expect(api.to("POST /animals/a1/notes")).toHaveLength(1));
-    expect(api.to("POST /animals/a1/notes")[0].json).toMatchObject({ text: "Comeu bem." });
+    expect(api.to("POST /animals/a1/notes")[0].json).toMatchObject({
+      text: "Comeu bem.",
+    });
   });
 
   it("saves a visit with a photo and a PDF, and the history opens them", async () => {
     let n = 0;
-    const files = [attachment("p1", "receita.jpg", "image/jpeg"), attachment("p2", "exame.pdf", "application/pdf")];
+    const files = [
+      attachment("p1", "receita.jpg", "image/jpeg"),
+      attachment("p2", "exame.pdf", "application/pdf"),
+    ];
     const visit = {
       kind: "visit",
       id: "c1",
@@ -168,19 +221,30 @@ describe("antiparasitic, weight, note, visit", () => {
     const { user } = renderApp("/animais/a1/registrar/consulta");
     await user.type(await screen.findByLabelText(/Clínica/), "Clínica Centro");
     await user.type(screen.getByLabelText(/Motivo/), "Vômito");
-    await user.upload(screen.getByLabelText("Anexar foto ou PDF"), new File(["x"], "receita.jpg", { type: "image/jpeg" }));
+    await user.upload(
+      screen.getByLabelText("Anexar foto ou PDF"),
+      new File(["x"], "receita.jpg", { type: "image/jpeg" }),
+    );
     await screen.findByText("receita.jpg");
-    await user.upload(screen.getByLabelText("Anexar foto ou PDF"), new File(["%PDF"], "exame.pdf", { type: "application/pdf" }));
+    await user.upload(
+      screen.getByLabelText("Anexar foto ou PDF"),
+      new File(["%PDF"], "exame.pdf", { type: "application/pdf" }),
+    );
     await screen.findByText("exame.pdf");
     await user.click(screen.getByRole("button", { name: "Salvar" }));
-    const item = await screen.findByRole("article", { name: /Consulta ou exame · Clínica Centro/ });
+    const item = await screen.findByRole("article", {
+      name: /Consulta ou exame · Clínica Centro/,
+    });
     expect(api.to("POST /animals/a1/visits")[0].json).toMatchObject({
       clinic: "Clínica Centro",
       reason: "Vômito",
       attachment_ids: ["p1", "p2"],
     });
     const links = within(item).getAllByRole("link", { name: /receita.jpg|exame.pdf/ });
-    expect(links.map((l) => l.getAttribute("href"))).toEqual([files[0].url, files[1].url]);
+    expect(links.map((l) => l.getAttribute("href"))).toEqual([
+      files[0].url,
+      files[1].url,
+    ]);
     expect(links[0].getAttribute("target")).toBe("_blank");
   });
 });

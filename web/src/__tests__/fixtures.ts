@@ -108,11 +108,23 @@ export function reminder(over: Partial<ReminderOut> = {}): ReminderOut {
 }
 
 export function access(over: Partial<AccessOut> = {}): AccessOut {
-  return { id: 1, user_id: "u1", email: "ana@example.com", role: "tutor", ends_on: null, is_me: true, ...over };
+  return {
+    id: 1,
+    user_id: "u1",
+    email: "ana@example.com",
+    role: "tutor",
+    ends_on: null,
+    is_me: true,
+    ...over,
+  };
 }
 
 /** The routes every animal screen reads, for one animal. */
-export function animalRoutes(a: AnimalOut, records: unknown[] = [], reminders: ReminderOut[] = []) {
+export function animalRoutes(
+  a: AnimalOut,
+  records: unknown[] = [],
+  reminders: ReminderOut[] = [],
+) {
   return {
     "GET /catalog": CATALOG,
     [`GET /animals/${a.id}`]: a,

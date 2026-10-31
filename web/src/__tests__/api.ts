@@ -14,7 +14,13 @@ export interface Call {
 }
 
 const REPLY = Symbol("reply");
-type Reply = { [REPLY]: true; status?: number; body?: unknown; headers?: Record<string, string>; raw?: BodyInit };
+type Reply = {
+  [REPLY]: true;
+  status?: number;
+  body?: unknown;
+  headers?: Record<string, string>;
+  raw?: BodyInit;
+};
 type Handler = (call: Call, params: Record<string, string>) => Reply | unknown;
 
 function match(pattern: string, path: string): Record<string, string> | null {
@@ -29,12 +35,20 @@ function match(pattern: string, path: string): Record<string, string> | null {
   return params;
 }
 
-export function reply(status: number, body?: unknown, headers?: Record<string, string>): Reply {
+export function reply(
+  status: number,
+  body?: unknown,
+  headers?: Record<string, string>,
+): Reply {
   return { [REPLY]: true, status, body, headers };
 }
 
 /** A non-JSON answer (a PDF). */
-export function raw(body: BodyInit, headers: Record<string, string>, status = 200): Reply {
+export function raw(
+  body: BodyInit,
+  headers: Record<string, string>,
+  status = 200,
+): Reply {
   return { [REPLY]: true, status, raw: body, headers };
 }
 
@@ -65,24 +79,36 @@ export function mockApi(routes: Record<string, Handler | unknown>) {
         }
       }
     }
-    const call: Call = { method: request.method, path: url.pathname, query: url.searchParams, headers: request.headers, json, form };
+    const call: Call = {
+      method: request.method,
+      path: url.pathname,
+      query: url.searchParams,
+      headers: request.headers,
+      json,
+      form,
+    };
     calls.push(call);
     for (const [key, handler] of Object.entries(routes)) {
       const [method, pattern] = key.split(" ");
       if (method !== request.method) continue;
       const params = match(pattern, url.pathname);
       if (!params) continue;
-      const out = typeof handler === "function" ? (handler as Handler)(call, params) : handler;
+      const out =
+        typeof handler === "function" ? (handler as Handler)(call, params) : handler;
       const r: Reply = isReply(out) ? out : { [REPLY]: true, status: 200, body: out };
       const status = r.status ?? 200;
       if (r.raw !== undefined) return new Response(r.raw, { status, headers: r.headers });
-      if (status === 204 || r.body === undefined) return new Response(null, { status, headers: r.headers });
+      if (status === 204 || r.body === undefined)
+        return new Response(null, { status, headers: r.headers });
       return new Response(JSON.stringify(r.body), {
         status,
         headers: { "Content-Type": "application/json", ...r.headers },
       });
     }
-    return new Response(JSON.stringify({ detail: `unmocked ${request.method} ${url.pathname}` }), { status: 599 });
+    return new Response(
+      JSON.stringify({ detail: `unmocked ${request.method} ${url.pathname}` }),
+      { status: 599 },
+    );
   });
   vi.stubGlobal("fetch", fetchMock);
   return {

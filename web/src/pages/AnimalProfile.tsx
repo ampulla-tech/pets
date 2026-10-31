@@ -43,7 +43,13 @@ import { RecordItem } from "@/components/RecordItem";
 import { StatusBadge } from "@/components/StatusBadge";
 import { WeightChart } from "@/components/WeightChart";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,8 +57,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { canWrite, isTutor, refreshAll, useAnimal, useCatalog, useRecords } from "@/lib/queries";
-import { editRecordPath, newRecordPath, type AnimalOut, type RecordKind } from "@/lib/types";
+import {
+  canWrite,
+  isTutor,
+  refreshAll,
+  useAnimal,
+  useCatalog,
+  useRecords,
+} from "@/lib/queries";
+import {
+  editRecordPath,
+  newRecordPath,
+  type AnimalOut,
+  type RecordKind,
+} from "@/lib/types";
 
 const S = strings.animal;
 // The action grid's buttons wrap a long label instead of overflowing a phone.
@@ -80,7 +98,9 @@ function Profile({ animal }: { animal: AnimalOut }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const records = useRecords(animal.id);
-  const reminders = useQuery(listAnimalRemindersOptions({ path: { animal_id: animal.id } }));
+  const reminders = useQuery(
+    listAnimalRemindersOptions({ path: { animal_id: animal.id } }),
+  );
   const catalog = useCatalog();
   const [params] = useSearchParams();
   const subject = params.get("assunto");
@@ -96,14 +116,20 @@ function Profile({ animal }: { animal: AnimalOut }) {
 
   const labels = useMemo(() => {
     const map: Record<string, string> = {};
-    for (const entry of [...(catalog.data?.dog ?? []), ...(catalog.data?.cat ?? []), ...(catalog.data?.parasites ?? [])])
+    for (const entry of [
+      ...(catalog.data?.dog ?? []),
+      ...(catalog.data?.cat ?? []),
+      ...(catalog.data?.parasites ?? []),
+    ])
       map[entry.code] = entry.label;
     return map;
   }, [catalog.data]);
 
   const weights = useMemo(
     () =>
-      (records.data ?? []).flatMap((r) => (r.kind === "weight" ? [{ date: r.date, kg: Number(r.kg) }] : [])),
+      (records.data ?? []).flatMap((r) =>
+        r.kind === "weight" ? [{ date: r.date, kg: Number(r.kg) }] : [],
+      ),
     [records.data],
   );
 
@@ -140,7 +166,10 @@ function Profile({ animal }: { animal: AnimalOut }) {
             {S.archive}
           </DropdownMenuItem>
         ) : null}
-        <DropdownMenuItem onSelect={() => setDeleting(true)} className="text-destructive focus:text-destructive">
+        <DropdownMenuItem
+          onSelect={() => setDeleting(true)}
+          className="text-destructive focus:text-destructive"
+        >
           <Trash2 />
           {S.deleteAnimal}
         </DropdownMenuItem>
@@ -151,14 +180,25 @@ function Profile({ animal }: { animal: AnimalOut }) {
   return (
     <Page title={animal.name} back={back} actions={menu}>
       <div className="flex items-center gap-4">
-        <AnimalAvatar name={animal.name} species={animal.species} photoUrl={animal.photo_url} className="size-20 rounded-3xl" />
+        <AnimalAvatar
+          name={animal.name}
+          species={animal.species}
+          photoUrl={animal.photo_url}
+          className="size-20 rounded-3xl"
+        />
         <div className="min-w-0 flex-1">
           <p className="truncate text-2xl font-semibold tracking-tight">{animal.name}</p>
           <p className="text-sm text-muted-foreground">
             {[SPECIES_LABEL[animal.species], animal.breed].filter(Boolean).join(" · ")}
           </p>
-          <p className="text-sm text-muted-foreground">{formatAge(animal.age) ?? formatBirth(animal.birth)}</p>
-          {badge && active ? <StatusBadge tone={badge.tone} className="mt-1.5">{badge.text}</StatusBadge> : null}
+          <p className="text-sm text-muted-foreground">
+            {formatAge(animal.age) ?? formatBirth(animal.birth)}
+          </p>
+          {badge && active ? (
+            <StatusBadge tone={badge.tone} className="mt-1.5">
+              {badge.text}
+            </StatusBadge>
+          ) : null}
         </div>
       </div>
 
@@ -239,8 +279,12 @@ function Profile({ animal }: { animal: AnimalOut }) {
         {animal.last_weight ? (
           <div className="flex flex-col gap-3">
             <div className="flex items-baseline justify-between rounded-2xl border bg-card px-4 py-3">
-              <span className="text-2xl font-semibold">{formatKg(animal.last_weight.kg)}</span>
-              <span className="text-sm text-muted-foreground">{formatDate(animal.last_weight.date)}</span>
+              <span className="text-2xl font-semibold">
+                {formatKg(animal.last_weight.kg)}
+              </span>
+              <span className="text-sm text-muted-foreground">
+                {formatDate(animal.last_weight.date)}
+              </span>
             </div>
             <WeightChart points={weights} />
           </div>
@@ -252,7 +296,16 @@ function Profile({ animal }: { animal: AnimalOut }) {
       <Section title={S.profile} id="profile">
         <dl className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-2xl border bg-card p-4 text-sm">
           <Fact label={S.sex} value={SEX_LABEL[animal.sex]} />
-          <Fact label={S.neutered} value={animal.neutered === true ? S.yes : animal.neutered === false ? S.no : S.unknown} />
+          <Fact
+            label={S.neutered}
+            value={
+              animal.neutered === true
+                ? S.yes
+                : animal.neutered === false
+                  ? S.no
+                  : S.unknown
+            }
+          />
           <Fact label={S.birth} value={formatBirth(animal.birth)} />
           <Fact label={S.adoptedOn} value={formatDate(animal.adopted_on)} />
           <Fact label={S.coat} value={animal.coat || "—"} />
@@ -271,15 +324,26 @@ function Profile({ animal }: { animal: AnimalOut }) {
           <ul className="flex flex-col gap-2">
             {records.data.map((record) => (
               <li key={record.id}>
-                <RecordItem animalId={animal.id} record={record} labels={labels} editable={active && record.can_edit} />
+                <RecordItem
+                  animalId={animal.id}
+                  record={record}
+                  labels={labels}
+                  editable={active && record.can_edit}
+                />
               </li>
             ))}
           </ul>
         )}
       </Section>
 
-      <RecordPicker animalId={animal.id} open={recordPicker} onOpenChange={setRecordPicker} />
-      {archiving ? <ArchiveDialog animal={animal} onClose={() => setArchiving(false)} /> : null}
+      <RecordPicker
+        animalId={animal.id}
+        open={recordPicker}
+        onOpenChange={setRecordPicker}
+      />
+      {archiving ? (
+        <ArchiveDialog animal={animal} onClose={() => setArchiving(false)} />
+      ) : null}
       <ConfirmDialog
         open={deleting}
         onOpenChange={setDeleting}
@@ -314,7 +378,8 @@ function ReminderRow({
 }) {
   const [node, setNode] = useState<HTMLLIElement | null>(null);
   useEffect(() => {
-    if (highlighted && node) node.scrollIntoView?.({ block: "center", behavior: "smooth" });
+    if (highlighted && node)
+      node.scrollIntoView?.({ block: "center", behavior: "smooth" });
   }, [highlighted, node]);
   const tone = reminderTone(reminder.state);
   const doseKind: RecordKind = reminder.record_kind;
@@ -344,7 +409,13 @@ function ReminderRow({
       ) : null}
       {writable && highlighted ? (
         <Button asChild size="lg" className="self-start">
-          <Link to={newRecordPath(reminder.animal_id, doseKind, `?assunto=${encodeURIComponent(reminder.subject)}`)}>
+          <Link
+            to={newRecordPath(
+              reminder.animal_id,
+              doseKind,
+              `?assunto=${encodeURIComponent(reminder.subject)}`,
+            )}
+          >
             <Plus />
             {strings.reminders.registerDose}
           </Link>
@@ -389,7 +460,10 @@ function RecordPicker({
                 >
                   <Icon className="size-5 text-primary" aria-hidden />
                   {RECORD_KIND_LABEL[kind]}
-                  <ChevronRight className="ml-auto size-4 text-muted-foreground" aria-hidden />
+                  <ChevronRight
+                    className="ml-auto size-4 text-muted-foreground"
+                    aria-hidden
+                  />
                 </Link>
               </li>
             );
@@ -415,7 +489,11 @@ function ArchiveDialog({ animal, onClose }: { animal: AnimalOut; onClose: () => 
     setBusy(true);
     setFailure(null);
     try {
-      await archiveAnimal({ path: { animal_id: animal.id }, body: { reason, on }, throwOnError: true });
+      await archiveAnimal({
+        path: { animal_id: animal.id },
+        body: { reason, on },
+        throwOnError: true,
+      });
       await refreshAll(queryClient);
       onClose();
     } catch {
@@ -445,7 +523,14 @@ function ArchiveDialog({ animal, onClose }: { animal: AnimalOut; onClose: () => 
           ]}
         />
         <Field label={strings.archive.on}>
-          {(control) => <Input {...control} type="date" value={on} onChange={(e) => setOn(e.target.value)} />}
+          {(control) => (
+            <Input
+              {...control}
+              type="date"
+              value={on}
+              onChange={(e) => setOn(e.target.value)}
+            />
+          )}
         </Field>
         {failure ? <Notice tone="error">{failure}</Notice> : null}
         <DialogFooter>

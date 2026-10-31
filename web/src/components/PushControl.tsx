@@ -5,7 +5,12 @@ import { getWebpushKeyOptions } from "@pets/core/api/query";
 import { strings } from "@pets/core/strings";
 import { Button } from "@/components/ui/button";
 import { Notice } from "@/components/Feedback";
-import { currentSubscription, enablePush, pushSupport, type EnableResult } from "@/lib/push";
+import {
+  currentSubscription,
+  enablePush,
+  pushSupport,
+  type EnableResult,
+} from "@/lib/push";
 
 /**
  * "Ativar notificações": the permission is asked only inside the tap. On an
@@ -14,7 +19,11 @@ import { currentSubscription, enablePush, pushSupport, type EnableResult } from 
  */
 export function PushControl() {
   const support = pushSupport();
-  const key = useQuery({ ...getWebpushKeyOptions(), enabled: support === "available", staleTime: Infinity });
+  const key = useQuery({
+    ...getWebpushKeyOptions(),
+    enabled: support === "available",
+    staleTime: Infinity,
+  });
   const [result, setResult] = useState<EnableResult | null>(null);
   const [busy, setBusy] = useState(false);
 

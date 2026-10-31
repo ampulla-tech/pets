@@ -29,7 +29,10 @@ export function InvitePage() {
   // carries who is asking.
   const preview = useQuery({
     ...previewInviteOptions({ path: { token } }),
-    queryKey: [...previewInviteOptions({ path: { token } }).queryKey, account?.email ?? null] as never,
+    queryKey: [
+      ...previewInviteOptions({ path: { token } }).queryKey,
+      account?.email ?? null,
+    ] as never,
     retry: false,
   });
   const [failure, setFailure] = useState<string | null>(null);
@@ -61,20 +64,39 @@ export function InvitePage() {
   let body;
   if (preview.isPending) body = <Loading />;
   else if (preview.isError)
-    body = <ErrorState message={readFailure(preview.error).status === 404 ? V.notFound : strings.app.genericError} />;
+    body = (
+      <ErrorState
+        message={
+          readFailure(preview.error).status === 404
+            ? V.notFound
+            : strings.app.genericError
+        }
+      />
+    );
   else {
     const invite = preview.data;
     const role = ROLE_LABEL[invite.role];
     body = (
       <div className="flex flex-col gap-5">
         <div className="flex flex-col items-center gap-3 text-center">
-          <AnimalAvatar name={invite.animal.name} species={invite.animal.species} photoUrl={invite.animal.photo_url} className="size-24 rounded-3xl" />
+          <AnimalAvatar
+            name={invite.animal.name}
+            species={invite.animal.species}
+            photoUrl={invite.animal.photo_url}
+            className="size-24 rounded-3xl"
+          />
           <p className="text-2xl font-semibold">{invite.animal.name}</p>
           <p>{V.body(invite.invited_by, invite.animal.name, role)}</p>
           <p className="text-sm text-muted-foreground">
-            {invite.role === "guest" ? strings.people.guestHint : strings.people.tutorHint}
+            {invite.role === "guest"
+              ? strings.people.guestHint
+              : strings.people.tutorHint}
           </p>
-          {invite.access_ends_on ? <p className="text-sm font-medium">{V.endsOn(formatDate(invite.access_ends_on))}</p> : null}
+          {invite.access_ends_on ? (
+            <p className="text-sm font-medium">
+              {V.endsOn(formatDate(invite.access_ends_on))}
+            </p>
+          ) : null}
         </div>
         {invite.state === "expired" ? (
           <Notice tone="warn">{V.expired}</Notice>
@@ -98,12 +120,18 @@ export function InvitePage() {
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            <p className="text-center text-sm text-muted-foreground">{V.signInToAccept}</p>
+            <p className="text-center text-sm text-muted-foreground">
+              {V.signInToAccept}
+            </p>
             <Button asChild size="xl">
-              <Link to={`/cadastro?volta=${encodeURIComponent(here)}`}>{strings.auth.signUp}</Link>
+              <Link to={`/cadastro?volta=${encodeURIComponent(here)}`}>
+                {strings.auth.signUp}
+              </Link>
             </Button>
             <Button asChild size="xl" variant="outline">
-              <Link to={`/entrar?volta=${encodeURIComponent(here)}`}>{strings.auth.signIn}</Link>
+              <Link to={`/entrar?volta=${encodeURIComponent(here)}`}>
+                {strings.auth.signIn}
+              </Link>
             </Button>
           </div>
         )}
@@ -116,7 +144,9 @@ export function InvitePage() {
       <div className="flex w-full max-w-sm flex-col gap-6">
         <div className="flex items-center justify-center gap-2 text-primary">
           <PawPrint className="size-5" aria-hidden />
-          <span className="text-sm font-semibold tracking-wide uppercase">{strings.app.name}</span>
+          <span className="text-sm font-semibold tracking-wide uppercase">
+            {strings.app.name}
+          </span>
         </div>
         <h1 className="sr-only">{V.title}</h1>
         <div className="rounded-2xl border bg-card p-5 shadow-xs">{body}</div>

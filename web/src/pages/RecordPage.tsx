@@ -24,10 +24,24 @@ export function NewRecord() {
   const back = `/animais/${id}`;
   const title = kind ? strings.records.newTitle(RECORD_KIND_LABEL[kind]) : "";
 
-  if (!kind) return <Page title={title} back={back}><ErrorState message={strings.app.notFound} /></Page>;
+  if (!kind)
+    return (
+      <Page title={title} back={back}>
+        <ErrorState message={strings.app.notFound} />
+      </Page>
+    );
   if (animal.isPending || (extractionId && extraction.isPending))
-    return <Page title={title} back={back}><Loading /></Page>;
-  if (animal.isError) return <Page title={title} back={back}><ErrorState message={strings.animal.notFound} /></Page>;
+    return (
+      <Page title={title} back={back}>
+        <Loading />
+      </Page>
+    );
+  if (animal.isError)
+    return (
+      <Page title={title} back={back}>
+        <ErrorState message={strings.animal.notFound} />
+      </Page>
+    );
   return (
     <Page title={title} back={back}>
       <RecordForm
@@ -48,11 +62,22 @@ export function EditRecord() {
   const records = useRecords(id);
   const back = `/animais/${id}`;
   const record = records.data?.find((r) => r.id === recordId);
-  const title = record?.kind ? strings.records.editTitle(RECORD_KIND_LABEL[record.kind]) : strings.app.edit;
+  const title = record?.kind
+    ? strings.records.editTitle(RECORD_KIND_LABEL[record.kind])
+    : strings.app.edit;
 
-  if (animal.isPending || records.isPending) return <Page title={title} back={back}><Loading /></Page>;
+  if (animal.isPending || records.isPending)
+    return (
+      <Page title={title} back={back}>
+        <Loading />
+      </Page>
+    );
   if (animal.isError || !record || !record.can_edit || animal.data.status !== "active")
-    return <Page title={title} back={back}><ErrorState message={strings.records.notFound} /></Page>;
+    return (
+      <Page title={title} back={back}>
+        <ErrorState message={strings.records.notFound} />
+      </Page>
+    );
   return (
     <Page title={title} back={back}>
       <RecordForm kind={record.kind ?? "note"} animal={animal.data} record={record} />

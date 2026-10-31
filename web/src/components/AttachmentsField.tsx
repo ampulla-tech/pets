@@ -19,7 +19,11 @@ export function AttachmentLink({ attachment }: { attachment: AttachmentOut }) {
       className="flex min-w-0 items-center gap-2 rounded-lg border bg-card p-1.5 pr-3 text-sm hover:bg-muted"
     >
       {isImage(attachment) ? (
-        <img src={attachment.url} alt="" className="size-10 shrink-0 rounded-md object-cover" />
+        <img
+          src={attachment.url}
+          alt=""
+          className="size-10 shrink-0 rounded-md object-cover"
+        />
       ) : (
         <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted">
           <FileText className="size-5 text-muted-foreground" aria-hidden />
@@ -76,7 +80,10 @@ export function AttachmentsField({
   return (
     <div className="flex flex-col gap-2">
       <span className="text-sm font-medium">
-        {label} <span className="font-normal text-muted-foreground">({strings.app.optional})</span>
+        {label}{" "}
+        <span className="font-normal text-muted-foreground">
+          ({strings.app.optional})
+        </span>
       </span>
       {value.length ? (
         <ul className="flex flex-col gap-2">
@@ -119,7 +126,9 @@ export function AttachmentsField({
         {uploading ? <Loader2 className="animate-spin" /> : <Paperclip />}
         {uploading ? strings.records.uploading : addLabel}
       </Button>
-      {failed ? <p className="text-sm text-destructive">{strings.records.uploadFailed}</p> : null}
+      {failed ? (
+        <p className="text-sm text-destructive">{strings.records.uploadFailed}</p>
+      ) : null}
     </div>
   );
 }

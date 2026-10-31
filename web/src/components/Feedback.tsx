@@ -6,7 +6,10 @@ import { cn } from "@/lib/utils";
 
 export function Loading({ label = strings.app.loading }: { label?: string }) {
   return (
-    <div role="status" className="flex items-center justify-center gap-2 py-12 text-muted-foreground">
+    <div
+      role="status"
+      className="flex items-center justify-center gap-2 py-12 text-muted-foreground"
+    >
       <Loader2 className="size-5 animate-spin" aria-hidden />
       <span>{label}</span>
     </div>
@@ -60,5 +63,9 @@ export function Notice({
 }
 
 export function EmptyText({ children }: { children: ReactNode }) {
-  return <p className="rounded-xl border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">{children}</p>;
+  return (
+    <p className="rounded-xl border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
+      {children}
+    </p>
+  );
 }

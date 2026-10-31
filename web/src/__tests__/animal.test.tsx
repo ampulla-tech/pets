@@ -19,9 +19,12 @@ describe("animal", () => {
     await user.click(screen.getByRole("radio", { name: "Macho" }));
     await user.click(screen.getByRole("radio", { name: "Sim" }));
     await user.click(screen.getByRole("radio", { name: "Mês e ano" }));
-    fireEvent.change(screen.getByLabelText("Mês e ano", { selector: "input:not([type=radio])" }), {
-      target: { value: "2025-03" },
-    });
+    fireEvent.change(
+      screen.getByLabelText("Mês e ano", { selector: "input:not([type=radio])" }),
+      {
+        target: { value: "2025-03" },
+      },
+    );
     const photo = new File(["x"], "bug.jpg", { type: "image/jpeg" });
     await user.upload(screen.getByLabelText("Foto"), photo);
     await user.click(screen.getByRole("button", { name: "Salvar" }));
@@ -46,14 +49,20 @@ describe("animal", () => {
     const { user } = renderApp("/animais/novo");
     await user.type(screen.getByLabelText("Nome"), "Bug");
     await user.click(screen.getByRole("radio", { name: "Só o ano" }));
-    await user.type(screen.getByLabelText("Só o ano", { selector: "input:not([type=radio])" }), "25");
+    await user.type(
+      screen.getByLabelText("Só o ano", { selector: "input:not([type=radio])" }),
+      "25",
+    );
     await user.click(screen.getByRole("button", { name: "Salvar" }));
     expect(await screen.findByText("Digite o ano com 4 dígitos.")).toBeTruthy();
     expect(api.to("POST /animals")).toHaveLength(0);
   });
 
   it("edits an animal, keeping what it had", async () => {
-    const lacan = animal({ birth: { precision: "exact", value: "2020-05-02" }, microchip: "123" });
+    const lacan = animal({
+      birth: { precision: "exact", value: "2020-05-02" },
+      microchip: "123",
+    });
     const api = mockApi({ ...animalRoutes(lacan), "PUT /animals/a1": lacan });
     const { user, router } = renderApp("/animais/a1/editar");
     const name = (await screen.findByLabelText("Nome")) as HTMLInputElement;
@@ -71,13 +80,47 @@ describe("animal", () => {
   it("home lists the animals with age and badge, and Próximos on top", async () => {
     mockApi({
       "GET /animals": [
-        animal({ id: "b", species: "dog", name: "Bug", age: { years: 0, months: 1, approximate: false }, badge: { state: "overdue", days: null } }),
+        animal({
+          id: "b",
+          species: "dog",
+          name: "Bug",
+          age: { years: 0, months: 1, approximate: false },
+          badge: { state: "overdue", days: null },
+        }),
         animal({ id: "g", name: "GATA", badge: { state: "due_soon", days: 6 } }),
       ],
       "GET /reminders/upcoming": [
-        reminder({ animal_id: "b", animal_name: "Bug", subject: "internal", subject_label: "Verme interno", state: "overdue", days: -8, due_on: "2026-10-23", record_kind: "antiparasitic", record_id: "p1" }),
-        reminder({ animal_id: "b", animal_name: "Bug", subject: "distemper", subject_label: "Cinomose", state: "upcoming", days: 6, due_on: "2026-11-06", record_id: "v9" }),
-        reminder({ animal_id: "b", animal_name: "Bug", subject: "parvovirus", subject_label: "Parvovirose", state: "upcoming", days: 6, due_on: "2026-11-06", record_id: "v9" }),
+        reminder({
+          animal_id: "b",
+          animal_name: "Bug",
+          subject: "internal",
+          subject_label: "Verme interno",
+          state: "overdue",
+          days: -8,
+          due_on: "2026-10-23",
+          record_kind: "antiparasitic",
+          record_id: "p1",
+        }),
+        reminder({
+          animal_id: "b",
+          animal_name: "Bug",
+          subject: "distemper",
+          subject_label: "Cinomose",
+          state: "upcoming",
+          days: 6,
+          due_on: "2026-11-06",
+          record_id: "v9",
+        }),
+        reminder({
+          animal_id: "b",
+          animal_name: "Bug",
+          subject: "parvovirus",
+          subject_label: "Parvovirose",
+          state: "upcoming",
+          days: 6,
+          due_on: "2026-11-06",
+          record_id: "v9",
+        }),
       ],
       "GET /push/webpush/key": { public_key: "" },
     });
@@ -89,7 +132,9 @@ describe("animal", () => {
     // One dose covering two diseases reads as one line.
     expect(links[1].textContent).toContain("Cinomose, Parvovirose");
     expect(links[1].getAttribute("href")).toBe("/animais/b?assunto=distemper");
-    const cards = within(screen.getByRole("region", { name: "Seus animais" })).getAllByRole("link", { name: /Bug|GATA/ });
+    const cards = within(
+      screen.getByRole("region", { name: "Seus animais" }),
+    ).getAllByRole("link", { name: /Bug|GATA/ });
     expect(cards[0].textContent).toContain("1 mês");
     expect(cards[0].textContent).toContain("Atrasado");
     expect(cards[1].textContent).toContain("Vence em 6 dias");

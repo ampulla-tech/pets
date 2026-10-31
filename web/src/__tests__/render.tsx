@@ -7,11 +7,17 @@ import { session } from "@/lib/session";
 import { routes } from "@/router";
 
 /** The whole app at one address, signed in as `as` unless it is null. */
-export function renderApp(path: string, { as = "ana@example.com" }: { as?: string | null } = {}) {
+export function renderApp(
+  path: string,
+  { as = "ana@example.com" }: { as?: string | null } = {},
+) {
   if (as) session.set({ token: "token-1", email: as });
   else session.clear();
   const queryClient = createQueryClient();
-  queryClient.setDefaultOptions({ queries: { retry: false, staleTime: 0 }, mutations: { retry: false } });
+  queryClient.setDefaultOptions({
+    queries: { retry: false, staleTime: 0 },
+    mutations: { retry: false },
+  });
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   const user = userEvent.setup();
   render(

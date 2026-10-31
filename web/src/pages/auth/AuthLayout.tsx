@@ -11,7 +11,9 @@ export function AuthLayout({ title, children }: { title: string; children: React
           <span className="flex size-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
             <PawPrint className="size-7" aria-hidden />
           </span>
-          <p className="text-sm font-semibold tracking-wide text-primary uppercase">{strings.app.name}</p>
+          <p className="text-sm font-semibold tracking-wide text-primary uppercase">
+            {strings.app.name}
+          </p>
           <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
         </div>
         <div className="rounded-2xl border bg-card p-5 shadow-xs">{children}</div>

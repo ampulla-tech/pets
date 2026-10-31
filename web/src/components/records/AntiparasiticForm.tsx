@@ -30,9 +30,16 @@ const schema = z.object({
 type Values = z.infer<typeof schema>;
 
 /** A dewormer or a flea-and-tick dose, with an optional weight taken the same day. */
-export function AntiparasiticForm({ animal, record, subject, attachments }: RecordFormProps<AntiparasiticOut>) {
+export function AntiparasiticForm({
+  animal,
+  record,
+  subject,
+  attachments,
+}: RecordFormProps<AntiparasiticOut>) {
   const { save, failure } = useSaver(animal.id);
-  const [files, setFiles] = useState<AttachmentOut[]>(record?.attachments ?? attachments ?? []);
+  const [files, setFiles] = useState<AttachmentOut[]>(
+    record?.attachments ?? attachments ?? [],
+  );
   const form = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -47,7 +54,8 @@ export function AntiparasiticForm({ animal, record, subject, attachments }: Reco
   });
   const { errors, isSubmitting } = form.formState;
   const repeatOn = form.watch("repeatOn");
-  const inferred = record?.repeat_on_origin === "inferred" && repeatOn === record.repeat_on;
+  const inferred =
+    record?.repeat_on_origin === "inferred" && repeatOn === record.repeat_on;
 
   const onSubmit = form.handleSubmit((values) =>
     save(() => {
@@ -63,8 +71,16 @@ export function AntiparasiticForm({ animal, record, subject, attachments }: Reco
         attachment_ids: files.map((f) => f.id),
       };
       return record
-        ? updateAntiparasitic({ path: { animal_id: animal.id, record_id: record.id }, body, throwOnError: true })
-        : createAntiparasitic({ path: { animal_id: animal.id }, body, throwOnError: true });
+        ? updateAntiparasitic({
+            path: { animal_id: animal.id, record_id: record.id },
+            body,
+            throwOnError: true,
+          })
+        : createAntiparasitic({
+            path: { animal_id: animal.id },
+            body,
+            throwOnError: true,
+          });
     }),
   );
 
@@ -95,17 +111,40 @@ export function AntiparasiticForm({ animal, record, subject, attachments }: Reco
       <Field label={R.dose} optional>
         {(control) => <Input {...control} {...form.register("dose")} />}
       </Field>
-      <Field label={R.repeatOn} optional hint={repeatOn ? (inferred ? R.repeatInferred : undefined) : R.noRepeat}>
+      <Field
+        label={R.repeatOn}
+        optional
+        hint={repeatOn ? (inferred ? R.repeatInferred : undefined) : R.noRepeat}
+      >
         {(control) => <Input {...control} type="date" {...form.register("repeatOn")} />}
       </Field>
       <Field label={R.vet} optional>
         {(control) => <Input {...control} {...form.register("vetName")} />}
       </Field>
       <Field label={R.weightWithTreatment} error={errors.weight?.message}>
-        {(control) => <Input {...control} inputMode="decimal" placeholder="4,9" {...form.register("weight")} />}
+        {(control) => (
+          <Input
+            {...control}
+            inputMode="decimal"
+            placeholder="4,9"
+            {...form.register("weight")}
+          />
+        )}
       </Field>
-      <AttachmentsField animalId={animal.id} value={files} onChange={setFiles} accept="image/*" label={R.photo} />
-      <FormFoot animalId={animal.id} kind="antiparasitic" record={record} failure={failure} submitting={isSubmitting} />
+      <AttachmentsField
+        animalId={animal.id}
+        value={files}
+        onChange={setFiles}
+        accept="image/*"
+        label={R.photo}
+      />
+      <FormFoot
+        animalId={animal.id}
+        kind="antiparasitic"
+        record={record}
+        failure={failure}
+        submitting={isSubmitting}
+      />
     </form>
   );
 }

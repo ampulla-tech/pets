@@ -2,7 +2,12 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { createVaccine, updateVaccine, type AttachmentOut, type VaccineIn } from "@pets/core/api/generated";
+import {
+  createVaccine,
+  updateVaccine,
+  type AttachmentOut,
+  type VaccineIn,
+} from "@pets/core/api/generated";
 import { formatMonth, todayIso } from "@pets/core/domain";
 import { strings } from "@pets/core/strings";
 import { AttachmentsField } from "@/components/AttachmentsField";
@@ -21,7 +26,9 @@ const schema = z.object({
   diseases: z.array(z.string()).min(1, R.diseasesRequired),
   brand: z.string(),
   lot: z.string(),
-  lotExpiry: z.string().refine((v) => !v.trim() || monthValue(v) !== null, R.monthInvalid),
+  lotExpiry: z
+    .string()
+    .refine((v) => !v.trim() || monthValue(v) !== null, R.monthInvalid),
   repeatOn: z.string(),
   vetName: z.string(),
   vetCrmv: z.string(),
@@ -29,10 +36,18 @@ const schema = z.object({
 type Values = z.infer<typeof schema>;
 
 /** A vaccine: only the diseases of the animal's species, one or more. */
-export function VaccineForm({ animal, record, subject, attachments, fromPhoto }: RecordFormProps<VaccineOut>) {
+export function VaccineForm({
+  animal,
+  record,
+  subject,
+  attachments,
+  fromPhoto,
+}: RecordFormProps<VaccineOut>) {
   const catalog = useCatalog();
   const { save, failure } = useSaver(animal.id);
-  const [files, setFiles] = useState<AttachmentOut[]>(record?.attachments ?? attachments ?? []);
+  const [files, setFiles] = useState<AttachmentOut[]>(
+    record?.attachments ?? attachments ?? [],
+  );
   const form = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -48,7 +63,8 @@ export function VaccineForm({ animal, record, subject, attachments, fromPhoto }:
   });
   const { errors, isSubmitting } = form.formState;
   const repeatOn = form.watch("repeatOn");
-  const inferred = record?.repeat_on_origin === "inferred" && repeatOn === record.repeat_on;
+  const inferred =
+    record?.repeat_on_origin === "inferred" && repeatOn === record.repeat_on;
 
   const onSubmit = form.handleSubmit((values) =>
     save(() => {
@@ -66,7 +82,11 @@ export function VaccineForm({ animal, record, subject, attachments, fromPhoto }:
         attachment_ids: files.map((f) => f.id),
       };
       return record
-        ? updateVaccine({ path: { animal_id: animal.id, record_id: record.id }, body, throwOnError: true })
+        ? updateVaccine({
+            path: { animal_id: animal.id, record_id: record.id },
+            body,
+            throwOnError: true,
+          })
         : createVaccine({ path: { animal_id: animal.id }, body, throwOnError: true });
     }),
   );
@@ -88,12 +108,19 @@ export function VaccineForm({ animal, record, subject, attachments, fromPhoto }:
               key={disease.code}
               className="flex cursor-pointer items-center gap-3 rounded-lg border border-input bg-card px-3 py-2.5 text-sm has-[:checked]:border-primary has-[:checked]:bg-accent"
             >
-              <input type="checkbox" value={disease.code} className="size-4" {...form.register("diseases")} />
+              <input
+                type="checkbox"
+                value={disease.code}
+                className="size-4"
+                {...form.register("diseases")}
+              />
               {disease.label}
             </label>
           ))}
         </div>
-        {errors.diseases?.message ? <p className="text-sm text-destructive">{errors.diseases.message}</p> : null}
+        {errors.diseases?.message ? (
+          <p className="text-sm text-destructive">{errors.diseases.message}</p>
+        ) : null}
       </fieldset>
       <Field label={R.brand} optional>
         {(control) => <Input {...control} {...form.register("brand")} />}
@@ -103,7 +130,14 @@ export function VaccineForm({ animal, record, subject, attachments, fromPhoto }:
           {(control) => <Input {...control} {...form.register("lot")} />}
         </Field>
         <Field label={R.lotExpiry} optional error={errors.lotExpiry?.message}>
-          {(control) => <Input {...control} inputMode="numeric" placeholder={R.monthPlaceholder} {...form.register("lotExpiry")} />}
+          {(control) => (
+            <Input
+              {...control}
+              inputMode="numeric"
+              placeholder={R.monthPlaceholder}
+              {...form.register("lotExpiry")}
+            />
+          )}
         </Field>
       </div>
       <Field
@@ -121,8 +155,20 @@ export function VaccineForm({ animal, record, subject, attachments, fromPhoto }:
           {(control) => <Input {...control} {...form.register("vetCrmv")} />}
         </Field>
       </div>
-      <AttachmentsField animalId={animal.id} value={files} onChange={setFiles} accept="image/*" label={R.photo} />
-      <FormFoot animalId={animal.id} kind="vaccine" record={record} failure={failure} submitting={isSubmitting} />
+      <AttachmentsField
+        animalId={animal.id}
+        value={files}
+        onChange={setFiles}
+        accept="image/*"
+        label={R.photo}
+      />
+      <FormFoot
+        animalId={animal.id}
+        kind="vaccine"
+        record={record}
+        failure={failure}
+        submitting={isSubmitting}
+      />
     </form>
   );
 }

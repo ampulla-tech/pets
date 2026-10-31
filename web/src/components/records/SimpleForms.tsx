@@ -36,9 +36,17 @@ export function WeightForm({ animal, record }: RecordFormProps<WeightOut>) {
   const { errors, isSubmitting } = form.formState;
   const onSubmit = form.handleSubmit((values) =>
     save(() => {
-      const body = { date: values.date, kg: parseKg(values.kg) ?? "", attachment_ids: files.map((f) => f.id) };
+      const body = {
+        date: values.date,
+        kg: parseKg(values.kg) ?? "",
+        attachment_ids: files.map((f) => f.id),
+      };
       return record
-        ? updateWeight({ path: { animal_id: animal.id, record_id: record.id }, body, throwOnError: true })
+        ? updateWeight({
+            path: { animal_id: animal.id, record_id: record.id },
+            body,
+            throwOnError: true,
+          })
         : createWeight({ path: { animal_id: animal.id }, body, throwOnError: true });
     }),
   );
@@ -48,10 +56,25 @@ export function WeightForm({ animal, record }: RecordFormProps<WeightOut>) {
         {(control) => <Input {...control} type="date" {...form.register("date")} />}
       </Field>
       <Field label={R.weightKg} error={errors.kg?.message}>
-        {(control) => <Input {...control} inputMode="decimal" placeholder="4,9" {...form.register("kg")} />}
+        {(control) => (
+          <Input
+            {...control}
+            inputMode="decimal"
+            placeholder="4,9"
+            {...form.register("kg")}
+          />
+        )}
       </Field>
-      {tutor ? <AttachmentsField animalId={animal.id} value={files} onChange={setFiles} /> : null}
-      <FormFoot animalId={animal.id} kind="weight" record={record} failure={failure} submitting={isSubmitting} />
+      {tutor ? (
+        <AttachmentsField animalId={animal.id} value={files} onChange={setFiles} />
+      ) : null}
+      <FormFoot
+        animalId={animal.id}
+        kind="weight"
+        record={record}
+        failure={failure}
+        submitting={isSubmitting}
+      />
     </form>
   );
 }
@@ -73,9 +96,17 @@ export function NoteForm({ animal, record }: RecordFormProps<NoteOut>) {
   const { errors, isSubmitting } = form.formState;
   const onSubmit = form.handleSubmit((values) =>
     save(() => {
-      const body = { date: values.date, text: values.text.trim(), attachment_ids: files.map((f) => f.id) };
+      const body = {
+        date: values.date,
+        text: values.text.trim(),
+        attachment_ids: files.map((f) => f.id),
+      };
       return record
-        ? updateNote({ path: { animal_id: animal.id, record_id: record.id }, body, throwOnError: true })
+        ? updateNote({
+            path: { animal_id: animal.id, record_id: record.id },
+            body,
+            throwOnError: true,
+          })
         : createNote({ path: { animal_id: animal.id }, body, throwOnError: true });
     }),
   );
@@ -87,8 +118,16 @@ export function NoteForm({ animal, record }: RecordFormProps<NoteOut>) {
       <Field label={R.text} error={errors.text?.message}>
         {(control) => <TextArea {...control} rows={5} {...form.register("text")} />}
       </Field>
-      {tutor ? <AttachmentsField animalId={animal.id} value={files} onChange={setFiles} /> : null}
-      <FormFoot animalId={animal.id} kind="note" record={record} failure={failure} submitting={isSubmitting} />
+      {tutor ? (
+        <AttachmentsField animalId={animal.id} value={files} onChange={setFiles} />
+      ) : null}
+      <FormFoot
+        animalId={animal.id}
+        kind="note"
+        record={record}
+        failure={failure}
+        submitting={isSubmitting}
+      />
     </form>
   );
 }

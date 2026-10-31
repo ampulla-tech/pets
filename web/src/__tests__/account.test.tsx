@@ -21,14 +21,20 @@ function emptyHome() {
 
 describe("account", () => {
   it("signs up and lands on the empty home", async () => {
-    const api = mockApi({ ...emptyHome(), [`POST ${ALLAUTH}/auth/signup`]: signedIn("bia@example.com") });
+    const api = mockApi({
+      ...emptyHome(),
+      [`POST ${ALLAUTH}/auth/signup`]: signedIn("bia@example.com"),
+    });
     const { user, router } = renderApp("/cadastro", { as: null });
     await user.type(screen.getByLabelText("E-mail"), "bia@example.com");
     await user.type(screen.getByLabelText("Senha"), "uma-senha-boa");
     await user.click(screen.getByRole("button", { name: "Criar conta" }));
     expect(await screen.findByText("Nenhum animal ainda.")).toBeTruthy();
     expect(router.state.location.pathname).toBe("/");
-    expect(api.to(`POST ${ALLAUTH}/auth/signup`)[0].json).toEqual({ email: "bia@example.com", password: "uma-senha-boa" });
+    expect(api.to(`POST ${ALLAUTH}/auth/signup`)[0].json).toEqual({
+      email: "bia@example.com",
+      password: "uma-senha-boa",
+    });
     // The API is called with the new session token.
     expect(api.to("GET /animals")[0].headers.get("X-Session-Token")).toBe("tok-new");
   });
@@ -39,7 +45,9 @@ describe("account", () => {
     await user.type(screen.getByLabelText("E-mail"), "bia@example.com");
     await user.type(screen.getByLabelText("Senha"), "curta");
     await user.click(screen.getByRole("button", { name: "Criar conta" }));
-    expect(await screen.findByText("A senha precisa de pelo menos 8 caracteres.")).toBeTruthy();
+    expect(
+      await screen.findByText("A senha precisa de pelo menos 8 caracteres."),
+    ).toBeTruthy();
     expect(api.calls).toHaveLength(0);
   });
 
@@ -78,7 +86,10 @@ describe("account", () => {
   it("resets the password with the e-mailed code and signs in", async () => {
     const api = mockApi({
       ...emptyHome(),
-      [`POST ${ALLAUTH}/auth/password/request`]: reply(401, { status: 401, meta: { session_token: "flow-1" } }),
+      [`POST ${ALLAUTH}/auth/password/request`]: reply(401, {
+        status: 401,
+        meta: { session_token: "flow-1" },
+      }),
       [`POST ${ALLAUTH}/auth/password/reset`]: signedIn("bia@example.com"),
     });
     const { user, router } = renderApp("/recuperar", { as: null });
@@ -97,7 +108,12 @@ describe("account", () => {
   });
 
   it("asks for the code in its format", async () => {
-    mockApi({ [`POST ${ALLAUTH}/auth/password/request`]: reply(401, { status: 401, meta: { session_token: "f" } }) });
+    mockApi({
+      [`POST ${ALLAUTH}/auth/password/request`]: reply(401, {
+        status: 401,
+        meta: { session_token: "f" },
+      }),
+    });
     const { user } = renderApp("/recuperar", { as: null });
     await user.type(screen.getByLabelText("E-mail"), "bia@example.com");
     await user.click(screen.getByRole("button", { name: "Mandar o código" }));
@@ -108,13 +124,18 @@ describe("account", () => {
   });
 
   it("signs out: ends the session on the server and goes to /entrar", async () => {
-    const api = mockApi({ ...emptyHome(), [`DELETE ${ALLAUTH}/auth/session`]: reply(401, { status: 401 }) });
+    const api = mockApi({
+      ...emptyHome(),
+      [`DELETE ${ALLAUTH}/auth/session`]: reply(401, { status: 401 }),
+    });
     const { user, router } = renderApp("/");
     await screen.findByText("Nenhum animal ainda.");
     await user.click(screen.getByRole("button", { name: "Menu" }));
     await user.click(await screen.findByRole("menuitem", { name: "Sair da conta" }));
     await waitFor(() => expect(router.state.location.pathname).toBe("/entrar"));
-    expect(api.to(`DELETE ${ALLAUTH}/auth/session`)[0].headers.get("X-Session-Token")).toBe("token-1");
+    expect(
+      api.to(`DELETE ${ALLAUTH}/auth/session`)[0].headers.get("X-Session-Token"),
+    ).toBe("token-1");
     expect(localStorage.getItem("pets.session")).toBeNull();
   });
 });

@@ -3,7 +3,13 @@ import { useNavigate, useParams } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Copy, LogOut, Share2, UserMinus, UserPlus } from "lucide-react";
 import { readFailure } from "@pets/core/api";
-import { createInvite, deleteAnimal, removeAccess, type AccessOut, type InviteOut } from "@pets/core/api/generated";
+import {
+  createInvite,
+  deleteAnimal,
+  removeAccess,
+  type AccessOut,
+  type InviteOut,
+} from "@pets/core/api/generated";
 import { listAccessesOptions } from "@pets/core/api/query";
 import { formatDate, ROLE_LABEL, todayIso } from "@pets/core/domain";
 import { strings } from "@pets/core/strings";
@@ -12,7 +18,13 @@ import { ChoiceGroup, Field } from "@/components/Field";
 import { ErrorState, Loading, Notice } from "@/components/Feedback";
 import { Page } from "@/components/Page";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { refreshAll, useAnimal } from "@/lib/queries";
 import type { AnimalOut } from "@/lib/types";
@@ -24,8 +36,18 @@ export function People() {
   const { id = "" } = useParams();
   const animal = useAnimal(id);
   const back = `/animais/${id}`;
-  if (animal.isPending) return <Page title={P.title} back={back}><Loading /></Page>;
-  if (animal.isError) return <Page title={P.title} back={back}><ErrorState message={strings.animal.notFound} /></Page>;
+  if (animal.isPending)
+    return (
+      <Page title={P.title} back={back}>
+        <Loading />
+      </Page>
+    );
+  if (animal.isError)
+    return (
+      <Page title={P.title} back={back}>
+        <ErrorState message={strings.animal.notFound} />
+      </Page>
+    );
   return <PeopleOf animal={animal.data} />;
 }
 
@@ -48,7 +70,10 @@ function PeopleOf({ animal }: { animal: AnimalOut }) {
     setBusy(true);
     setFailure(null);
     try {
-      await removeAccess({ path: { animal_id: animal.id, access_id: access.id }, throwOnError: true });
+      await removeAccess({
+        path: { animal_id: animal.id, access_id: access.id },
+        throwOnError: true,
+      });
       if (self) {
         queryClient.clear();
         navigate("/", { replace: true });
@@ -90,7 +115,9 @@ function PeopleOf({ animal }: { animal: AnimalOut }) {
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">
                   {access.email}
-                  {access.is_me ? <span className="font-normal text-muted-foreground"> ({P.you})</span> : null}
+                  {access.is_me ? (
+                    <span className="font-normal text-muted-foreground"> ({P.you})</span>
+                  ) : null}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {ROLE_LABEL[access.role]}
@@ -125,7 +152,13 @@ function PeopleOf({ animal }: { animal: AnimalOut }) {
         ) : null}
       </div>
 
-      {inviting ? <InviteDialog animal={animal} initialRole={inviting} onClose={() => setInviting(null)} /> : null}
+      {inviting ? (
+        <InviteDialog
+          animal={animal}
+          initialRole={inviting}
+          onClose={() => setInviting(null)}
+        />
+      ) : null}
 
       <ConfirmDialog
         open={removing !== null}
@@ -250,9 +283,17 @@ function InviteDialog({
             <Notice tone="ok">{P.linkReady}</Notice>
             <p className="text-sm">
               {ROLE_LABEL[invite.role]}
-              {invite.access_ends_on ? ` · ${P.until(formatDate(invite.access_ends_on))}` : ""}
+              {invite.access_ends_on
+                ? ` · ${P.until(formatDate(invite.access_ends_on))}`
+                : ""}
             </p>
-            <Input readOnly value={invite.url} aria-label={P.copy} onFocus={(e) => e.target.select()} className="font-mono text-sm" />
+            <Input
+              readOnly
+              value={invite.url}
+              aria-label={P.copy}
+              onFocus={(e) => e.target.select()}
+              className="font-mono text-sm"
+            />
             <Button size="xl" onClick={() => void copy(invite.url)}>
               {copied ? <Check /> : <Copy />}
               {copied ? P.copied : P.copy}
@@ -262,7 +303,9 @@ function InviteDialog({
                 size="xl"
                 variant="outline"
                 onClick={() =>
-                  void navigator.share({ title: P.shareTitle(animal.name), url: invite.url }).catch(() => undefined)
+                  void navigator
+                    .share({ title: P.shareTitle(animal.name), url: invite.url })
+                    .catch(() => undefined)
                 }
               >
                 <Share2 />
@@ -285,7 +328,13 @@ function InviteDialog({
             {role === "guest" ? (
               <Field label={P.endsOn} optional hint={P.endsOnHint}>
                 {(control) => (
-                  <Input {...control} type="date" min={todayIso()} value={endsOn} onChange={(e) => setEndsOn(e.target.value)} />
+                  <Input
+                    {...control}
+                    type="date"
+                    min={todayIso()}
+                    value={endsOn}
+                    onChange={(e) => setEndsOn(e.target.value)}
+                  />
                 )}
               </Field>
             ) : null}

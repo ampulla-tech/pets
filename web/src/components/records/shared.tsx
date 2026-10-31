@@ -77,7 +77,10 @@ export function FormFoot({
     if (!record) return;
     setBusy(true);
     try {
-      await DELETE[kind]({ path: { animal_id: animalId, record_id: record.id }, throwOnError: true });
+      await DELETE[kind]({
+        path: { animal_id: animalId, record_id: record.id },
+        throwOnError: true,
+      });
       await refreshAll(queryClient);
       navigate(`/animais/${animalId}`, { replace: true });
     } catch {
@@ -89,13 +92,20 @@ export function FormFoot({
 
   return (
     <div className="flex flex-col gap-3">
-      {failure || deleteFailed ? <Notice tone="error">{failure ?? strings.app.genericError}</Notice> : null}
+      {failure || deleteFailed ? (
+        <Notice tone="error">{failure ?? strings.app.genericError}</Notice>
+      ) : null}
       <Button type="submit" size="xl" disabled={submitting}>
         {submitting ? strings.app.saving : strings.app.save}
       </Button>
       {record ? (
         <>
-          <Button type="button" variant="destructive" size="xl" onClick={() => setConfirming(true)}>
+          <Button
+            type="button"
+            variant="destructive"
+            size="xl"
+            onClick={() => setConfirming(true)}
+          >
             <Trash2 />
             {strings.app.delete}
           </Button>

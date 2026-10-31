@@ -29,13 +29,17 @@ export function Field({
   const id = useId();
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
-  const describedBy = [hint ? hintId : null, error ? errorId : null].filter(Boolean).join(" ");
+  const describedBy = [hint ? hintId : null, error ? errorId : null]
+    .filter(Boolean)
+    .join(" ");
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
       <Label htmlFor={id}>
         {label}
         {optional ? (
-          <span className="font-normal text-muted-foreground">({strings.app.optional})</span>
+          <span className="font-normal text-muted-foreground">
+            ({strings.app.optional})
+          </span>
         ) : null}
       </Label>
       {children({
@@ -105,7 +109,9 @@ export function ChoiceGroup<T extends string>({
             />
             <span className="flex flex-col">
               <span className="font-medium">{option.label}</span>
-              {option.hint ? <span className="text-xs text-muted-foreground">{option.hint}</span> : null}
+              {option.hint ? (
+                <span className="text-xs text-muted-foreground">{option.hint}</span>
+              ) : null}
             </span>
           </label>
         ))}

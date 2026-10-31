@@ -31,8 +31,12 @@ export function WeightChart({ points }: { points: WeightPoint[] }) {
     pad.left + (t1 === t0 ? 0.5 : (t - t0) / (t1 - t0)) * (width - pad.left - pad.right);
   const y = (kg: number) =>
     pad.top + (1 - (kg - low) / (high - low)) * (height - pad.top - pad.bottom);
-  const line = sorted.map((p, i) => `${x(times[i]).toFixed(1)},${y(p.kg).toFixed(1)}`).join(" ");
-  const summary = sorted.map((p) => `${formatDate(p.date)}: ${formatKg(p.kg)}`).join("; ");
+  const line = sorted
+    .map((p, i) => `${x(times[i]).toFixed(1)},${y(p.kg).toFixed(1)}`)
+    .join(" ");
+  const summary = sorted
+    .map((p) => `${formatDate(p.date)}: ${formatKg(p.kg)}`)
+    .join("; ");
   return (
     <figure className="rounded-xl border bg-card p-3">
       <figcaption className="mb-1 text-xs font-medium text-muted-foreground">
@@ -60,10 +64,22 @@ export function WeightChart({ points }: { points: WeightPoint[] }) {
           stroke="var(--border)"
           strokeDasharray="3 4"
         />
-        <text x={pad.left - 6} y={y(high) + 4} textAnchor="end" fontSize="10" fill="var(--muted-foreground)">
+        <text
+          x={pad.left - 6}
+          y={y(high) + 4}
+          textAnchor="end"
+          fontSize="10"
+          fill="var(--muted-foreground)"
+        >
           {formatKg(Math.max(...kgs))}
         </text>
-        <text x={pad.left - 6} y={y(low) + 4} textAnchor="end" fontSize="10" fill="var(--muted-foreground)">
+        <text
+          x={pad.left - 6}
+          y={y(low) + 4}
+          textAnchor="end"
+          fontSize="10"
+          fill="var(--muted-foreground)"
+        >
           {formatKg(Math.min(...kgs))}
         </text>
         <polyline
@@ -75,12 +91,26 @@ export function WeightChart({ points }: { points: WeightPoint[] }) {
           strokeLinecap="round"
         />
         {sorted.map((p, i) => (
-          <circle key={`${p.date}-${i}`} cx={x(times[i])} cy={y(p.kg)} r="3.5" fill="var(--card)" stroke="var(--primary)" strokeWidth="2" />
+          <circle
+            key={`${p.date}-${i}`}
+            cx={x(times[i])}
+            cy={y(p.kg)}
+            r="3.5"
+            fill="var(--card)"
+            stroke="var(--primary)"
+            strokeWidth="2"
+          />
         ))}
         <text x={pad.left} y={height - 6} fontSize="10" fill="var(--muted-foreground)">
           {formatDate(sorted[0].date)}
         </text>
-        <text x={width - pad.right} y={height - 6} textAnchor="end" fontSize="10" fill="var(--muted-foreground)">
+        <text
+          x={width - pad.right}
+          y={height - 6}
+          textAnchor="end"
+          fontSize="10"
+          fill="var(--muted-foreground)"
+        >
           {formatDate(sorted[sorted.length - 1].date)}
         </text>
       </svg>

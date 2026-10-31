@@ -24,7 +24,10 @@ export function SignIn() {
   const navigate = useNavigate();
   const target = returnTo(params);
   const [failure, setFailure] = useState<string | null>(null);
-  const form = useForm({ resolver: zodResolver(schema), defaultValues: { email: "", password: "" } });
+  const form = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: { email: "", password: "" },
+  });
 
   const onSubmit = form.handleSubmit(async ({ email, password }) => {
     setFailure(null);
@@ -41,24 +44,43 @@ export function SignIn() {
     <AuthLayout title={strings.auth.signInTitle}>
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
         <Field label={strings.auth.email} error={errors.email?.message}>
-          {(control) => <Input {...control} type="email" autoComplete="email" inputMode="email" {...form.register("email")} />}
+          {(control) => (
+            <Input
+              {...control}
+              type="email"
+              autoComplete="email"
+              inputMode="email"
+              {...form.register("email")}
+            />
+          )}
         </Field>
         <Field label={strings.auth.password} error={errors.password?.message}>
           {(control) => (
-            <Input {...control} type="password" autoComplete="current-password" {...form.register("password")} />
+            <Input
+              {...control}
+              type="password"
+              autoComplete="current-password"
+              {...form.register("password")}
+            />
           )}
         </Field>
         {failure ? <Notice tone="error">{failure}</Notice> : null}
         <Button type="submit" size="xl" disabled={isSubmitting}>
           {strings.auth.signIn}
         </Button>
-        <Link to={withReturn("/recuperar", target)} className="text-center text-sm text-primary hover:underline">
+        <Link
+          to={withReturn("/recuperar", target)}
+          className="text-center text-sm text-primary hover:underline"
+        >
           {strings.auth.forgot}
         </Link>
       </form>
       <p className="mt-5 border-t pt-4 text-center text-sm text-muted-foreground">
         {strings.auth.noAccount}{" "}
-        <Link to={withReturn("/cadastro", target)} className="font-medium text-primary hover:underline">
+        <Link
+          to={withReturn("/cadastro", target)}
+          className="font-medium text-primary hover:underline"
+        >
           {strings.auth.signUp}
         </Link>
       </p>

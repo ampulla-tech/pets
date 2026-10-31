@@ -40,7 +40,9 @@ export function UpcomingList({ items }: { items: ReminderOut[] }) {
               <p className="text-sm text-muted-foreground">{labels.join(", ")}</p>
               <p className="text-xs text-muted-foreground">{formatDate(first.due_on)}</p>
             </div>
-            <StatusBadge tone={reminderTone(first.state) as "ok" | "soon" | "late" | "none"}>
+            <StatusBadge
+              tone={reminderTone(first.state) as "ok" | "soon" | "late" | "none"}
+            >
               {reminderText(first)}
             </StatusBadge>
             <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />

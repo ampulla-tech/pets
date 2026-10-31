@@ -96,7 +96,9 @@ export async function disablePush(): Promise<void> {
   try {
     const subscription = await currentSubscription();
     if (!subscription) return;
-    await removeWebpush({ body: { endpoint: subscription.endpoint } }).catch(() => undefined);
+    await removeWebpush({ body: { endpoint: subscription.endpoint } }).catch(
+      () => undefined,
+    );
     await subscription.unsubscribe();
   } catch {
     // Signing out never fails on account of push.

@@ -34,7 +34,9 @@ export function Page({
           ) : (
             <span className="w-2" />
           )}
-          <h1 className="min-w-0 flex-1 truncate text-lg font-semibold tracking-tight">{title}</h1>
+          <h1 className="min-w-0 flex-1 truncate text-lg font-semibold tracking-tight">
+            {title}
+          </h1>
           {actions ? <div className="flex items-center gap-1">{actions}</div> : null}
         </div>
       </header>
@@ -63,7 +65,10 @@ export function Section({
   id?: string;
 }) {
   return (
-    <section className="flex flex-col gap-3" aria-labelledby={id ? `${id}-title` : undefined}>
+    <section
+      className="flex flex-col gap-3"
+      aria-labelledby={id ? `${id}-title` : undefined}
+    >
       <div className="flex items-center justify-between gap-2">
         <h2
           id={id ? `${id}-title` : undefined}

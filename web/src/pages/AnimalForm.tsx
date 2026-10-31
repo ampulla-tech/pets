@@ -6,7 +6,12 @@ import { useLocation, useNavigate, useParams } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { Camera } from "lucide-react";
 import { readFailure } from "@pets/core/api";
-import { createAnimal, setAnimalPhoto, updateAnimal, type AnimalIn } from "@pets/core/api/generated";
+import {
+  createAnimal,
+  setAnimalPhoto,
+  updateAnimal,
+  type AnimalIn,
+} from "@pets/core/api/generated";
 import { SPECIES_LABEL } from "@pets/core/domain";
 import { strings } from "@pets/core/strings";
 import { AnimalAvatar } from "@/components/AnimalAvatar";
@@ -36,11 +41,14 @@ const schema = z
   })
   .superRefine((value, ctx) => {
     const v = value.birthValue.trim();
-    const fail = (message: string) => ctx.addIssue({ code: "custom", path: ["birthValue"], message });
+    const fail = (message: string) =>
+      ctx.addIssue({ code: "custom", path: ["birthValue"], message });
     if (value.birthPrecision === "unknown") return;
     if (!v) return fail(S.birthRequired);
-    if (value.birthPrecision === "month" && !monthValue(v)) return fail(S.birthMonthInvalid);
-    if (value.birthPrecision === "year" && !/^\d{4}$/.test(v)) return fail(S.birthYearInvalid);
+    if (value.birthPrecision === "month" && !monthValue(v))
+      return fail(S.birthMonthInvalid);
+    if (value.birthPrecision === "year" && !/^\d{4}$/.test(v))
+      return fail(S.birthYearInvalid);
   });
 
 type Values = z.infer<typeof schema>;
@@ -51,7 +59,8 @@ function toValues(animal?: AnimalOut): Values {
     name: animal?.name ?? "",
     breed: animal?.breed ?? "",
     sex: animal?.sex ?? "",
-    neutered: animal?.neutered === true ? "yes" : animal?.neutered === false ? "no" : "unknown",
+    neutered:
+      animal?.neutered === true ? "yes" : animal?.neutered === false ? "no" : "unknown",
     coat: animal?.coat ?? "",
     microchip: animal?.microchip ?? "",
     birthPrecision: animal?.birth.precision ?? "unknown",
@@ -72,7 +81,12 @@ function toBody(values: Values): AnimalIn {
     microchip: values.microchip.trim(),
     birth: {
       precision: values.birthPrecision,
-      value: values.birthPrecision === "unknown" ? null : values.birthPrecision === "month" ? monthValue(v) : v,
+      value:
+        values.birthPrecision === "unknown"
+          ? null
+          : values.birthPrecision === "month"
+            ? monthValue(v)
+            : v,
     },
     adopted_on: values.adoptedOn || null,
   };
@@ -87,7 +101,12 @@ export function AnimalForm() {
 
 function EditAnimal({ id }: { id: string }) {
   const animal = useAnimal(id);
-  if (animal.isPending) return <Page title={S.editTitle} back={`/animais/${id}`}><Loading /></Page>;
+  if (animal.isPending)
+    return (
+      <Page title={S.editTitle} back={`/animais/${id}`}>
+        <Loading />
+      </Page>
+    );
   if (animal.isError)
     return (
       <Page title={S.editTitle} back={`/animais/${id}`}>
@@ -104,13 +123,21 @@ function AnimalFormBody({ animal }: { animal?: AnimalOut }) {
   const fileInput = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState<File | null>(null);
   const preview = useMemo(() => (photo ? URL.createObjectURL(photo) : null), [photo]);
-  useEffect(() => () => {
-    if (preview) URL.revokeObjectURL(preview);
-  }, [preview]);
-  const [failure, setFailure] = useState<string | null>(
-    (location.state as { photoFailed?: boolean } | null)?.photoFailed ? S.photoFailed : null,
+  useEffect(
+    () => () => {
+      if (preview) URL.revokeObjectURL(preview);
+    },
+    [preview],
   );
-  const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: toValues(animal) });
+  const [failure, setFailure] = useState<string | null>(
+    (location.state as { photoFailed?: boolean } | null)?.photoFailed
+      ? S.photoFailed
+      : null,
+  );
+  const form = useForm<Values>({
+    resolver: zodResolver(schema),
+    defaultValues: toValues(animal),
+  });
   const precision = form.watch("birthPrecision");
   const species = form.watch("species");
   const name = form.watch("name");
@@ -123,19 +150,36 @@ function AnimalFormBody({ animal }: { animal?: AnimalOut }) {
     try {
       const body = toBody(values);
       saved = animal
-        ? (await updateAnimal({ path: { animal_id: animal.id }, body, throwOnError: true })).data
+        ? (
+            await updateAnimal({
+              path: { animal_id: animal.id },
+              body,
+              throwOnError: true,
+            })
+          ).data
         : (await createAnimal({ body, throwOnError: true })).data;
     } catch (error) {
       const { status } = readFailure(error);
-      setFailure(status === 422 && animal && values.species !== animal.species ? S.speciesLocked : strings.app.genericError);
+      setFailure(
+        status === 422 && animal && values.species !== animal.species
+          ? S.speciesLocked
+          : strings.app.genericError,
+      );
       return;
     }
     if (photo) {
       try {
-        await setAnimalPhoto({ path: { animal_id: saved.id }, body: { file: photo }, throwOnError: true });
+        await setAnimalPhoto({
+          path: { animal_id: saved.id },
+          body: { file: photo },
+          throwOnError: true,
+        });
       } catch {
         await refreshAll(queryClient);
-        navigate(`/animais/${saved.id}/editar`, { replace: true, state: { photoFailed: true } });
+        navigate(`/animais/${saved.id}/editar`, {
+          replace: true,
+          state: { photoFailed: true },
+        });
         return;
       }
     }
@@ -161,7 +205,12 @@ function AnimalFormBody({ animal }: { animal?: AnimalOut }) {
             aria-label={S.photo}
             onChange={(event) => setPhoto(event.target.files?.[0] ?? null)}
           />
-          <Button type="button" variant="outline" size="lg" onClick={() => fileInput.current?.click()}>
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            onClick={() => fileInput.current?.click()}
+          >
             <Camera />
             {animal?.photo_url || photo ? S.changePhoto : S.pickPhoto}
           </Button>
@@ -184,7 +233,9 @@ function AnimalFormBody({ animal }: { animal?: AnimalOut }) {
           )}
         />
         <Field label={S.name} error={errors.name?.message}>
-          {(control) => <Input {...control} autoComplete="off" {...form.register("name")} />}
+          {(control) => (
+            <Input {...control} autoComplete="off" {...form.register("name")} />
+          )}
         </Field>
         <Field label={S.breed} optional>
           {(control) => <Input {...control} {...form.register("breed")} />}
@@ -227,7 +278,9 @@ function AnimalFormBody({ animal }: { animal?: AnimalOut }) {
           {(control) => <Input {...control} {...form.register("coat")} />}
         </Field>
         <Field label={S.microchip} optional>
-          {(control) => <Input {...control} inputMode="numeric" {...form.register("microchip")} />}
+          {(control) => (
+            <Input {...control} inputMode="numeric" {...form.register("microchip")} />
+          )}
         </Field>
 
         <div className="flex flex-col gap-3 rounded-xl border bg-card p-4">
@@ -255,12 +308,19 @@ function AnimalFormBody({ animal }: { animal?: AnimalOut }) {
           />
           {precision === "exact" ? (
             <Field label={S.birthExact} error={errors.birthValue?.message}>
-              {(control) => <Input {...control} type="date" {...form.register("birthValue")} />}
+              {(control) => (
+                <Input {...control} type="date" {...form.register("birthValue")} />
+              )}
             </Field>
           ) : precision === "month" ? (
             <Field label={S.birthMonth} error={errors.birthValue?.message}>
               {(control) => (
-                <Input {...control} type="month" placeholder={S.birthPlaceholderMonth} {...form.register("birthValue")} />
+                <Input
+                  {...control}
+                  type="month"
+                  placeholder={S.birthPlaceholderMonth}
+                  {...form.register("birthValue")}
+                />
               )}
             </Field>
           ) : precision === "year" ? (
@@ -279,7 +339,9 @@ function AnimalFormBody({ animal }: { animal?: AnimalOut }) {
         </div>
 
         <Field label={S.adoptedOn} optional>
-          {(control) => <Input {...control} type="date" {...form.register("adoptedOn")} />}
+          {(control) => (
+            <Input {...control} type="date" {...form.register("adoptedOn")} />
+          )}
         </Field>
 
         {failure ? <Notice tone="error">{failure}</Notice> : null}
