@@ -94,7 +94,10 @@ export function createIdentity(config: IdentityConfig) {
   return {
     /** Create the account and sign in. */
     async signUp(email: string, password: string): Promise<Session> {
-      const { status, envelope } = await call("POST", "/auth/signup", { email, password });
+      const { status, envelope } = await call("POST", "/auth/signup", {
+        email,
+        password,
+      });
       return session(status, envelope, email);
     },
 
@@ -116,7 +119,9 @@ export function createIdentity(config: IdentityConfig) {
 
     /** E-mail a reset code. The answer is the same whether the address exists or not. */
     async requestReset(email: string): Promise<PendingReset> {
-      const { status, envelope } = await call("POST", "/auth/password/request", { email });
+      const { status, envelope } = await call("POST", "/auth/password/request", {
+        email,
+      });
       const flowToken = envelope.meta?.session_token;
       if (status === 401 && flowToken) return { flowToken, email };
       if (status === 200 && flowToken) return { flowToken, email };
@@ -124,7 +129,11 @@ export function createIdentity(config: IdentityConfig) {
     },
 
     /** Set the new password with the e-mailed code; signs in. */
-    async resetPassword(pending: PendingReset, code: string, password: string): Promise<Session> {
+    async resetPassword(
+      pending: PendingReset,
+      code: string,
+      password: string,
+    ): Promise<Session> {
       const { status, envelope } = await call(
         "POST",
         "/auth/password/reset",
@@ -140,11 +149,14 @@ export type Identity = ReturnType<typeof createIdentity>;
 
 /** The on-screen message for an identity failure, in pt-BR. */
 export function identityMessage(error: unknown): string {
-  if (!(error instanceof IdentityFailure)) return "Não deu para falar com o servidor. Tente de novo.";
+  if (!(error instanceof IdentityFailure))
+    return "Não deu para falar com o servidor. Tente de novo.";
   if (error.has("email_taken")) return "Já existe uma conta com este e-mail.";
   if (error.has("email_password_mismatch")) return "E-mail ou senha não conferem.";
-  if (error.has("password_too_short")) return "A senha precisa de pelo menos 8 caracteres.";
-  if (error.has("password_too_common")) return "Esta senha é comum demais. Escolha outra.";
+  if (error.has("password_too_short"))
+    return "A senha precisa de pelo menos 8 caracteres.";
+  if (error.has("password_too_common"))
+    return "Esta senha é comum demais. Escolha outra.";
   if (error.has("password_entirely_numeric")) return "A senha não pode ter só números.";
   if (error.has("incorrect_code")) return "Código incorreto. Confira o e-mail.";
   if (error.status === 409) return "O pedido de senha nova venceu. Peça outro código.";

@@ -5,10 +5,7 @@
  */
 
 export type ApiErrorCode =
-  | "invite_expired"
-  | "invite_used"
-  | "already_member"
-  | "last_tutor";
+  "invite_expired" | "invite_used" | "already_member" | "last_tutor";
 
 export interface ApiFailure {
   status: number;

@@ -13,7 +13,8 @@ import type {
 
 export type Species = AnimalOut["species"];
 
-const pluralize = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+const pluralize = (n: number, one: string, many: string) =>
+  `${n} ${n === 1 ? one : many}`;
 
 /** "2 anos e 3 meses", "cerca de 4 anos", "3 meses", "menos de 1 mês"; null when unknown. */
 export function formatAge(age: AgeOut | null | undefined): string | null {
@@ -21,7 +22,8 @@ export function formatAge(age: AgeOut | null | undefined): string | null {
   const parts: string[] = [];
   if (age.years) parts.push(pluralize(age.years, "ano", "anos"));
   if (age.months) parts.push(pluralize(age.months, "mês", "meses"));
-  const text = parts.join(" e ") || (age.months === null ? "menos de 1 ano" : "menos de 1 mês");
+  const text =
+    parts.join(" e ") || (age.months === null ? "menos de 1 ano" : "menos de 1 mês");
   return age.approximate ? `cerca de ${text}` : text;
 }
 
@@ -69,8 +71,18 @@ export function formatBirth(birth: BirthOut): string {
 }
 
 export const MONTHS = [
-  "janeiro", "fevereiro", "março", "abril", "maio", "junho",
-  "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+  "janeiro",
+  "fevereiro",
+  "março",
+  "abril",
+  "maio",
+  "junho",
+  "julho",
+  "agosto",
+  "setembro",
+  "outubro",
+  "novembro",
+  "dezembro",
 ];
 
 export type BadgeTone = "ok" | "soon" | "late";
@@ -82,7 +94,8 @@ export function badgeText(badge: BadgeOut): { text: string; tone: BadgeTone } | 
       return { text: "Atrasado", tone: "late" };
     case "due_soon": {
       const days = badge.days ?? 0;
-      const text = days <= 0 ? "Vence hoje" : days === 1 ? "Vence amanhã" : `Vence em ${days} dias`;
+      const text =
+        days <= 0 ? "Vence hoje" : days === 1 ? "Vence amanhã" : `Vence em ${days} dias`;
       return { text, tone: "soon" };
     }
     case "up_to_date":
@@ -93,7 +106,9 @@ export function badgeText(badge: BadgeOut): { text: string; tone: BadgeTone } | 
 }
 
 /** A reminder's state in words, from its days left. */
-export function reminderText(reminder: Pick<ReminderOut, "state" | "days" | "due_on">): string {
+export function reminderText(
+  reminder: Pick<ReminderOut, "state" | "days" | "due_on">,
+): string {
   const days = reminder.days;
   switch (reminder.state) {
     case "no_date":
@@ -153,5 +168,7 @@ export function formatKg(kg: string | number | null | undefined): string {
 /** A typed weight ("4,9" or "4.9") as the API's decimal string; null when not a weight. */
 export function parseKg(text: string): string | null {
   const value = Number(text.trim().replace(",", "."));
-  return Number.isFinite(value) && value > 0 ? String(Math.round(value * 1000) / 1000) : null;
+  return Number.isFinite(value) && value > 0
+    ? String(Math.round(value * 1000) / 1000)
+    : null;
 }

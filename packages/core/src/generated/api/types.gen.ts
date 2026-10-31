@@ -295,7 +295,7 @@ export type AntiparasiticOut = {
   /**
    * Kind
    */
-  kind?: "antiparasitic";
+  kind: "antiparasitic";
   /**
    * Parasite
    */
@@ -768,7 +768,7 @@ export type NoteOut = {
   /**
    * Kind
    */
-  kind?: "note";
+  kind: "note";
   /**
    * Text
    */
@@ -1092,7 +1092,7 @@ export type VaccineOut = {
   /**
    * Kind
    */
-  kind?: "vaccine";
+  kind: "vaccine";
   /**
    * Lot
    */
@@ -1186,7 +1186,7 @@ export type VisitOut = {
   /**
    * Kind
    */
-  kind?: "visit";
+  kind: "visit";
   /**
    * Notes
    */
@@ -1323,7 +1323,7 @@ export type WeightOut = {
   /**
    * Kind
    */
-  kind?: "weight";
+  kind: "weight";
   /**
    * Updated At
    */

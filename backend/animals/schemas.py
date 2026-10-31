@@ -118,7 +118,7 @@ class VaccineIn(Schema):
 
 
 class VaccineOut(RecordBase):
-    kind: Literal["vaccine"] = "vaccine"
+    kind: Literal["vaccine"]
     brand: str
     lot: str
     lot_expiry: str
@@ -142,7 +142,7 @@ class AntiparasiticIn(Schema):
 
 
 class AntiparasiticOut(RecordBase):
-    kind: Literal["antiparasitic"] = "antiparasitic"
+    kind: Literal["antiparasitic"]
     parasite: Literal["internal", "external"]
     product: str
     dose: str
@@ -159,7 +159,7 @@ class WeightIn(Schema):
 
 
 class WeightOut(RecordBase):
-    kind: Literal["weight"] = "weight"
+    kind: Literal["weight"]
     kg: Decimal
 
 
@@ -170,7 +170,7 @@ class NoteIn(Schema):
 
 
 class NoteOut(RecordBase):
-    kind: Literal["note"] = "note"
+    kind: Literal["note"]
     text: str
 
 
@@ -184,7 +184,7 @@ class VisitIn(Schema):
 
 
 class VisitOut(RecordBase):
-    kind: Literal["visit"] = "visit"
+    kind: Literal["visit"]
     clinic: str
     vet_name: str
     reason: str

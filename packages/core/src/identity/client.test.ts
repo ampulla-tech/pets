@@ -17,7 +17,14 @@ function fakeFetch(answers: [number, unknown][]) {
 describe("the identity client", () => {
   it("signs up and keeps the session token", async () => {
     const { calls, fetch } = fakeFetch([
-      [200, { status: 200, data: { user: { email: "ana@example.com" } }, meta: { session_token: "t1" } }],
+      [
+        200,
+        {
+          status: 200,
+          data: { user: { email: "ana@example.com" } },
+          meta: { session_token: "t1" },
+        },
+      ],
     ]);
     const identity = createIdentity({ baseUrl: "http://api", fetch });
     const session = await identity.signUp("ana@example.com", "uma-senha-boa");
@@ -31,7 +38,10 @@ describe("the identity client", () => {
 
   it("reads allauth's errors", async () => {
     const { fetch } = fakeFetch([
-      [400, { status: 400, errors: [{ code: "email_taken", param: "email", message: "x" }] }],
+      [
+        400,
+        { status: 400, errors: [{ code: "email_taken", param: "email", message: "x" }] },
+      ],
     ]);
     const identity = createIdentity({ baseUrl: "http://api", fetch });
     const error = await identity.signUp("ana@example.com", "x").catch((e) => e);
@@ -42,11 +52,22 @@ describe("the identity client", () => {
   it("resets the password with the code under the flow's token", async () => {
     const { calls, fetch } = fakeFetch([
       [401, { status: 401, meta: { session_token: "flow" } }],
-      [200, { status: 200, data: { user: { email: "ana@example.com" } }, meta: { session_token: "t2" } }],
+      [
+        200,
+        {
+          status: 200,
+          data: { user: { email: "ana@example.com" } },
+          meta: { session_token: "t2" },
+        },
+      ],
     ]);
     const identity = createIdentity({ baseUrl: "http://api", fetch });
     const pending = await identity.requestReset("ana@example.com");
-    const session = await identity.resetPassword(pending, " znpd-nttt ", "outra-senha-boa");
+    const session = await identity.resetPassword(
+      pending,
+      " znpd-nttt ",
+      "outra-senha-boa",
+    );
     expect(session.token).toBe("t2");
     const headers = calls[1].init.headers as Record<string, string>;
     expect(headers["X-Session-Token"]).toBe("flow");

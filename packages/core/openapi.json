@@ -576,7 +576,6 @@
           },
           "kind": {
             "const": "antiparasitic",
-            "default": "antiparasitic",
             "title": "Kind",
             "type": "string"
           },
@@ -647,6 +646,7 @@
           "updated_by",
           "updated_at",
           "can_edit",
+          "kind",
           "parasite",
           "product",
           "dose",
@@ -1409,7 +1409,6 @@
           },
           "kind": {
             "const": "note",
-            "default": "note",
             "title": "Kind",
             "type": "string"
           },
@@ -1435,6 +1434,7 @@
           "updated_by",
           "updated_at",
           "can_edit",
+          "kind",
           "text"
         ],
         "title": "NoteOut",
@@ -1977,7 +1977,6 @@
           },
           "kind": {
             "const": "vaccine",
-            "default": "vaccine",
             "title": "Kind",
             "type": "string"
           },
@@ -2036,6 +2035,7 @@
           "updated_by",
           "updated_at",
           "can_edit",
+          "kind",
           "brand",
           "lot",
           "lot_expiry",
@@ -2128,7 +2128,6 @@
           },
           "kind": {
             "const": "visit",
-            "default": "visit",
             "title": "Kind",
             "type": "string"
           },
@@ -2162,6 +2161,7 @@
           "updated_by",
           "updated_at",
           "can_edit",
+          "kind",
           "clinic",
           "vet_name",
           "reason",
@@ -2349,7 +2349,6 @@
           },
           "kind": {
             "const": "weight",
-            "default": "weight",
             "title": "Kind",
             "type": "string"
           },
@@ -2371,6 +2370,7 @@
           "updated_by",
           "updated_at",
           "can_edit",
+          "kind",
           "kg"
         ],
         "title": "WeightOut",
