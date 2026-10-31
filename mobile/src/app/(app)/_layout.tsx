@@ -1,0 +1,29 @@
+import { Redirect, Stack } from "expo-router";
+
+import { screenOptions } from "@/lib/navigation";
+import { useSession } from "@/lib/session";
+import { strings } from "@pets/core/strings";
+
+// A deep link straight to an animal keeps the home beneath it, to go back to.
+export const unstable_settings = { initialRouteName: "index" };
+
+/** Everything behind the session: signed out, the way in is the sign-in screen. */
+export default function SignedInLayout() {
+  const { state } = useSession();
+  if (state.status === "signedOut") return <Redirect href="/entrar" />;
+  return (
+    <Stack screenOptions={screenOptions}>
+      <Stack.Screen name="index" options={{ title: strings.home.title }} />
+      <Stack.Screen name="arquivados" options={{ title: strings.archive.listTitle }} />
+      <Stack.Screen name="animais/novo" options={{ title: strings.animal.newTitle }} />
+      <Stack.Screen name="animais/[id]/index" options={{ title: "" }} />
+      <Stack.Screen name="animais/[id]/editar" options={{ title: strings.animal.editTitle }} />
+      <Stack.Screen name="animais/[id]/registro" options={{ title: "" }} />
+      <Stack.Screen name="animais/[id]/pessoas" options={{ title: strings.people.title }} />
+      <Stack.Screen name="animais/[id]/convidar" options={{ title: strings.people.inviteTitle }} />
+      <Stack.Screen name="animais/[id]/arquivar" options={{ title: strings.archive.title }} />
+      <Stack.Screen name="animais/[id]/carteirinha" options={{ title: strings.card.title }} />
+      <Stack.Screen name="animais/[id]/foto" options={{ title: strings.intake.title }} />
+    </Stack>
+  );
+}
