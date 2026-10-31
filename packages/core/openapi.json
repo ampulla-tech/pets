@@ -1,0 +1,4405 @@
+{
+  "components": {
+    "schemas": {
+      "AcceptedOut": {
+        "properties": {
+          "animal_id": {
+            "format": "uuid",
+            "title": "Animal Id",
+            "type": "string"
+          },
+          "ends_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends On"
+          },
+          "role": {
+            "enum": [
+              "tutor",
+              "guest"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "animal_id",
+          "role",
+          "ends_on"
+        ],
+        "title": "AcceptedOut",
+        "type": "object"
+      },
+      "AccessOut": {
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "ends_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends On"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "is_me": {
+            "title": "Is Me",
+            "type": "boolean"
+          },
+          "role": {
+            "enum": [
+              "tutor",
+              "guest"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "email",
+          "role",
+          "ends_on",
+          "is_me"
+        ],
+        "title": "AccessOut",
+        "type": "object"
+      },
+      "AgeOut": {
+        "properties": {
+          "approximate": {
+            "title": "Approximate",
+            "type": "boolean"
+          },
+          "months": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Months"
+          },
+          "years": {
+            "title": "Years",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "years",
+          "months",
+          "approximate"
+        ],
+        "title": "AgeOut",
+        "type": "object"
+      },
+      "AnimalIn": {
+        "properties": {
+          "adopted_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Adopted On"
+          },
+          "birth": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BirthIn"
+              }
+            ],
+            "default": {
+              "precision": "unknown",
+              "value": null
+            }
+          },
+          "breed": {
+            "default": "",
+            "title": "Breed",
+            "type": "string"
+          },
+          "coat": {
+            "default": "",
+            "title": "Coat",
+            "type": "string"
+          },
+          "microchip": {
+            "default": "",
+            "title": "Microchip",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "neutered": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Neutered"
+          },
+          "sex": {
+            "default": "",
+            "enum": [
+              "male",
+              "female",
+              ""
+            ],
+            "title": "Sex",
+            "type": "string"
+          },
+          "species": {
+            "enum": [
+              "dog",
+              "cat"
+            ],
+            "title": "Species",
+            "type": "string"
+          }
+        },
+        "required": [
+          "species",
+          "name"
+        ],
+        "title": "AnimalIn",
+        "type": "object"
+      },
+      "AnimalOut": {
+        "properties": {
+          "adopted_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Adopted On"
+          },
+          "age": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgeOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "archived_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Archived On"
+          },
+          "archived_reason": {
+            "enum": [
+              "died",
+              "rehomed",
+              "other",
+              ""
+            ],
+            "title": "Archived Reason",
+            "type": "string"
+          },
+          "badge": {
+            "$ref": "#/components/schemas/BadgeOut"
+          },
+          "birth": {
+            "$ref": "#/components/schemas/BirthOut"
+          },
+          "breed": {
+            "title": "Breed",
+            "type": "string"
+          },
+          "coat": {
+            "title": "Coat",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_weight": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LastWeightOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "microchip": {
+            "title": "Microchip",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "neutered": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Neutered"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
+          "role": {
+            "enum": [
+              "tutor",
+              "guest"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "sex": {
+            "enum": [
+              "male",
+              "female",
+              ""
+            ],
+            "title": "Sex",
+            "type": "string"
+          },
+          "species": {
+            "enum": [
+              "dog",
+              "cat"
+            ],
+            "title": "Species",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "archived"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "species",
+          "name",
+          "breed",
+          "sex",
+          "neutered",
+          "coat",
+          "microchip",
+          "birth",
+          "adopted_on",
+          "age",
+          "photo_url",
+          "status",
+          "archived_reason",
+          "archived_on",
+          "role",
+          "badge",
+          "last_weight"
+        ],
+        "title": "AnimalOut",
+        "type": "object"
+      },
+      "AntiparasiticConfirm": {
+        "properties": {
+          "attachment_ids": {
+            "default": [],
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Attachment Ids",
+            "type": "array"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "dose": {
+            "default": "",
+            "title": "Dose",
+            "type": "string"
+          },
+          "kind": {
+            "const": "antiparasitic",
+            "title": "Kind",
+            "type": "string"
+          },
+          "parasite": {
+            "enum": [
+              "internal",
+              "external"
+            ],
+            "title": "Parasite",
+            "type": "string"
+          },
+          "product": {
+            "default": "",
+            "title": "Product",
+            "type": "string"
+          },
+          "repeat_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repeat On"
+          },
+          "repeat_on_origin": {
+            "default": "",
+            "enum": [
+              "written",
+              "inferred",
+              ""
+            ],
+            "title": "Repeat On Origin",
+            "type": "string"
+          },
+          "vet_name": {
+            "default": "",
+            "title": "Vet Name",
+            "type": "string"
+          },
+          "weight_kg": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,3}|(?=[\\d.]{1,7}0*$)\\d{0,3}\\.\\d{0,3}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight Kg"
+          }
+        },
+        "required": [
+          "date",
+          "parasite",
+          "kind"
+        ],
+        "title": "AntiparasiticConfirm",
+        "type": "object"
+      },
+      "AntiparasiticIn": {
+        "properties": {
+          "attachment_ids": {
+            "default": [],
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Attachment Ids",
+            "type": "array"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "dose": {
+            "default": "",
+            "title": "Dose",
+            "type": "string"
+          },
+          "parasite": {
+            "enum": [
+              "internal",
+              "external"
+            ],
+            "title": "Parasite",
+            "type": "string"
+          },
+          "product": {
+            "default": "",
+            "title": "Product",
+            "type": "string"
+          },
+          "repeat_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repeat On"
+          },
+          "repeat_on_origin": {
+            "default": "",
+            "enum": [
+              "written",
+              "inferred",
+              ""
+            ],
+            "title": "Repeat On Origin",
+            "type": "string"
+          },
+          "vet_name": {
+            "default": "",
+            "title": "Vet Name",
+            "type": "string"
+          },
+          "weight_kg": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,3}|(?=[\\d.]{1,7}0*$)\\d{0,3}\\.\\d{0,3}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight Kg"
+          }
+        },
+        "required": [
+          "date",
+          "parasite"
+        ],
+        "title": "AntiparasiticIn",
+        "type": "object"
+      },
+      "AntiparasiticOut": {
+        "properties": {
+          "attachments": {
+            "items": {
+              "$ref": "#/components/schemas/AttachmentOut"
+            },
+            "title": "Attachments",
+            "type": "array"
+          },
+          "can_edit": {
+            "title": "Can Edit",
+            "type": "boolean"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "$ref": "#/components/schemas/AuthorOut"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "dose": {
+            "title": "Dose",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "antiparasitic",
+            "default": "antiparasitic",
+            "title": "Kind",
+            "type": "string"
+          },
+          "parasite": {
+            "enum": [
+              "internal",
+              "external"
+            ],
+            "title": "Parasite",
+            "type": "string"
+          },
+          "product": {
+            "title": "Product",
+            "type": "string"
+          },
+          "repeat_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repeat On"
+          },
+          "repeat_on_origin": {
+            "enum": [
+              "written",
+              "inferred",
+              ""
+            ],
+            "title": "Repeat On Origin",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "updated_by": {
+            "$ref": "#/components/schemas/AuthorOut"
+          },
+          "vet_name": {
+            "title": "Vet Name",
+            "type": "string"
+          },
+          "weight_kg": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight Kg"
+          }
+        },
+        "required": [
+          "id",
+          "date",
+          "attachments",
+          "created_by",
+          "created_at",
+          "updated_by",
+          "updated_at",
+          "can_edit",
+          "parasite",
+          "product",
+          "dose",
+          "repeat_on",
+          "repeat_on_origin",
+          "vet_name",
+          "weight_kg"
+        ],
+        "title": "AntiparasiticOut",
+        "type": "object"
+      },
+      "ArchiveIn": {
+        "properties": {
+          "on": {
+            "format": "date",
+            "title": "On",
+            "type": "string"
+          },
+          "reason": {
+            "enum": [
+              "died",
+              "rehomed",
+              "other"
+            ],
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason",
+          "on"
+        ],
+        "title": "ArchiveIn",
+        "type": "object"
+      },
+      "AttachmentOut": {
+        "properties": {
+          "content_type": {
+            "title": "Content Type",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "content_type",
+          "url"
+        ],
+        "title": "AttachmentOut",
+        "type": "object"
+      },
+      "AuthorOut": {
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          }
+        },
+        "required": [
+          "id",
+          "email"
+        ],
+        "title": "AuthorOut",
+        "type": "object"
+      },
+      "BadgeOut": {
+        "properties": {
+          "days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days"
+          },
+          "state": {
+            "enum": [
+              "none",
+              "up_to_date",
+              "due_soon",
+              "overdue"
+            ],
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state"
+        ],
+        "title": "BadgeOut",
+        "type": "object"
+      },
+      "BirthIn": {
+        "properties": {
+          "precision": {
+            "enum": [
+              "exact",
+              "month",
+              "year",
+              "unknown"
+            ],
+            "title": "Precision",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "precision"
+        ],
+        "title": "BirthIn",
+        "type": "object"
+      },
+      "BirthOut": {
+        "properties": {
+          "precision": {
+            "enum": [
+              "exact",
+              "month",
+              "year",
+              "unknown"
+            ],
+            "title": "Precision",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "precision",
+          "value"
+        ],
+        "title": "BirthOut",
+        "type": "object"
+      },
+      "CardOut": {
+        "properties": {
+          "animal": {
+            "$ref": "#/components/schemas/AnimalOut"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/CardRowOut"
+            },
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "animal",
+          "rows"
+        ],
+        "title": "CardOut",
+        "type": "object"
+      },
+      "CardRowOut": {
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "last_date": {
+            "format": "date",
+            "title": "Last Date",
+            "type": "string"
+          },
+          "last_product": {
+            "title": "Last Product",
+            "type": "string"
+          },
+          "last_vet": {
+            "title": "Last Vet",
+            "type": "string"
+          },
+          "next_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next On"
+          },
+          "photos": {
+            "items": {
+              "$ref": "#/components/schemas/AttachmentOut"
+            },
+            "title": "Photos",
+            "type": "array"
+          },
+          "record_id": {
+            "format": "uuid",
+            "title": "Record Id",
+            "type": "string"
+          },
+          "record_kind": {
+            "enum": [
+              "vaccine",
+              "antiparasitic"
+            ],
+            "title": "Record Kind",
+            "type": "string"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "subject": {
+            "title": "Subject",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject",
+          "label",
+          "last_date",
+          "last_product",
+          "last_vet",
+          "next_on",
+          "state",
+          "record_kind",
+          "record_id",
+          "photos"
+        ],
+        "title": "CardRowOut",
+        "type": "object"
+      },
+      "CatalogEntry": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "label"
+        ],
+        "title": "CatalogEntry",
+        "type": "object"
+      },
+      "CatalogOut": {
+        "properties": {
+          "cat": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogEntry"
+            },
+            "title": "Cat",
+            "type": "array"
+          },
+          "dog": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogEntry"
+            },
+            "title": "Dog",
+            "type": "array"
+          },
+          "parasites": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogEntry"
+            },
+            "title": "Parasites",
+            "type": "array"
+          }
+        },
+        "required": [
+          "dog",
+          "cat",
+          "parasites"
+        ],
+        "title": "CatalogOut",
+        "type": "object"
+      },
+      "CodesValueOut": {
+        "properties": {
+          "read": {
+            "title": "Read",
+            "type": "boolean"
+          },
+          "value": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Value",
+            "type": "array"
+          }
+        },
+        "required": [
+          "value",
+          "read"
+        ],
+        "title": "CodesValueOut",
+        "type": "object"
+      },
+      "ConfirmIn": {
+        "properties": {
+          "record": {
+            "discriminator": {
+              "mapping": {
+                "antiparasitic": "#/components/schemas/AntiparasiticConfirm",
+                "vaccine": "#/components/schemas/VaccineConfirm",
+                "weight": "#/components/schemas/WeightConfirm"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/VaccineConfirm"
+              },
+              {
+                "$ref": "#/components/schemas/AntiparasiticConfirm"
+              },
+              {
+                "$ref": "#/components/schemas/WeightConfirm"
+              }
+            ],
+            "title": "Record"
+          }
+        },
+        "required": [
+          "record"
+        ],
+        "title": "ConfirmIn",
+        "type": "object"
+      },
+      "ErrorOut": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "detail"
+        ],
+        "title": "ErrorOut",
+        "type": "object"
+      },
+      "ExpoTokenIn": {
+        "properties": {
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "ExpoTokenIn",
+        "type": "object"
+      },
+      "ExtractionOut": {
+        "properties": {
+          "animal_id": {
+            "format": "uuid",
+            "title": "Animal Id",
+            "type": "string"
+          },
+          "error": {
+            "enum": [
+              "",
+              "unconfigured",
+              "provider",
+              "nothing_read"
+            ],
+            "title": "Error",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "photos": {
+            "items": {
+              "$ref": "#/components/schemas/AttachmentOut"
+            },
+            "title": "Photos",
+            "type": "array"
+          },
+          "proposals": {
+            "items": {
+              "$ref": "#/components/schemas/ProposalOut"
+            },
+            "title": "Proposals",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "processing",
+              "ready",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "animal_id",
+          "status",
+          "error",
+          "photos",
+          "proposals"
+        ],
+        "title": "ExtractionOut",
+        "type": "object"
+      },
+      "HealthOut": {
+        "properties": {
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "HealthOut",
+        "type": "object"
+      },
+      "InviteAnimalOut": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
+          "species": {
+            "enum": [
+              "dog",
+              "cat"
+            ],
+            "title": "Species",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "species",
+          "photo_url"
+        ],
+        "title": "InviteAnimalOut",
+        "type": "object"
+      },
+      "InviteIn": {
+        "properties": {
+          "access_ends_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Access Ends On"
+          },
+          "role": {
+            "enum": [
+              "tutor",
+              "guest"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role"
+        ],
+        "title": "InviteIn",
+        "type": "object"
+      },
+      "InviteOut": {
+        "properties": {
+          "access_ends_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Access Ends On"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "tutor",
+              "guest"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "url",
+          "role",
+          "access_ends_on",
+          "expires_at"
+        ],
+        "title": "InviteOut",
+        "type": "object"
+      },
+      "InvitePreviewOut": {
+        "properties": {
+          "access_ends_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Access Ends On"
+          },
+          "already_member": {
+            "title": "Already Member",
+            "type": "boolean"
+          },
+          "animal": {
+            "$ref": "#/components/schemas/InviteAnimalOut"
+          },
+          "animal_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Animal Id"
+          },
+          "invited_by": {
+            "title": "Invited By",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "tutor",
+              "guest"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "valid",
+              "expired",
+              "used"
+            ],
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "role",
+          "access_ends_on",
+          "invited_by",
+          "animal",
+          "already_member",
+          "animal_id"
+        ],
+        "title": "InvitePreviewOut",
+        "type": "object"
+      },
+      "LastWeightOut": {
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "kg": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Kg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kg",
+          "date"
+        ],
+        "title": "LastWeightOut",
+        "type": "object"
+      },
+      "MeOut": {
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email"
+        ],
+        "title": "MeOut",
+        "type": "object"
+      },
+      "NoteIn": {
+        "properties": {
+          "attachment_ids": {
+            "default": [],
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Attachment Ids",
+            "type": "array"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "text": {
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "text"
+        ],
+        "title": "NoteIn",
+        "type": "object"
+      },
+      "NoteOut": {
+        "properties": {
+          "attachments": {
+            "items": {
+              "$ref": "#/components/schemas/AttachmentOut"
+            },
+            "title": "Attachments",
+            "type": "array"
+          },
+          "can_edit": {
+            "title": "Can Edit",
+            "type": "boolean"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "$ref": "#/components/schemas/AuthorOut"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "note",
+            "default": "note",
+            "title": "Kind",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "updated_by": {
+            "$ref": "#/components/schemas/AuthorOut"
+          }
+        },
+        "required": [
+          "id",
+          "date",
+          "attachments",
+          "created_by",
+          "created_at",
+          "updated_by",
+          "updated_at",
+          "can_edit",
+          "text"
+        ],
+        "title": "NoteOut",
+        "type": "object"
+      },
+      "NumberValueOut": {
+        "properties": {
+          "read": {
+            "title": "Read",
+            "type": "boolean"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "value",
+          "read"
+        ],
+        "title": "NumberValueOut",
+        "type": "object"
+      },
+      "ProposalOut": {
+        "properties": {
+          "brand": {
+            "$ref": "#/components/schemas/TextValueOut"
+          },
+          "date": {
+            "$ref": "#/components/schemas/TextValueOut"
+          },
+          "diseases": {
+            "$ref": "#/components/schemas/CodesValueOut"
+          },
+          "dose": {
+            "$ref": "#/components/schemas/TextValueOut"
+          },
+          "index": {
+            "title": "Index",
+            "type": "integer"
+          },
+          "kind": {
+            "enum": [
+              "vaccine",
+              "antiparasitic",
+              "weight"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "lot": {
+            "$ref": "#/components/schemas/TextValueOut"
+          },
+          "lot_expiry": {
+            "$ref": "#/components/schemas/TextValueOut"
+          },
+          "record_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Record Id"
+          },
+          "repeat_on": {
+            "$ref": "#/components/schemas/RepeatOnValueOut"
+          },
+          "review": {
+            "enum": [
+              "pending",
+              "confirmed",
+              "discarded"
+            ],
+            "title": "Review",
+            "type": "string"
+          },
+          "vet_crmv": {
+            "$ref": "#/components/schemas/TextValueOut"
+          },
+          "vet_name": {
+            "$ref": "#/components/schemas/TextValueOut"
+          },
+          "weight_kg": {
+            "$ref": "#/components/schemas/NumberValueOut"
+          }
+        },
+        "required": [
+          "index",
+          "kind",
+          "date",
+          "brand",
+          "lot",
+          "lot_expiry",
+          "diseases",
+          "repeat_on",
+          "vet_name",
+          "vet_crmv",
+          "dose",
+          "weight_kg",
+          "review",
+          "record_id"
+        ],
+        "title": "ProposalOut",
+        "type": "object"
+      },
+      "ReminderOut": {
+        "properties": {
+          "animal_id": {
+            "format": "uuid",
+            "title": "Animal Id",
+            "type": "string"
+          },
+          "animal_name": {
+            "title": "Animal Name",
+            "type": "string"
+          },
+          "days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days"
+          },
+          "dose_date": {
+            "format": "date",
+            "title": "Dose Date",
+            "type": "string"
+          },
+          "due_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due On"
+          },
+          "record_id": {
+            "format": "uuid",
+            "title": "Record Id",
+            "type": "string"
+          },
+          "record_kind": {
+            "enum": [
+              "vaccine",
+              "antiparasitic"
+            ],
+            "title": "Record Kind",
+            "type": "string"
+          },
+          "species": {
+            "enum": [
+              "dog",
+              "cat"
+            ],
+            "title": "Species",
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "no_date",
+              "scheduled",
+              "upcoming",
+              "due",
+              "overdue",
+              "closed",
+              "suspended"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "subject": {
+            "title": "Subject",
+            "type": "string"
+          },
+          "subject_label": {
+            "title": "Subject Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "animal_id",
+          "animal_name",
+          "species",
+          "subject",
+          "subject_label",
+          "state",
+          "due_on",
+          "days",
+          "record_kind",
+          "record_id",
+          "dose_date"
+        ],
+        "title": "ReminderOut",
+        "type": "object"
+      },
+      "RepeatOnValueOut": {
+        "properties": {
+          "origin": {
+            "anyOf": [
+              {
+                "enum": [
+                  "written",
+                  "inferred"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin"
+          },
+          "read": {
+            "title": "Read",
+            "type": "boolean"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "value",
+          "read",
+          "origin"
+        ],
+        "title": "RepeatOnValueOut",
+        "type": "object"
+      },
+      "TextValueOut": {
+        "properties": {
+          "read": {
+            "title": "Read",
+            "type": "boolean"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "value",
+          "read"
+        ],
+        "title": "TextValueOut",
+        "type": "object"
+      },
+      "VaccineConfirm": {
+        "properties": {
+          "attachment_ids": {
+            "default": [],
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Attachment Ids",
+            "type": "array"
+          },
+          "brand": {
+            "default": "",
+            "title": "Brand",
+            "type": "string"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "diseases": {
+            "items": {
+              "enum": [
+                "distemper",
+                "infectious_hepatitis",
+                "parvovirus",
+                "parainfluenza",
+                "leptospirosis",
+                "coronavirus",
+                "rabies",
+                "kennel_cough",
+                "canine_influenza",
+                "giardia",
+                "leishmaniasis",
+                "rhinotracheitis",
+                "calicivirus",
+                "panleukopenia",
+                "chlamydiosis",
+                "felv"
+              ],
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Diseases",
+            "type": "array"
+          },
+          "kind": {
+            "const": "vaccine",
+            "title": "Kind",
+            "type": "string"
+          },
+          "lot": {
+            "default": "",
+            "title": "Lot",
+            "type": "string"
+          },
+          "lot_expiry": {
+            "default": "",
+            "title": "Lot Expiry",
+            "type": "string"
+          },
+          "repeat_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repeat On"
+          },
+          "repeat_on_origin": {
+            "default": "",
+            "enum": [
+              "written",
+              "inferred",
+              ""
+            ],
+            "title": "Repeat On Origin",
+            "type": "string"
+          },
+          "vet_crmv": {
+            "default": "",
+            "title": "Vet Crmv",
+            "type": "string"
+          },
+          "vet_name": {
+            "default": "",
+            "title": "Vet Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "diseases",
+          "kind"
+        ],
+        "title": "VaccineConfirm",
+        "type": "object"
+      },
+      "VaccineIn": {
+        "properties": {
+          "attachment_ids": {
+            "default": [],
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Attachment Ids",
+            "type": "array"
+          },
+          "brand": {
+            "default": "",
+            "title": "Brand",
+            "type": "string"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "diseases": {
+            "items": {
+              "enum": [
+                "distemper",
+                "infectious_hepatitis",
+                "parvovirus",
+                "parainfluenza",
+                "leptospirosis",
+                "coronavirus",
+                "rabies",
+                "kennel_cough",
+                "canine_influenza",
+                "giardia",
+                "leishmaniasis",
+                "rhinotracheitis",
+                "calicivirus",
+                "panleukopenia",
+                "chlamydiosis",
+                "felv"
+              ],
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Diseases",
+            "type": "array"
+          },
+          "lot": {
+            "default": "",
+            "title": "Lot",
+            "type": "string"
+          },
+          "lot_expiry": {
+            "default": "",
+            "title": "Lot Expiry",
+            "type": "string"
+          },
+          "repeat_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repeat On"
+          },
+          "repeat_on_origin": {
+            "default": "",
+            "enum": [
+              "written",
+              "inferred",
+              ""
+            ],
+            "title": "Repeat On Origin",
+            "type": "string"
+          },
+          "vet_crmv": {
+            "default": "",
+            "title": "Vet Crmv",
+            "type": "string"
+          },
+          "vet_name": {
+            "default": "",
+            "title": "Vet Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "diseases"
+        ],
+        "title": "VaccineIn",
+        "type": "object"
+      },
+      "VaccineOut": {
+        "properties": {
+          "attachments": {
+            "items": {
+              "$ref": "#/components/schemas/AttachmentOut"
+            },
+            "title": "Attachments",
+            "type": "array"
+          },
+          "brand": {
+            "title": "Brand",
+            "type": "string"
+          },
+          "can_edit": {
+            "title": "Can Edit",
+            "type": "boolean"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "$ref": "#/components/schemas/AuthorOut"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "diseases": {
+            "items": {
+              "enum": [
+                "distemper",
+                "infectious_hepatitis",
+                "parvovirus",
+                "parainfluenza",
+                "leptospirosis",
+                "coronavirus",
+                "rabies",
+                "kennel_cough",
+                "canine_influenza",
+                "giardia",
+                "leishmaniasis",
+                "rhinotracheitis",
+                "calicivirus",
+                "panleukopenia",
+                "chlamydiosis",
+                "felv"
+              ],
+              "type": "string"
+            },
+            "title": "Diseases",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "vaccine",
+            "default": "vaccine",
+            "title": "Kind",
+            "type": "string"
+          },
+          "lot": {
+            "title": "Lot",
+            "type": "string"
+          },
+          "lot_expiry": {
+            "title": "Lot Expiry",
+            "type": "string"
+          },
+          "repeat_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repeat On"
+          },
+          "repeat_on_origin": {
+            "enum": [
+              "written",
+              "inferred",
+              ""
+            ],
+            "title": "Repeat On Origin",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "updated_by": {
+            "$ref": "#/components/schemas/AuthorOut"
+          },
+          "vet_crmv": {
+            "title": "Vet Crmv",
+            "type": "string"
+          },
+          "vet_name": {
+            "title": "Vet Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "date",
+          "attachments",
+          "created_by",
+          "created_at",
+          "updated_by",
+          "updated_at",
+          "can_edit",
+          "brand",
+          "lot",
+          "lot_expiry",
+          "diseases",
+          "repeat_on",
+          "repeat_on_origin",
+          "vet_name",
+          "vet_crmv"
+        ],
+        "title": "VaccineOut",
+        "type": "object"
+      },
+      "VisitIn": {
+        "properties": {
+          "attachment_ids": {
+            "default": [],
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Attachment Ids",
+            "type": "array"
+          },
+          "clinic": {
+            "default": "",
+            "title": "Clinic",
+            "type": "string"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "notes": {
+            "default": "",
+            "title": "Notes",
+            "type": "string"
+          },
+          "reason": {
+            "default": "",
+            "title": "Reason",
+            "type": "string"
+          },
+          "vet_name": {
+            "default": "",
+            "title": "Vet Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date"
+        ],
+        "title": "VisitIn",
+        "type": "object"
+      },
+      "VisitOut": {
+        "properties": {
+          "attachments": {
+            "items": {
+              "$ref": "#/components/schemas/AttachmentOut"
+            },
+            "title": "Attachments",
+            "type": "array"
+          },
+          "can_edit": {
+            "title": "Can Edit",
+            "type": "boolean"
+          },
+          "clinic": {
+            "title": "Clinic",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "$ref": "#/components/schemas/AuthorOut"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "visit",
+            "default": "visit",
+            "title": "Kind",
+            "type": "string"
+          },
+          "notes": {
+            "title": "Notes",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "updated_by": {
+            "$ref": "#/components/schemas/AuthorOut"
+          },
+          "vet_name": {
+            "title": "Vet Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "date",
+          "attachments",
+          "created_by",
+          "created_at",
+          "updated_by",
+          "updated_at",
+          "can_edit",
+          "clinic",
+          "vet_name",
+          "reason",
+          "notes"
+        ],
+        "title": "VisitOut",
+        "type": "object"
+      },
+      "WebPushEndpointIn": {
+        "properties": {
+          "endpoint": {
+            "title": "Endpoint",
+            "type": "string"
+          }
+        },
+        "required": [
+          "endpoint"
+        ],
+        "title": "WebPushEndpointIn",
+        "type": "object"
+      },
+      "WebPushIn": {
+        "properties": {
+          "endpoint": {
+            "title": "Endpoint",
+            "type": "string"
+          },
+          "keys": {
+            "$ref": "#/components/schemas/WebPushKeys"
+          }
+        },
+        "required": [
+          "endpoint",
+          "keys"
+        ],
+        "title": "WebPushIn",
+        "type": "object"
+      },
+      "WebPushKeyOut": {
+        "properties": {
+          "public_key": {
+            "title": "Public Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "public_key"
+        ],
+        "title": "WebPushKeyOut",
+        "type": "object"
+      },
+      "WebPushKeys": {
+        "properties": {
+          "auth": {
+            "title": "Auth",
+            "type": "string"
+          },
+          "p256dh": {
+            "title": "P256Dh",
+            "type": "string"
+          }
+        },
+        "required": [
+          "p256dh",
+          "auth"
+        ],
+        "title": "WebPushKeys",
+        "type": "object"
+      },
+      "WeightConfirm": {
+        "properties": {
+          "attachment_ids": {
+            "default": [],
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Attachment Ids",
+            "type": "array"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "kg": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,3}|(?=[\\d.]{1,7}0*$)\\d{0,3}\\.\\d{0,3}0*$)",
+                "type": "string"
+              }
+            ],
+            "title": "Kg"
+          },
+          "kind": {
+            "const": "weight",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "kg",
+          "kind"
+        ],
+        "title": "WeightConfirm",
+        "type": "object"
+      },
+      "WeightIn": {
+        "properties": {
+          "attachment_ids": {
+            "default": [],
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Attachment Ids",
+            "type": "array"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "kg": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,3}|(?=[\\d.]{1,7}0*$)\\d{0,3}\\.\\d{0,3}0*$)",
+                "type": "string"
+              }
+            ],
+            "title": "Kg"
+          }
+        },
+        "required": [
+          "date",
+          "kg"
+        ],
+        "title": "WeightIn",
+        "type": "object"
+      },
+      "WeightOut": {
+        "properties": {
+          "attachments": {
+            "items": {
+              "$ref": "#/components/schemas/AttachmentOut"
+            },
+            "title": "Attachments",
+            "type": "array"
+          },
+          "can_edit": {
+            "title": "Can Edit",
+            "type": "boolean"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "$ref": "#/components/schemas/AuthorOut"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kg": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Kg",
+            "type": "string"
+          },
+          "kind": {
+            "const": "weight",
+            "default": "weight",
+            "title": "Kind",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "updated_by": {
+            "$ref": "#/components/schemas/AuthorOut"
+          }
+        },
+        "required": [
+          "id",
+          "date",
+          "attachments",
+          "created_by",
+          "created_at",
+          "updated_by",
+          "updated_at",
+          "can_edit",
+          "kg"
+        ],
+        "title": "WeightOut",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "XSessionTokenAuth": {
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "description": "",
+    "title": "Pets API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/animals": {
+      "get": {
+        "description": "The caller's animals, active by default, or the archived ones.",
+        "operationId": "list_animals",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "active",
+              "title": "Status",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AnimalOut"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "List Animals",
+        "tags": [
+          "animals"
+        ]
+      },
+      "post": {
+        "description": "Register an animal; whoever registers it becomes its first tutor.",
+        "operationId": "create_animal",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnimalIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnimalOut"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Create Animal",
+        "tags": [
+          "animals"
+        ]
+      }
+    },
+    "/animals/{animal_id}": {
+      "delete": {
+        "description": "Delete for good: the animal, its records and its files.",
+        "operationId": "delete_animal",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Delete Animal",
+        "tags": [
+          "animals"
+        ]
+      },
+      "get": {
+        "operationId": "get_animal",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnimalOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Get Animal",
+        "tags": [
+          "animals"
+        ]
+      },
+      "put": {
+        "operationId": "update_animal",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnimalIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnimalOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Update Animal",
+        "tags": [
+          "animals"
+        ]
+      }
+    },
+    "/animals/{animal_id}/accesses": {
+      "get": {
+        "description": "Who has access to the animal, and with which role.",
+        "operationId": "list_accesses",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AccessOut"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "List Accesses",
+        "tags": [
+          "people"
+        ]
+      }
+    },
+    "/animals/{animal_id}/accesses/{access_id}": {
+      "delete": {
+        "description": "Remove someone (a tutor), or leave (anyone, their own access).\n\nThe last tutor of an animal can neither leave nor be removed: the animal\nwould be left with nobody responsible for it.",
+        "operationId": "remove_access",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "access_id",
+            "required": true,
+            "schema": {
+              "title": "Access Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Remove Access",
+        "tags": [
+          "people"
+        ]
+      }
+    },
+    "/animals/{animal_id}/antiparasitics": {
+      "post": {
+        "operationId": "create_antiparasitic",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AntiparasiticIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AntiparasiticOut"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Create",
+        "tags": [
+          "records"
+        ]
+      }
+    },
+    "/animals/{animal_id}/antiparasitics/{record_id}": {
+      "delete": {
+        "operationId": "delete_antiparasitic",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Record Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Delete",
+        "tags": [
+          "records"
+        ]
+      },
+      "put": {
+        "operationId": "update_antiparasitic",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Record Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AntiparasiticIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AntiparasiticOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Update",
+        "tags": [
+          "records"
+        ]
+      }
+    },
+    "/animals/{animal_id}/archive": {
+      "post": {
+        "description": "Archive with a reason and a date: off the home screen, reminders suspended.",
+        "operationId": "archive_animal",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArchiveIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnimalOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Archive Animal",
+        "tags": [
+          "animals"
+        ]
+      }
+    },
+    "/animals/{animal_id}/attachments": {
+      "post": {
+        "description": "Store photos or PDFs, to be referred to by records through their ids.",
+        "operationId": "upload_attachments",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "files": {
+                    "items": {
+                      "format": "binary",
+                      "type": "string"
+                    },
+                    "title": "Files",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "files"
+                ],
+                "title": "FileParams",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AttachmentOut"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Upload Attachments",
+        "tags": [
+          "attachments"
+        ]
+      }
+    },
+    "/animals/{animal_id}/card": {
+      "get": {
+        "description": "The card to show at the clinic's counter: one row per disease, last and next dose.",
+        "operationId": "get_card",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Get Card",
+        "tags": [
+          "card"
+        ]
+      }
+    },
+    "/animals/{animal_id}/extractions": {
+      "post": {
+        "description": "Send one or more photos of a card page; the reading runs in the background.",
+        "operationId": "create_extraction",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "files": {
+                    "items": {
+                      "format": "binary",
+                      "type": "string"
+                    },
+                    "title": "Files",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "files"
+                ],
+                "title": "FileParams",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtractionOut"
+                }
+              }
+            },
+            "description": "Accepted"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Create Extraction",
+        "tags": [
+          "intake"
+        ]
+      }
+    },
+    "/animals/{animal_id}/invites": {
+      "post": {
+        "description": "A single-use link, valid for 3 days, that grants a role on this animal.",
+        "operationId": "create_invite",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteOut"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Create Invite",
+        "tags": [
+          "people"
+        ]
+      }
+    },
+    "/animals/{animal_id}/notes": {
+      "post": {
+        "operationId": "create_note",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NoteIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoteOut"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Create",
+        "tags": [
+          "records"
+        ]
+      }
+    },
+    "/animals/{animal_id}/notes/{record_id}": {
+      "delete": {
+        "operationId": "delete_note",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Record Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Delete",
+        "tags": [
+          "records"
+        ]
+      },
+      "put": {
+        "operationId": "update_note",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Record Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NoteIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoteOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Update",
+        "tags": [
+          "records"
+        ]
+      }
+    },
+    "/animals/{animal_id}/photo": {
+      "post": {
+        "operationId": "set_animal_photo",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "title": "File",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "title": "FileParams",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnimalOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Set Animal Photo",
+        "tags": [
+          "animals"
+        ]
+      }
+    },
+    "/animals/{animal_id}/records": {
+      "get": {
+        "description": "The animal's history, every kind together, newest first.",
+        "operationId": "list_records",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "discriminator": {
+                      "mapping": {
+                        "antiparasitic": "#/components/schemas/AntiparasiticOut",
+                        "note": "#/components/schemas/NoteOut",
+                        "vaccine": "#/components/schemas/VaccineOut",
+                        "visit": "#/components/schemas/VisitOut",
+                        "weight": "#/components/schemas/WeightOut"
+                      },
+                      "propertyName": "kind"
+                    },
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/VaccineOut"
+                      },
+                      {
+                        "$ref": "#/components/schemas/AntiparasiticOut"
+                      },
+                      {
+                        "$ref": "#/components/schemas/WeightOut"
+                      },
+                      {
+                        "$ref": "#/components/schemas/NoteOut"
+                      },
+                      {
+                        "$ref": "#/components/schemas/VisitOut"
+                      }
+                    ]
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "List Records",
+        "tags": [
+          "records"
+        ]
+      }
+    },
+    "/animals/{animal_id}/reminders": {
+      "get": {
+        "description": "Every reminder of one animal, open, closed and with no date.",
+        "operationId": "list_animal_reminders",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ReminderOut"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "List Animal Reminders",
+        "tags": [
+          "reminders"
+        ]
+      }
+    },
+    "/animals/{animal_id}/vaccines": {
+      "post": {
+        "operationId": "create_vaccine",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VaccineIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VaccineOut"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Create",
+        "tags": [
+          "records"
+        ]
+      }
+    },
+    "/animals/{animal_id}/vaccines/{record_id}": {
+      "delete": {
+        "operationId": "delete_vaccine",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Record Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Delete",
+        "tags": [
+          "records"
+        ]
+      },
+      "put": {
+        "operationId": "update_vaccine",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Record Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VaccineIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VaccineOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Update",
+        "tags": [
+          "records"
+        ]
+      }
+    },
+    "/animals/{animal_id}/visits": {
+      "post": {
+        "operationId": "create_visit",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisitIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisitOut"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Create",
+        "tags": [
+          "records"
+        ]
+      }
+    },
+    "/animals/{animal_id}/visits/{record_id}": {
+      "delete": {
+        "operationId": "delete_visit",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Record Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Delete",
+        "tags": [
+          "records"
+        ]
+      },
+      "put": {
+        "operationId": "update_visit",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Record Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisitIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisitOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Update",
+        "tags": [
+          "records"
+        ]
+      }
+    },
+    "/animals/{animal_id}/weights": {
+      "post": {
+        "operationId": "create_weight",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeightIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeightOut"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Create",
+        "tags": [
+          "records"
+        ]
+      }
+    },
+    "/animals/{animal_id}/weights/{record_id}": {
+      "delete": {
+        "operationId": "delete_weight",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Record Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Delete",
+        "tags": [
+          "records"
+        ]
+      },
+      "put": {
+        "operationId": "update_weight",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "animal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Animal Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Record Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeightIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeightOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Update",
+        "tags": [
+          "records"
+        ]
+      }
+    },
+    "/catalog": {
+      "get": {
+        "description": "The closed lists: diseases per species and the antiparasitic kinds.",
+        "operationId": "get_catalog",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Get Catalog",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/extractions/{extraction_id}": {
+      "get": {
+        "operationId": "get_extraction",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "extraction_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Extraction Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtractionOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Get Extraction",
+        "tags": [
+          "intake"
+        ]
+      }
+    },
+    "/extractions/{extraction_id}/proposals/{index}/confirm": {
+      "post": {
+        "description": "Write one line as a record, as the tutor corrected it, with the whole photos attached.",
+        "operationId": "confirm_proposal",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "extraction_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Extraction Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "index",
+            "required": true,
+            "schema": {
+              "title": "Index",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "discriminator": {
+                    "mapping": {
+                      "antiparasitic": "#/components/schemas/AntiparasiticOut",
+                      "note": "#/components/schemas/NoteOut",
+                      "vaccine": "#/components/schemas/VaccineOut",
+                      "visit": "#/components/schemas/VisitOut",
+                      "weight": "#/components/schemas/WeightOut"
+                    },
+                    "propertyName": "kind"
+                  },
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/VaccineOut"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AntiparasiticOut"
+                    },
+                    {
+                      "$ref": "#/components/schemas/WeightOut"
+                    },
+                    {
+                      "$ref": "#/components/schemas/NoteOut"
+                    },
+                    {
+                      "$ref": "#/components/schemas/VisitOut"
+                    }
+                  ],
+                  "title": "Response"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Confirm Proposal",
+        "tags": [
+          "intake"
+        ]
+      }
+    },
+    "/extractions/{extraction_id}/proposals/{index}/discard": {
+      "post": {
+        "description": "Drop one line: nothing is written.",
+        "operationId": "discard_proposal",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "extraction_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Extraction Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "index",
+            "required": true,
+            "schema": {
+              "title": "Index",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtractionOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Discard Proposal",
+        "tags": [
+          "intake"
+        ]
+      }
+    },
+    "/extractions/{extraction_id}/retry": {
+      "post": {
+        "description": "Read the same photos again, after a failure.",
+        "operationId": "retry_extraction",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "extraction_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Extraction Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtractionOut"
+                }
+              }
+            },
+            "description": "Accepted"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Retry Extraction",
+        "tags": [
+          "intake"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "health",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/invites/{token}": {
+      "get": {
+        "description": "What the invite grants, shown before accepting (open to a caller with no account).",
+        "operationId": "preview_invite",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitePreviewOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Preview Invite",
+        "tags": [
+          "people"
+        ]
+      }
+    },
+    "/invites/{token}/accept": {
+      "post": {
+        "description": "Accept: the access is created with the invite's role and end, and the invite is spent.",
+        "operationId": "accept_invite",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptedOut"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Gone"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Accept Invite",
+        "tags": [
+          "people"
+        ]
+      }
+    },
+    "/me": {
+      "get": {
+        "operationId": "get_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Get Me",
+        "tags": [
+          "account"
+        ]
+      }
+    },
+    "/push/expo": {
+      "post": {
+        "description": "Register this phone's Expo push token for the caller (moves it if another had it).",
+        "operationId": "register_expo_token",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpoTokenIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Register Expo Token",
+        "tags": [
+          "push"
+        ]
+      }
+    },
+    "/push/expo/remove": {
+      "post": {
+        "description": "Forget this phone's token (sign-out).",
+        "operationId": "remove_expo_token",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpoTokenIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Remove Expo Token",
+        "tags": [
+          "push"
+        ]
+      }
+    },
+    "/push/webpush": {
+      "post": {
+        "operationId": "register_webpush",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebPushIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Register Webpush",
+        "tags": [
+          "push"
+        ]
+      }
+    },
+    "/push/webpush/key": {
+      "get": {
+        "description": "The VAPID public key the browser subscribes with; empty when push is off.",
+        "operationId": "get_webpush_key",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebPushKeyOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Get Webpush Key",
+        "tags": [
+          "push"
+        ]
+      }
+    },
+    "/push/webpush/remove": {
+      "post": {
+        "operationId": "remove_webpush",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebPushEndpointIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "Remove Webpush",
+        "tags": [
+          "push"
+        ]
+      }
+    },
+    "/reminders/upcoming": {
+      "get": {
+        "description": "Next up: what is overdue and what falls due in 30 days, every animal, by date.",
+        "operationId": "list_upcoming",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ReminderOut"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          }
+        ],
+        "summary": "List Upcoming",
+        "tags": [
+          "reminders"
+        ]
+      }
+    }
+  },
+  "servers": []
+}
