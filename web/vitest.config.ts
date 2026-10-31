@@ -15,6 +15,8 @@ export default defineConfig({
   },
   test: {
     environment: "happy-dom",
+    // A whole screen flow over the fake API takes longer on a CI runner.
+    testTimeout: 30000,
     env: { TZ: "America/Sao_Paulo" },
     setupFiles: ["./src/__tests__/setup.ts"],
     // Run react-query through Vite, so `dedupe` gives it the app's React
