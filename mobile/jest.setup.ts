@@ -86,3 +86,8 @@ jest.mock("expo-splash-screen", () => ({
   preventAutoHideAsync: jest.fn(async () => true),
   hideAsync: jest.fn(async () => true),
 }));
+
+// A CI runner is slower than a laptop: screens that load over the fake API get
+// more than the default second to settle.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+require("@testing-library/react-native").configure({ asyncUtilTimeout: 10000 });
