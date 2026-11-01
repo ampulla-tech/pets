@@ -1,9 +1,21 @@
 import json
+import re
 
 import pytest
+from django.core import mail
 from django.test import Client
 
 PASSWORD = "uma-senha-boa-42"
+CODE = re.compile(r"\b([A-Z0-9]{4}-[A-Z0-9]{4})\b")
+
+
+def last_code(email: str, *, take: bool = False) -> str:
+    """The code in the last message sent to `email` (verification or reset);
+    with `take`, the message leaves the outbox once read."""
+    message = next(m for m in reversed(mail.outbox) if email in m.to)
+    if take:
+        mail.outbox.remove(message)
+    return CODE.search(message.body).group(1)
 
 
 @pytest.fixture(autouse=True)
@@ -51,11 +63,22 @@ class Api:
 
 
 def signup(email: str, password: str = PASSWORD) -> Api:
+    """Sign up the way the native app does, confirming the e-mail with its code."""
     api = Api()
     response = api.client.post(
         "/_allauth/app/v1/auth/signup",
         data=json.dumps({"email": email, "password": password}),
         content_type="application/json",
+    )
+    assert response.status_code == 401, response.content
+    flow_token = response.json()["meta"]["session_token"]
+    response = api.client.post(
+        "/_allauth/app/v1/auth/email/verify",
+        # The verification mail is read and put away, so a test counting the
+        # mail the app sends sees only its own.
+        data=json.dumps({"key": last_code(email, take=True)}),
+        content_type="application/json",
+        HTTP_X_SESSION_TOKEN=flow_token,
     )
     assert response.status_code == 200, response.content
     api.token = response.json()["meta"]["session_token"]

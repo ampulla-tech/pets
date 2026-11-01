@@ -2,13 +2,15 @@
 
     uv run python manage.py seed_demo --email demo@example.com --password ...
 
-The animals and the dates mirror real cards; vets, lots' owners and the
-microchip are made up. Refused unless DEBUG is on.
+The account's e-mail is created confirmed. The animals and the dates mirror
+real cards; vets, lots' owners and the microchip are made up. Refused unless
+DEBUG is on.
 """
 
 from datetime import date
 from decimal import Decimal
 
+from allauth.account.models import EmailAddress
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
@@ -35,6 +37,11 @@ class Command(BaseCommand):
         if created:
             user.set_password(options["password"])
             user.save()
+        # Already confirmed: sign-up asks for the e-mailed code (ADR-0002), and
+        # the demo account signs in without one.
+        EmailAddress.objects.update_or_create(
+            user=user, email=user.email, defaults={"verified": True, "primary": True}
+        )
         for access in Access.objects.filter(user=user):
             access.animal.delete()
 

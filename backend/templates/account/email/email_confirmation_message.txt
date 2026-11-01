@@ -1,0 +1,10 @@
+{% autoescape off %}Olá,
+
+Este é o código para confirmar o seu e-mail no Pets:
+
+{{ code }}
+
+Digite o código no app. Ele vale por 15 minutos.
+
+Se você não criou uma conta no Pets, ignore este e-mail.
+{% endautoescape %}

@@ -181,10 +181,15 @@ ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*"]
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_USER_MODEL_EMAIL_FIELD = "email"
 ACCOUNT_UNIQUE_EMAIL = True
-ACCOUNT_EMAIL_VERIFICATION = os.environ.get("ACCOUNT_EMAIL_VERIFICATION", "none")
 ACCOUNT_PRESERVE_USERNAME_CASING = False
-# The reset is a short code typed into the app, so it works the same on the
-# web and on a phone with no link to open.
+# The e-mail is confirmed before the account is usable, by a short code typed
+# into the app, which a phone with no link to open can finish too. Signing in
+# to an account not yet confirmed sends a fresh code.
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_EMAIL_VERIFICATION_BY_CODE_ENABLED = True
+ACCOUNT_EMAIL_VERIFICATION_BY_CODE_TIMEOUT = 900
+ACCOUNT_EMAIL_VERIFICATION_SUPPORTS_RESEND = True
+# The reset is a short code typed into the app as well, for the same reason.
 ACCOUNT_PASSWORD_RESET_BY_CODE_ENABLED = True
 ACCOUNT_PASSWORD_RESET_BY_CODE_TIMEOUT = 900
 ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
