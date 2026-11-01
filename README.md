@@ -20,11 +20,21 @@ Each directory has its own path-filtered workflow in `.github/workflows/`.
 ## Getting started
 
 ```bash
-docker compose up                       # Postgres, the API on :8300, the reading worker
+docker compose up                       # Postgres, the API on :8300, the reading worker, Mailpit
 docker compose exec pets python manage.py seed_demo   # demo@example.com / pets-demo-2026
 pnpm install && pnpm dev                # the web app on http://localhost:5180
 pnpm --filter pets-mobile start         # the native app (see mobile/README.md)
 ```
+
+Every e-mail the local API sends (the code that confirms a new account's
+e-mail, the password reset code, the reminders) lands in Mailpit, never in a
+real inbox: open **http://localhost:8325** to read it. A new account is usable
+only after its code is typed (ADR-0002); the demo account is already
+confirmed.
+
+From a phone on the same Wi-Fi, start the stack with the machine's address,
+`HOST_IP=<your-lan-ip> docker compose up`, and open `http://<your-lan-ip>:5180`
+(serve the web app on the network with `pnpm --filter @pets/web dev --host`); Mailpit is at `http://<your-lan-ip>:8325`.
 
 ## The shared package's generated code
 

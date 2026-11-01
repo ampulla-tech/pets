@@ -28,9 +28,10 @@ an animal is checked on every route (`animals/access.py`, ADR-0006).
 
 Environment variables (see `config/settings.py`); locally `backend/.env`,
 never committed. With no `AWS_STORAGE_BUCKET_NAME` media stays on disk; with
-no `RESEND_API_KEY` mail is printed; with no `OPENROUTER_API_KEY` or
-`INTAKE_MODEL` the photo reading answers `unconfigured`; with no VAPID keys
-web push is off.
+no `RESEND_API_KEY` mail goes to the SMTP server in `EMAIL_HOST` (Mailpit,
+in the compose stack) or, with neither, is printed; with no
+`OPENROUTER_API_KEY` or `INTAKE_MODEL` the photo reading answers
+`unconfigured`; with no VAPID keys web push is off.
 
 ## The reading benchmark
 

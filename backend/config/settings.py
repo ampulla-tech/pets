@@ -206,12 +206,18 @@ HEADLESS_FRONTEND_URLS = {
 }
 
 # ── Mail ────────────────────────────────────────────────────────────────────
-# Transactional mail (the reset code and the reminders) leaves through
-# Resend's HTTP API whenever its key is set; without it, mail is printed.
+# Transactional mail (the verification and reset codes, the reminders) leaves
+# through Resend's HTTP API whenever its key is set (production). Otherwise it
+# goes to the SMTP server in EMAIL_HOST: locally, the compose stack's Mailpit,
+# whose web UI shows every message. With neither, mail is printed.
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
 if RESEND_API_KEY:
     EMAIL_BACKEND = "anymail.backends.resend.EmailBackend"
     ANYMAIL = {"RESEND_API_KEY": RESEND_API_KEY}
+elif EMAIL_HOST:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "1025"))
 else:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "pets@ampulla.tech")
