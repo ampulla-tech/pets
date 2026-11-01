@@ -1,0 +1,6 @@
+# The scheduled commands, run by supercronic in the `cron` service of
+# deploy/compose.prod.yml. Each line runs in /app with the backend's environment.
+CRON_TZ=America/Sao_Paulo
+
+# 09:00 in Brasília: evaluate every reminder and send what reached a milestone.
+0 9 * * * python manage.py send_reminders

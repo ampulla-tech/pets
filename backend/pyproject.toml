@@ -1,0 +1,54 @@
+[project]
+name = "pets-backend"
+version = "0.1.0"
+description = "The pets API: animals, their records, reminders, photo reading and its own accounts. Django 6 + Ninja + allauth headless."
+requires-python = ">=3.13"
+dependencies = [
+    "django>=6.0,<6.1",
+    "django-allauth[headless]>=65.18",
+    "django-anymail>=15.2",
+    "django-cors-headers>=4.9.0",
+    "django-ninja>=1.6",
+    "django-storages[s3]>=1.14",
+    "exponent-server-sdk>=2.2.0",
+    "granian>=2.8.7",
+    "langchain-openrouter>=0.2.9",
+    "langgraph>=1.2.19",
+    "pillow>=13.0.0",
+    "pillow-heif>=1.8.1",
+    "psycopg[binary]>=3.2",
+    "python-dotenv>=1.2.4",
+    "pywebpush>=2.5.0",
+    "reportlab>=5.1.0",
+    "whitenoise>=6.12.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+    "pytest-django>=4.14.0",
+    "ruff>=0.17.3",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+extend-exclude = ["**/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "DJ"]
+# A model needs no __str__ of its own: the admin is not a product surface here.
+ignore = ["DJ008"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["ninja.File", "ninja.Query", "ninja.Form", "ninja.Path", "ninja.Body"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py"]
+addopts = "-ra -m 'not live'"
+filterwarnings = ["ignore:No directory at:UserWarning"]
+markers = ["live: calls the real OpenRouter API with the configured key; excluded by default"]

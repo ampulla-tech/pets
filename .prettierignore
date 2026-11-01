@@ -1,0 +1,7 @@
+pnpm-lock.yaml
+packages/core/src/generated/
+packages/core/openapi.json
+backend/
+mobile/ios/
+mobile/android/
+*.md

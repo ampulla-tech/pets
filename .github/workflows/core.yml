@@ -1,0 +1,53 @@
+name: Shared Package CI
+
+# packages/core: its type-check and tests, and the proof that what it
+# generates is what its sources produce now: the API client from the backend's
+# OpenAPI document (a backend change that was not regenerated fails here) and
+# the theme from the token source.
+
+on:
+  push:
+    branches: [main]
+    paths: ["packages/core/**", "backend/**", "pnpm-lock.yaml", ".github/workflows/core.yml"]
+  pull_request:
+    branches: [main]
+    paths: ["packages/core/**", "backend/**", "pnpm-lock.yaml", ".github/workflows/core.yml"]
+
+concurrency:
+  group: core-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Type-check · Test · Generated output
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --filter "@pets/core..." --filter pets
+      - run: pnpm --filter @pets/core typecheck
+      - run: pnpm --filter @pets/core test
+      - name: The theme matches its source
+        run: pnpm --filter @pets/core check:generated
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - name: Regenerate the API client from the backend
+        run: |
+          set -euo pipefail
+          (cd backend && uv sync --dev --frozen)
+          packages/core/scripts/openapi.sh
+          pnpm --filter @pets/core generate:api
+      - name: The committed client is the regenerated one
+        run: |
+          if ! git diff --exit-code --stat -- packages/core; then
+            echo "::error::the API client is stale: run packages/core/scripts/openapi.sh and pnpm --filter @pets/core generate:api, then commit"
+            exit 1
+          fi

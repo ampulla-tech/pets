@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "Pets",
+    "slug": "pets",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "pets",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "bundleIdentifier": "com.ampulla.pets",
+      "supportsTablet": false,
+      "associatedDomains": ["applinks:pets.ampulla.tech"],
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.ampulla.pets",
+      "predictiveBackGestureEnabled": false,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [{ "scheme": "https", "host": "pets.ampulla.tech", "pathPrefix": "/convite/" }],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      ["expo-splash-screen", { "backgroundColor": "#fbfaf7" }],
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O Pets abre as suas fotos para você escolher a foto do animal, a foto de uma vacina ou as páginas da carteirinha.",
+          "cameraPermission": "O Pets usa a câmera para você fotografar o animal, a etiqueta de uma vacina ou as páginas da carteirinha.",
+          "microphonePermission": false
+        }
+      ],
+      ["expo-notifications", { "color": "#2f6b57" }],
+      "expo-sharing",
+      "expo-web-browser",
+      "./plugins/without-script-sandboxing.js"
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}

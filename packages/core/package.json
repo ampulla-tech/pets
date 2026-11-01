@@ -1,0 +1,40 @@
+{
+  "name": "@pets/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "What the web app and the native app share: the API client generated from the backend's OpenAPI, the identity client, the domain rules of the screens, the strings and the theme. No DOM, no React Native, no component.",
+  "exports": {
+    "./api": "./src/api/index.ts",
+    "./api/generated": "./src/generated/api/index.ts",
+    "./api/query": "./src/generated/api/@tanstack/react-query.gen.ts",
+    "./identity": "./src/identity/index.ts",
+    "./domain": "./src/domain/index.ts",
+    "./strings": "./src/strings/index.ts",
+    "./tokens": "./src/tokens/index.ts",
+    "./theme.css": "./src/generated/theme.css",
+    "./native-theme": "./src/generated/native-theme.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "generate": "pnpm generate:api && pnpm generate:tokens",
+    "generate:api": "openapi-ts",
+    "generate:tokens": "node --experimental-strip-types scripts/tokens.ts",
+    "check:generated": "node --experimental-strip-types scripts/tokens.ts --check"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.101.4"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "^0.99.0",
+    "@tanstack/react-query": "5.101.4",
+    "@types/node": "^24.12.3",
+    "react": "19.2.3",
+    "typescript": "~6.0.2",
+    "vitest": "^4.1.8"
+  }
+}
