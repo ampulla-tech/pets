@@ -50,7 +50,7 @@ On the host, in `/srv/pets` (owned by `deploy`):
    RESEND_API_KEY=<key>
    DEFAULT_FROM_EMAIL=pets@ampulla.tech
    OPENROUTER_API_KEY=<key>
-   INTAKE_MODEL=<model chosen by the benchmark>
+   INTAKE_MODEL=openai/gpt-6.1-terra   # ADR-0007
    VAPID_PUBLIC_KEY=<base64url public key>
    VAPID_PRIVATE_KEY=<PEM, newlines escaped>
    ```

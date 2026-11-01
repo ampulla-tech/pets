@@ -1,6 +1,6 @@
 # 0005. The card is read by a LangGraph graph over OpenRouter, and the model comes from a benchmark
 
-- Status: accepted
+- Status: accepted, amended by [0007](0007-the-reading-model-is-gpt-6-1-terra-chosen-by-hand.md)
 - Date: 2026-10-31
 
 ## Context
