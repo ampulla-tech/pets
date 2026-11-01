@@ -7,3 +7,4 @@ backend/.env
 mobile
 web/dist
 .git
+backend/benchmark-data
