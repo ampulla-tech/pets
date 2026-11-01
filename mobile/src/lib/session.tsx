@@ -93,9 +93,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [clear]);
 
   const signIn = useCallback(async (session: Session) => {
-    currentToken = session.token;
-    await SecureStore.setItemAsync(KEY, JSON.stringify(session));
-    setState({ status: "signedIn", token: session.token, email: session.email });
+    const token = session.token;
+    // allauth's "app" client always answers a token with a session.
+    if (!token) throw new Error("signed in with no session token");
+    currentToken = token;
+    await SecureStore.setItemAsync(KEY, JSON.stringify({ token, email: session.email }));
+    setState({ status: "signedIn", token, email: session.email });
   }, []);
 
   const signOut = useCallback(async () => {

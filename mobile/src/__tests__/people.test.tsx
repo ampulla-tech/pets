@@ -191,11 +191,19 @@ describe("an invite link opened in the app", () => {
     expect(await screen.findByText(strings.invite.used)).toBeTruthy();
   });
 
-  it("without an account: sign up, then back to the invite to accept", async () => {
+  it("without an account: sign up, confirm the e-mail, then back to the invite to accept", async () => {
     signedOut();
     fakeApi({
       "GET /invites/tk": { body: PREVIEW },
       "POST /_allauth/app/v1/auth/signup": {
+        status: 401,
+        body: {
+          status: 401,
+          data: { flows: [{ id: "verify_email", is_pending: true }] },
+          meta: { is_authenticated: false, session_token: "flow-n" },
+        },
+      },
+      "POST /_allauth/app/v1/auth/email/verify": {
         body: { status: 200, data: { user: { email: "new@example.com" } }, meta: { session_token: "tok-n" } },
       },
     });
@@ -205,6 +213,8 @@ describe("an invite link opened in the app", () => {
     await fireEvent.changeText(await screen.findByTestId("email"), "new@example.com");
     await fireEvent.changeText(screen.getByTestId("password"), "uma-senha-longa");
     await fireEvent.press(screen.getByTestId("sign-up"));
+    await fireEvent.changeText(await screen.findByTestId("verify-code"), "ab12cd34");
+    await fireEvent.press(screen.getByTestId("verify"));
     await waitFor(() => expect(app.pathname()).toBe("/convite/tk"));
     expect(await screen.findByTestId("accept")).toBeTruthy();
   });

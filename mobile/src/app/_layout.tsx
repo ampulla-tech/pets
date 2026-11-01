@@ -30,6 +30,7 @@ function Navigator() {
         <Stack.Screen name="entrar" options={{ title: strings.auth.signInTitle, headerShown: false }} />
         <Stack.Screen name="cadastro" options={{ title: strings.auth.signUpTitle }} />
         <Stack.Screen name="recuperar" options={{ title: strings.auth.resetTitle }} />
+        <Stack.Screen name="confirmar" options={{ title: strings.auth.verifyTitle }} />
         <Stack.Screen name="convite/[token]" options={{ title: strings.invite.title }} />
       </Stack>
       <NotificationRouting />

@@ -55,6 +55,15 @@ describe("signing up", () => {
   it("checks the e-mail and the password before calling, then creates the account", async () => {
     const api = fakeApi({
       "POST /_allauth/app/v1/auth/signup": {
+        status: 401,
+        body: {
+          status: 401,
+          data: { flows: [{ id: "signup" }, { id: "verify_email", is_pending: true }] },
+          meta: { is_authenticated: false, session_token: "flow-2" },
+        },
+      },
+      "POST /_allauth/app/v1/auth/email/verify/resend": { body: { status: 200 } },
+      "POST /_allauth/app/v1/auth/email/verify": {
         body: { status: 200, data: { user: { email: "bia@example.com" } }, meta: { session_token: "tok-2" } },
       },
       "GET /animals": { body: [] },
@@ -71,7 +80,43 @@ describe("signing up", () => {
     await fireEvent.changeText(screen.getByTestId("email"), "bia@example.com");
     await fireEvent.changeText(screen.getByTestId("password"), "uma-senha-longa");
     await fireEvent.press(screen.getByTestId("sign-up"));
+
+    // The account is usable only once the e-mailed code is typed.
+    expect(await screen.findByText(strings.auth.verifyIntro("bia@example.com"))).toBeTruthy();
+    expect(store.has("pets.session")).toBe(false);
+    await fireEvent.changeText(screen.getByTestId("verify-code"), "abc");
+    await fireEvent.press(screen.getByTestId("verify"));
+    expect(await screen.findByText(strings.auth.codeInvalid)).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("resend-code"));
+    expect(await screen.findByText(strings.auth.codeResent)).toBeTruthy();
+    await fireEvent.changeText(screen.getByTestId("verify-code"), "ab12cd34");
+    await fireEvent.press(screen.getByTestId("verify"));
     expect(await screen.findByText(strings.home.empty)).toBeTruthy();
+
+    const verify = api.callsTo("POST /_allauth/app/v1/auth/email/verify")[0];
+    expect(verify.body).toEqual({ key: "AB12-CD34" });
+    expect(verify.headers["x-session-token"]).toBe("flow-2");
+    expect(api.callsTo("POST /_allauth/app/v1/auth/email/verify/resend")[0].headers["x-session-token"]).toBe("flow-2");
+    expect(JSON.parse(store.get("pets.session")!)).toEqual({ token: "tok-2", email: "bia@example.com" });
+    expect(api.callsTo("GET /animals")[0].headers["x-session-token"]).toBe("tok-2");
+  });
+
+  it("an account not yet confirmed gets the code screen at sign-in", async () => {
+    fakeApi({
+      "POST /_allauth/app/v1/auth/login": {
+        status: 401,
+        body: {
+          status: 401,
+          data: { flows: [{ id: "verify_email", is_pending: true }] },
+          meta: { is_authenticated: false, session_token: "flow-3" },
+        },
+      },
+    });
+    await renderApp("/entrar");
+    await fireEvent.changeText(await screen.findByTestId("email"), "bia@example.com");
+    await fireEvent.changeText(screen.getByTestId("password"), "uma-senha-longa");
+    await fireEvent.press(screen.getByTestId("sign-in"));
+    expect(await screen.findByTestId("verify-code")).toBeTruthy();
   });
 
   it("tells a taken e-mail apart", async () => {

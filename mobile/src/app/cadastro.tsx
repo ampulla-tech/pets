@@ -1,6 +1,6 @@
 import { identityMessage } from "@pets/core/identity";
 import { strings } from "@pets/core/strings";
-import { Link, Redirect, useLocalSearchParams } from "expo-router";
+import { Link, Redirect, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
 
@@ -11,6 +11,7 @@ import { Screen } from "@/components/ui/screen";
 import { Muted, Text } from "@/components/ui/text";
 import { identity } from "@/lib/identity";
 import { afterSignIn } from "@/lib/navigation";
+import { pendingVerification } from "@/lib/pending";
 import { useSession } from "@/lib/session";
 import { emailError, passwordError } from "@/lib/validation";
 
@@ -30,7 +31,13 @@ export default function SignUpScreen() {
     setBusy(true);
     setErrors({});
     try {
-      await signIn(await identity.signUp(email.trim(), password));
+      const result = await identity.signUp(email.trim(), password);
+      if (result.status === "verifyEmail") {
+        pendingVerification.set(result.pending);
+        router.push(convite ? `/confirmar?convite=${convite}` : "/confirmar");
+        return;
+      }
+      await signIn(result.session);
       afterSignIn(convite);
     } catch (failure) {
       setErrors({ form: identityMessage(failure) });
