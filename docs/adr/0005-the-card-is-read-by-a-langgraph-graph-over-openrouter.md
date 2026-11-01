@@ -39,7 +39,8 @@ varying success and at very different prices.
   scores each field after normalisation by the worst run, and the winner is the
   cheapest with 1.00 on date, "repeat on" (value and origin) and diseases and no
   record missing or extra. The evaluation set (the photos and the key) holds
-  third-party personal data, so it is read from a path and never committed;
+  third-party personal data, so it lives in a gitignored folder
+  (`backend/benchmark-data/`) and is never committed;
   the committed report holds aggregate scores only
   (`docs/benchmark/card-reading.md`).
 

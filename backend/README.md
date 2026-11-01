@@ -35,14 +35,13 @@ web push is off.
 ## The reading benchmark
 
 ```bash
-uv run python manage.py benchmark_intake \
-  --key /path/to/answer-key.json --photos /path/to/photos \
-  --models <id>,<id>,<id>,<id> --runs 3
+uv run python manage.py benchmark_intake --models <id>,<id> --runs 3
 ```
 
-The answer key and the photos hold third-party personal data: they are read
-from the paths given (or `PETS_BENCHMARK_KEY` / `PETS_BENCHMARK_PHOTOS`) and
-never committed. The report (`docs/benchmark/card-reading.md`) holds aggregate
+The answer key and the photos hold third-party personal data. They live in
+`backend/benchmark-data/` (`gabarito.json` and `photos/`), which is gitignored
+and never committed; `--key` / `--photos` (or `PETS_BENCHMARK_KEY` /
+`PETS_BENCHMARK_PHOTOS`) point elsewhere. The report (`docs/benchmark/card-reading.md`) holds aggregate
 scores only. Every call is paid.
 
 ## Local development

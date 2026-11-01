@@ -34,7 +34,7 @@ backend/uploads/
 backend/staticfiles/
 
 # The benchmark's evaluation set (card photos and their answer key) holds
-# third-party personal data: it is read from a path, never committed.
+# third-party personal data: it lives here but is never committed.
 backend/benchmark-data/
 *.HEIC
 *.heic
