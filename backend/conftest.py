@@ -85,6 +85,44 @@ def signup(email: str, password: str = PASSWORD) -> Api:
     return api
 
 
+BROWSER = "/_allauth/browser/v1"
+WEB = "http://localhost:5180"
+
+
+class Browser:
+    """A client that speaks the way the web app does: the cookies the API set,
+    and the CSRF cookie echoed as X-CSRFToken, from the web app's origin."""
+
+    def __init__(self):
+        self.client = Client(enforce_csrf_checks=True, HTTP_ORIGIN=WEB)
+        # Any browser view answers with the CSRF cookie.
+        self.client.get(f"{BROWSER}/auth/session")
+
+    def csrf(self):
+        return {"HTTP_X_CSRFTOKEN": self.client.cookies["csrftoken"].value}
+
+    def post(self, path, body, **extra):
+        return self.client.post(
+            path,
+            data=json.dumps(body),
+            content_type="application/json",
+            **{**self.csrf(), **extra},
+        )
+
+    def get(self, path):
+        return self.client.get(path)
+
+
+def browser_signup(email: str) -> Browser:
+    browser = Browser()
+    response = browser.post(f"{BROWSER}/auth/signup", {"email": email, "password": PASSWORD})
+    assert response.status_code == 401
+    assert "session_token" not in response.json()["meta"]
+    verified = browser.post(f"{BROWSER}/auth/email/verify", {"key": last_code(email, take=True)})
+    assert verified.status_code == 200, verified.content
+    return browser
+
+
 @pytest.fixture
 def tutor(db):
     return signup("tutor@example.com")

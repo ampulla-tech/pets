@@ -1,8 +1,9 @@
-"""The API: every route requires the allauth session token unless it says otherwise."""
+"""The API: every route requires a signed-in caller unless it says otherwise,
+by allauth's session token (native) or its session cookie (web), ADR-0002."""
 
-from allauth.headless.contrib.ninja.security import x_session_token_auth
 from ninja import NinjaAPI, Schema
 
+from accounts.auth import signed_in
 from animals.api import router as animals_router
 from animals.errors import ApiError
 from intake.api import router as intake_router
@@ -19,7 +20,7 @@ class PetsAPI(NinjaAPI):
 api = PetsAPI(
     title="Pets API",
     version="1.0.0",
-    auth=x_session_token_auth,
+    auth=signed_in,
     urls_namespace="api",
 )
 

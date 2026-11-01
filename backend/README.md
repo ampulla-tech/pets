@@ -5,7 +5,8 @@ The pets API: Django 6, Django Ninja and allauth headless.
 | Path | What |
 |---|---|
 | `GET /health` | Liveness probe |
-| `/_allauth/app/v1/*` | allauth headless ("app" client): sign-up, sign-in, sign-out, password reset by code |
+| `/_allauth/app/v1/*` | allauth headless, "app" client (the native app, a session token): sign-up, e-mail confirmation and password reset by code, sign-in, sign-out |
+| `/_allauth/browser/v1/*` | allauth headless, "browser" client (the web, a session cookie and CSRF): the same flows |
 | `/animals…` | Animals, their photo, records, accesses, invites, reminders, card and its PDF |
 | `/reminders/upcoming` | What is overdue or due within 30 days, across the caller's animals |
 | `/extractions…` | Photo intake: the reading of a card's photos and the review of its proposals |
@@ -13,8 +14,10 @@ The pets API: Django 6, Django Ninja and allauth headless.
 | `/files/<signed>` | A stored file behind a signed, expiring link |
 
 Every route but `/health`, `/catalog`, the invite preview and the files needs
-the `X-Session-Token` header allauth answered at sign-in (ADR-0002). Access to
-an animal is checked on every route (`animals/access.py`, ADR-0006).
+a signed-in caller (ADR-0002, `accounts/auth.py`): the native app sends the
+`X-Session-Token` header allauth answered at sign-in; the web sends allauth's
+session cookie, and on every write the CSRF cookie back as `X-CSRFToken`.
+Access to an animal is checked on every route (`animals/access.py`, ADR-0006).
 
 ## Processes
 

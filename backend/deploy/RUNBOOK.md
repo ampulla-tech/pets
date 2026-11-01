@@ -91,7 +91,10 @@ A failed migration leaves the running version up.
 - `curl https://api.pets.ampulla.tech/health` answers `{"status": "ok"}`.
 - `docker compose -f compose.prod.yml exec backup restic snapshots` lists the
   night's snapshot with `db` and `media`.
-- A password reset requested on the web app e-mails a code.
+- Signing up on the web app e-mails a code that confirms the address, and a
+  password reset e-mails a code.
+- After signing in on the web app, the browser holds `sessionid` and
+  `csrftoken` for `pets.ampulla.tech`, and the API's calls carry them.
 - `docker compose -f compose.prod.yml exec pets python manage.py send_reminders --date <day>`
   evaluates the reminders of that day by hand (it sends for real).
 

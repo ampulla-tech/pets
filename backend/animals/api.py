@@ -5,7 +5,6 @@ from decimal import Decimal
 from typing import Literal
 from uuid import UUID
 
-from allauth.headless.contrib.ninja.security import x_session_token_auth
 from django.conf import settings
 from django.db import transaction
 from django.http import HttpResponse
@@ -15,6 +14,7 @@ from django.utils.text import slugify
 from ninja import File, Router, Schema, Status, UploadedFile
 from ninja.errors import HttpError
 
+from accounts.auth import caller, signed_in_or_anonymous
 from animals import attachments as storage
 from animals.access import access_to, as_tutor, readable
 from animals.age import age_of
@@ -604,17 +604,10 @@ def _invite_state(invite: Invite) -> str:
     return "valid"
 
 
-class _Optional:
-    """Authentication that lets an anonymous caller through, as None."""
-
-    def __call__(self, request):
-        return True
-
-
 @router.get(
     "/invites/{token}",
     response=InvitePreviewOut,
-    auth=[x_session_token_auth, _Optional()],
+    auth=signed_in_or_anonymous,
     tags=["people"],
 )
 def preview_invite(request, token: str):
@@ -622,8 +615,7 @@ def preview_invite(request, token: str):
     invite = get_object_or_404(
         Invite.objects.select_related("animal", "animal__photo", "created_by"), token=token
     )
-    user = getattr(request, "auth", None)
-    user = user if getattr(user, "is_authenticated", False) else None
+    user = caller(request)
     member = bool(user and Access.objects.valid().filter(animal=invite.animal, user=user).exists())
     animal = invite.animal
     return {

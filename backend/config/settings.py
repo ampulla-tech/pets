@@ -173,9 +173,11 @@ LOGGING = {
 }
 
 # ── Identity: allauth headless, the app's own accounts (ADR-0002) ───────────
-# E-mail is the login; there is no username. Both clients (web and native) use
-# allauth's "app" client: the session token travels in the X-Session-Token
-# header, and the API authenticates every call with that same header.
+# E-mail is the login; there is no username. Two allauth clients:
+# - the web uses the "browser" client: allauth's session cookie and CSRF, and
+#   the API reads the same Django session;
+# - the native app uses the "app" client: the session token travels in the
+#   X-Session-Token header, and the API reads that same header.
 ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*"]
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
@@ -198,7 +200,7 @@ if env_bool("ACCOUNT_RATE_LIMITS_DISABLED", False):
     ACCOUNT_RATE_LIMITS = False
 
 HEADLESS_ONLY = True
-HEADLESS_CLIENTS = ("app",)
+HEADLESS_CLIENTS = ("app", "browser")
 WEB_APP_URL = os.environ.get("WEB_APP_URL", "http://localhost:5180").rstrip("/")
 HEADLESS_FRONTEND_URLS = {
     "account_reset_password_from_key": f"{WEB_APP_URL}/recuperar/{{key}}",
@@ -222,14 +224,29 @@ else:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "pets@ampulla.tech")
 
-# ── CORS ────────────────────────────────────────────────────────────────────
-# The web app calls the API from its own origin with the session token header;
-# no cookie crosses, so no credentials are allowed.
+# ── Cookies, CSRF and CORS ──────────────────────────────────────────────────
+# The web app calls the API from another origin (localhost:5180 and :8300, or
+# pets.ampulla.tech and api.pets.ampulla.tech) with the session cookie, so
+# CORS allows credentials. The two are always the same site (a port does not
+# make another site, and pets.ampulla.tech is a parent of the API's host), so
+# SameSite=Lax cookies travel. The web reads the CSRF cookie to send it back as
+# X-CSRFToken, so in production both cookies are set for the parent domain
+# (SESSION_COOKIE_DOMAIN, CSRF_COOKIE_DOMAIN = pets.ampulla.tech); locally they
+# stay host-only, which already covers both ports. Django checks the Origin of
+# every unsafe call against CSRF_TRUSTED_ORIGINS, which are the web app's
+# origins; the native app's calls carry the token and are not checked.
 CORS_ALLOWED_ORIGINS = env_list(
     "CORS_ALLOWED_ORIGINS", "http://localhost:5180,http://127.0.0.1:5180"
 )
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = (*cors_default_headers, "x-session-token")
-CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", "")
+CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", ",".join(CORS_ALLOWED_ORIGINS))
+SESSION_COOKIE_DOMAIN = os.environ.get("SESSION_COOKIE_DOMAIN") or None
+CSRF_COOKIE_DOMAIN = os.environ.get("CSRF_COOKIE_DOMAIN") or None
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+# The web reads it to echo it in the header (Django's default, said out loud).
+CSRF_COOKIE_HTTPONLY = False
 
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

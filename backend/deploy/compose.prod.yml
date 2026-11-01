@@ -23,6 +23,11 @@ x-pets: &pets
     DJANGO_DEBUG: "False"
     DJANGO_ALLOWED_HOSTS: api.pets.ampulla.tech
     CORS_ALLOWED_ORIGINS: https://pets.ampulla.tech
+    # The web's session and CSRF cookies are set for the parent domain, so the
+    # web app reads the CSRF one and both reach the API (ADR-0002).
+    CSRF_TRUSTED_ORIGINS: https://pets.ampulla.tech
+    SESSION_COOKIE_DOMAIN: pets.ampulla.tech
+    CSRF_COOKIE_DOMAIN: pets.ampulla.tech
     WEB_APP_URL: https://pets.ampulla.tech
     POSTGRES_HOST: postgres
     POSTGRES_PORT: "5432"

@@ -5,7 +5,7 @@ from datetime import timedelta
 from django.utils import timezone
 
 from animals.models import Access, Animal, Invite
-from conftest import Api, make_animal, signup
+from conftest import BROWSER, PASSWORD, Api, Browser, last_code, make_animal, signup
 
 
 def invite(api: Api, animal_id, role="tutor", ends=None):
@@ -158,3 +158,26 @@ def test_a_tutor_invite_cannot_carry_an_end(tutor):
         f"/animals/{dog['id']}/invites", {"role": "tutor", "access_ends_on": "2030-01-01"}
     )
     assert response.status_code == 422
+
+
+def test_someone_with_no_account_signs_up_from_the_invite_and_lands_on_the_animal(tutor):
+    """The web's way in: the invite, sign-up, the e-mailed code, accepting."""
+    dog = make_animal(tutor)
+    created = invite(tutor, dog["id"], role="guest", ends="2030-01-10")
+    browser = Browser()
+    assert browser.get(f"/invites/{created['token']}").json()["already_member"] is False
+
+    signed_up = browser.post(
+        f"{BROWSER}/auth/signup", {"email": "nova@example.com", "password": PASSWORD}
+    )
+    assert signed_up.status_code == 401
+    # The invite is a link, sent to no address: it proves nothing about the
+    # e-mail, so it cannot be accepted before the code is typed.
+    assert browser.post(f"/invites/{created['token']}/accept", {}).status_code == 401
+
+    verified = browser.post(f"{BROWSER}/auth/email/verify", {"key": last_code("nova@example.com")})
+    assert verified.status_code == 200
+    accepted = browser.post(f"/invites/{created['token']}/accept", {})
+    assert accepted.status_code == 200
+    assert accepted.json()["animal_id"] == dog["id"]
+    assert browser.get(f"/animals/{dog['id']}").status_code == 200
