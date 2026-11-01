@@ -19,24 +19,31 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import Any, Literal, TypedDict
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from animals.diseases import DISEASES, PARASITES, codes_for
 
 # ── The structured output ───────────────────────────────────────────────────
 
 
-class TextValue(BaseModel):
+class Strict(BaseModel):
+    """Every object closed (`additionalProperties: false`): OpenAI's strict
+    json_schema mode rejects a schema without it."""
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class TextValue(Strict):
     value: str | None = Field(description="The text as written, or null.")
     read: bool = Field(description="False when the field exists but is illegible or blank.")
 
 
-class DateValue(BaseModel):
+class DateValue(Strict):
     value: str | None = Field(description="ISO date YYYY-MM-DD, or null.")
     read: bool
 
 
-class RepeatOnValue(BaseModel):
+class RepeatOnValue(Strict):
     value: str | None = Field(description="ISO date YYYY-MM-DD, or null.")
     read: bool
     origin: Literal["written", "inferred"] | None = Field(
@@ -45,17 +52,17 @@ class RepeatOnValue(BaseModel):
     )
 
 
-class CodesValue(BaseModel):
+class CodesValue(Strict):
     value: list[str] = Field(description="Codes from the closed list given.")
     read: bool
 
 
-class NumberValue(BaseModel):
+class NumberValue(Strict):
     value: float | None
     read: bool
 
 
-class ProposedRecord(BaseModel):
+class ProposedRecord(Strict):
     kind: Literal["vaccine", "antiparasitic", "weight"]
     date: DateValue
     brand: TextValue = Field(description="Product name on the label (e.g. Nobivac Raiva).")
@@ -72,7 +79,7 @@ class ProposedRecord(BaseModel):
     weight_kg: NumberValue = Field(description="Only for kind=weight: kilograms.")
 
 
-class CardReading(BaseModel):
+class CardReading(Strict):
     proposals: list[ProposedRecord]
 
 
@@ -90,13 +97,17 @@ and return every record on it. Rules:
    below a vaccine with no "repeat on" date, is that vaccine's "repeat on":
    set repeat_on.origin = "inferred". A date in the record's own box is
    "written".
-4. A crossed-out field comes back with its final reading, with no mark.
+4. A crossed-out or overwritten field comes back with its final reading (the
+   digit written on top), with no mark.
 5. A weight written inside a vaccine's box, or in a corner of the cover, is a
    separate record of kind "weight" on the corresponding date.
 6. Diseases come only from the closed list below; they may be inferred from
    the letters of the product name (D distemper, H hepatitis, P parvovirus,
    Pi parainfluenza, L leptospirosis, C coronavirus in dogs / calicivirus in
-   cats, Ch chlamydiosis, FeLV, R rhinotracheitis in cats).
+   cats, Ch chlamydiosis, FeLV, R rhinotracheitis in cats). In a cat vaccine
+   named "CVR-C" (e.g. Felocell CVR-C), C-V-R is calicivirus, panleukopenia
+   (viral enteritis) and rhinotracheitis, and the trailing "-C" is
+   chlamydiosis.
 7. A two-digit year is 20xx. A crossed 7 (written like a 4 with a bar) is a 7.
 
 Dates are ISO (YYYY-MM-DD). A field you cannot read: value null, read false.
@@ -249,10 +260,21 @@ class ReadingUnconfigured(ReadingFailed):
     pass
 
 
+MAX_OUTPUT_TOKENS = 16_000
+
+
 def openrouter_model(model: str, api_key: str, timeout: int = 120):
     from langchain_openrouter import ChatOpenRouter
 
-    return ChatOpenRouter(model=model, api_key=api_key, temperature=0, timeout=timeout * 1000)
+    # A card's answer is a few thousand tokens; an explicit cap keeps OpenRouter
+    # from reserving the model's full output window against the key's credit.
+    return ChatOpenRouter(
+        model=model,
+        api_key=api_key,
+        temperature=0,
+        max_tokens=MAX_OUTPUT_TOKENS,
+        timeout=timeout * 1000,
+    )
 
 
 def read_card(

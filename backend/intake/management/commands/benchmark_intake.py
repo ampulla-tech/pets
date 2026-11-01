@@ -22,6 +22,10 @@ from animals.attachments import normalise_image
 from intake.benchmark import ModelResult, RunScore, choose, load_key, report, score_card
 from intake.reading import Photo, read_card
 
+# Out of credit (402) or over the workspace budget (403): every later call
+# would fail the same way, so the run stops instead of scoring zeros.
+CREDIT_ERRORS = {402, 403}
+
 EXTENSIONS = (".HEIC", ".heic", ".jpg", ".jpeg", ".JPG", ".JPEG", ".png", ".PNG")
 
 
@@ -76,6 +80,10 @@ class Command(BaseCommand):
                             timeout=settings.INTAKE_TIMEOUT_SECONDS,
                         )
                     except Exception as error:
+                        if getattr(error, "status_code", None) in CREDIT_ERRORS:
+                            raise CommandError(
+                                f"OpenRouter refused for credit or budget: {error}"
+                            ) from error
                         self.stderr.write(f"{model} run {run + 1}: a card failed: {error!r}")
                         result.errors += 1
                         score.cost_known = False
