@@ -1,7 +1,7 @@
 name: Web CI
 
 # The web app: type-check, tests and build on every change; on a push to main,
-# the same build is published to the Cloudflare Pages project `pets`, served
+# the same build is published to the Cloudflare Pages project `ampulla-pets`, served
 # at pets.ampulla.tech, and checked live.
 
 on:
@@ -56,7 +56,7 @@ jobs:
       # it belongs to. Both are secrets; the account ID is never written here.
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      PAGES_PROJECT: pets
+      PAGES_PROJECT: ampulla-pets
       SITE_URL: https://pets.ampulla.tech
       # The one host the build calls (web/.env.production).
       API_URL: https://api.pets.ampulla.tech

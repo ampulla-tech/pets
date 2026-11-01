@@ -17,7 +17,7 @@ beside the others. The web app is static files plus a service worker.
   the certificate for `api.pets.ampulla.tech` and finds the API by the `caddy`
   labels of its `pets` service on the external Docker network `edge`. Only
   that service joins `edge`.
-- **The web app is published to Cloudflare Pages** (project `pets`, at
+- **The web app is published to Cloudflare Pages** (project `ampulla-pets`, at
   `pets.ampulla.tech`). Its caching rules are `web/public/_headers`; deep links
   rely on Pages' single-page-app fallback, so the build has no `404.html`.
 - **A merge to `main` deploys both.** Backend CI pushes the two images to GHCR

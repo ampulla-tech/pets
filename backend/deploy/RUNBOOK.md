@@ -12,7 +12,7 @@ the media goes to `ampulla-backup-pets`.
 A merge to `main` deploys both: Backend CI pushes
 `ghcr.io/ampulla-tech/pets` and `ghcr.io/ampulla-tech/pets-backup`, tagged
 with the commit, and its `deploy` job runs `deploy.sh` on the host; Web CI
-publishes `web/dist` to the Pages project `pets`. Each deploy is skipped with
+publishes `web/dist` to the Pages project `ampulla-pets`. Each deploy is skipped with
 a warning, and the run stays green, until its secrets exist.
 
 ## What lives elsewhere
@@ -26,7 +26,7 @@ The host and the cloud resources are the infra repository's
   caddy-docker-proxy, DNS-01 certificates);
 - the host's `docker login ghcr.io` with a `read:packages` token, which these
   private images need;
-- DNS `api.pets.ampulla.tech` to the VPS; the Pages project `pets` with the
+- DNS `api.pets.ampulla.tech` to the VPS; the Pages project `ampulla-pets` with the
   custom domain `pets.ampulla.tech`; the R2 buckets `ampulla-pets-media` and
   `ampulla-backup-pets`; the `ampulla.tech` sending domain in Resend.
 
@@ -84,7 +84,7 @@ old public key.
 | Secret | What | Where it comes from |
 |---|---|---|
 | `CLOUDFLARE_PAGES_TOKEN` | an API token with Account, Cloudflare Pages, Edit, on this account only; while it is unset the publish is skipped | by hand: Cloudflare dashboard, API Tokens |
-| `CLOUDFLARE_ACCOUNT_ID` | the account that holds the Pages project `pets` | by hand: Cloudflare dashboard (the same account as `R2_ACCOUNT_ID`) |
+| `CLOUDFLARE_ACCOUNT_ID` | the account that holds the Pages project `ampulla-pets` | by hand: Cloudflare dashboard (the same account as `R2_ACCOUNT_ID`) |
 
 The web build's API host is public and committed: `web/.env.production`.
 
