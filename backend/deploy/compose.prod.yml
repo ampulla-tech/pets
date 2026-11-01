@@ -1,16 +1,23 @@
-# Pets in production on a VPS: Caddy in front, the API, the photo-reading
-# worker, the scheduled commands, Postgres 17, and the nightly backup of the
-# database and the media bucket to restic. RUNBOOK.md has the procedures.
+# Pets in production on a VPS shared with other apps: the API, the
+# photo-reading worker, the scheduled commands, Postgres 17, and the nightly
+# backup of the database and the media bucket to restic. RUNBOOK.md has the
+# procedures.
 #
-# Files beside this one on the host, mode 0600, never committed:
+# Nothing here publishes a port. The host's edge proxy (Caddy with
+# caddy-docker-proxy, owned by the infra repository) reads the `caddy` labels
+# of the `pets` service on the external `edge` network, holds the certificate
+# and forwards api.pets.ampulla.tech to it. Only `pets` joins `edge`; the
+# worker, cron, Postgres and the backup stay on this project's own network.
+# The web app is not served from here: it is on Cloudflare Pages.
+#
+# Files beside this one on the host, mode 0600, written by deploy.sh from the
+# deploy job's secrets, never committed:
 # - `.env`: read by Compose for the ${...} below (image owner and tag, the
-#   database password).
-# - `.env.pets`: the API's secrets (Django key, bucket keys, Resend, OpenRouter,
-#   VAPID), handed to the API, the worker and cron only.
-# - `.env.backup`: the restic repository, its password, the bucket's read keys
-#   and the heartbeat URL, handed to the backup only.
-#
-# Only Caddy publishes ports.
+#   database password, the R2 account).
+# - `.env.pets`: the API's secrets (Django key, the media bucket's read-write
+#   keys, Resend, OpenRouter, VAPID), handed to the API, the worker and cron.
+# - `.env.backup`: the restic password and the repository's keys, the media
+#   bucket's read-only keys and the heartbeat URL, handed to the backup only.
 
 name: pets
 
@@ -19,16 +26,24 @@ x-pets: &pets
   restart: unless-stopped
   env_file:
     - path: .env.pets
-  environment: &pets-environment
+  environment:
     DJANGO_DEBUG: "False"
     DJANGO_ALLOWED_HOSTS: api.pets.ampulla.tech
+    # The web app on pets.ampulla.tech calls the API on api.pets.ampulla.tech
+    # with its session cookie. The cookies are set for pets.ampulla.tech, a
+    # parent of the API's host, so the web reads the CSRF one and both travel
+    # to the API (ADR-0002).
     CORS_ALLOWED_ORIGINS: https://pets.ampulla.tech
-    # The web's session and CSRF cookies are set for the parent domain, so the
-    # web app reads the CSRF one and both reach the API (ADR-0002).
     CSRF_TRUSTED_ORIGINS: https://pets.ampulla.tech
     SESSION_COOKIE_DOMAIN: pets.ampulla.tech
     CSRF_COOKIE_DOMAIN: pets.ampulla.tech
     WEB_APP_URL: https://pets.ampulla.tech
+    DEFAULT_FROM_EMAIL: pets@ampulla.tech
+    # ADR-0007.
+    INTAKE_MODEL: openai/gpt-6.1-terra
+    # Media in a private R2 bucket; its read-write keys are in .env.pets.
+    AWS_STORAGE_BUCKET_NAME: ampulla-pets-media
+    AWS_S3_ENDPOINT_URL: https://${R2_ACCOUNT_ID:?}.r2.cloudflarestorage.com
     POSTGRES_HOST: postgres
     POSTGRES_PORT: "5432"
     POSTGRES_DB: pets
@@ -40,23 +55,18 @@ x-pets: &pets
       condition: service_healthy
 
 services:
-  caddy:
-    image: caddy:2
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./web:/srv/web:ro
-      - caddy-data:/data
-      - caddy-config:/config
-    depends_on:
-      - pets
-
   pets:
     <<: *pets
+    networks:
+      - default
+      - edge
+    labels:
+      caddy: api.pets.ampulla.tech
+      caddy.encode: zstd gzip
+      # Above the API's own limit (MAX_UPLOAD_BYTES, 25 MB), so an oversized
+      # upload gets the API's answer and not the proxy's.
+      caddy.request_body.max_size: 30MB
+      caddy.reverse_proxy: "{{upstreams 8000}}"
 
   worker:
     <<: *pets
@@ -95,14 +105,21 @@ services:
       PGDATABASE: pets
       PGPASSWORD: ${POSTGRES_PASSWORD:?}
       DUMP_RESTIC_HOST: pets-vps
+      RESTIC_REPOSITORY: s3:https://${R2_ACCOUNT_ID:?}.r2.cloudflarestorage.com/ampulla-backup-pets
+      MEDIA_S3_ENDPOINT: https://${R2_ACCOUNT_ID:?}.r2.cloudflarestorage.com
+      MEDIA_S3_PROVIDER: Cloudflare
+      MEDIA_S3_BUCKET: ampulla-pets-media
     volumes:
       - restic-cache:/root/.cache/restic
     depends_on:
       postgres:
         condition: service_healthy
 
+networks:
+  edge:
+    external: true
+    name: edge
+
 volumes:
-  caddy-data:
-  caddy-config:
   postgres-data:
   restic-cache:

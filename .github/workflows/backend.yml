@@ -11,7 +11,8 @@ on:
 
 concurrency:
   group: backend-ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Cancel superseded PR runs, never a run on main: it may be mid-deploy.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -50,9 +51,185 @@ jobs:
       - name: Test
         run: uv run pytest
 
-  image:
-    name: Build the image
+  deploy-test:
+    name: Shellcheck · Production compose · deploy.sh
+    # compose.prod.yml and deploy.sh on the runner with local images and dummy
+    # secrets (backend/deploy/compose-test.sh): the first deploy, the edge
+    # labels read by a real caddy-docker-proxy, the web's cookie session
+    # across subdomains, a migration that fails and a tag whose /health
+    # fails, which the deploy takes back. No VPS, no certificate requested.
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - run: docker build -f backend/Dockerfile --target prod -t pets-backend .
+      - name: Shellcheck
+        run: >-
+          docker run --rm -v "$GITHUB_WORKSPACE:/mnt" -w /mnt
+          koalaman/shellcheck:v0.10.0 -x
+          backend/deploy/deploy.sh backend/deploy/compose-test.sh
+          backup/backup.sh backup/restore.sh backup/test.sh
+      - name: Run the harness
+        run: backend/deploy/compose-test.sh
+
+  backup-test:
+    name: Backup · Restore round trip
+    # backup.sh and restore.sh against a MinIO standing in for R2
+    # (backup/test.sh): counts and media manifest match after a restore, and a
+    # target that holds data is refused.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run the harness
+        run: backup/test.sh
+
+  ghcr:
+    name: Build · Push to GHCR (amd64)
+    # The images the VPS runs, tagged with the commit; the deploy job runs them.
+    needs: [quality, deploy-test, backup-test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Image names
+        # GHCR refuses upper case in a repository name, and the owner may have it.
+        id: names
+        run: echo "registry=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v3
+      - name: Build and push the API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          target: prod
+          platforms: linux/amd64
+          provenance: false
+          push: true
+          tags: ${{ steps.names.outputs.registry }}/pets:${{ github.sha }}
+      - name: Build and push the backup image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backup/Dockerfile
+          platforms: linux/amd64
+          provenance: false
+          push: true
+          tags: ${{ steps.names.outputs.registry }}/pets-backup:${{ github.sha }}
+
+  deploy:
+    name: Deploy to the VPS
+    # SSH to the VPS as `deploy`, copy the release (compose file and
+    # deploy.sh) into ~/pets/release/ and run deploy.sh on this commit's
+    # images. deploy.sh migrates on the new tag before anything is recreated
+    # and leaves the running version up if that fails; after the switch it
+    # checks /health and goes back to the kept tag when it fails, exiting
+    # non-zero so this job is red (backend/deploy/RUNBOOK.md).
+    needs: [ghcr]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    environment: vps
+    # One deploy at a time, and a newer merge waits instead of cancelling one
+    # that is migrating.
+    concurrency:
+      group: pets-vps-deploy
+      cancel-in-progress: false
+    permissions:
+      contents: read
+    steps:
+      - name: VPS configured?
+        # Until the vps environment of this repository holds VPS_HOST, nothing
+        # here reaches the VPS: every step below is skipped and the run says
+        # so. Secrets cannot be read in a job-level `if`, hence the step.
+        id: vps
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          if [ -z "$VPS_HOST" ]; then
+            echo "::warning title=deploy skipped::VPS_HOST is not set in the vps environment of this repository, so nothing was deployed."
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.vps.outputs.present == 'true'
+        uses: actions/checkout@v4
+      - name: SSH key and pinned host key
+        if: steps.vps.outputs.present == 'true'
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/vps
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/vps_known_hosts
+          cat > ~/.ssh/config <<CONFIG
+          Host vps
+            HostName $VPS_HOST
+            User deploy
+            IdentityFile ~/.ssh/vps
+            IdentitiesOnly yes
+            UserKnownHostsFile ~/.ssh/vps_known_hosts
+            StrictHostKeyChecking yes
+            BatchMode yes
+            ServerAliveInterval 30
+          CONFIG
+      - name: Copy the release
+        if: steps.vps.outputs.present == 'true'
+        # Into pets/release/, beside the running files; deploy.sh installs the
+        # compose file only once it is past the refusal checks.
+        run: |
+          set -euo pipefail
+          ssh vps 'mkdir -p pets/release'
+          scp -q backend/deploy/compose.prod.yml backend/deploy/deploy.sh vps:pets/release/
+      - name: Deploy ${{ github.sha }}
+        if: steps.vps.outputs.present == 'true'
+        # The explicit list of what the host is configured with. The values go
+        # over SSH on stdin, never in a command line, and deploy.sh refuses a
+        # missing, empty or unknown key (BACKUP_PING_URL may be empty). printf
+        # is a shell builtin, so they do not appear in the runner's process
+        # list either.
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+          R2_MEDIA_ACCESS_KEY_ID: ${{ secrets.R2_MEDIA_ACCESS_KEY_ID }}
+          R2_MEDIA_SECRET_ACCESS_KEY: ${{ secrets.R2_MEDIA_SECRET_ACCESS_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          RESTIC_PASSWORD: ${{ secrets.RESTIC_PASSWORD }}
+          R2_RESTIC_ACCESS_KEY_ID: ${{ secrets.R2_RESTIC_ACCESS_KEY_ID }}
+          R2_RESTIC_SECRET_ACCESS_KEY: ${{ secrets.R2_RESTIC_SECRET_ACCESS_KEY }}
+          R2_MEDIA_READ_ACCESS_KEY_ID: ${{ secrets.R2_MEDIA_READ_ACCESS_KEY_ID }}
+          R2_MEDIA_READ_SECRET_ACCESS_KEY: ${{ secrets.R2_MEDIA_READ_SECRET_ACCESS_KEY }}
+          BACKUP_PING_URL: ${{ secrets.BACKUP_PING_URL }}
+        run: |
+          set -euo pipefail
+          # shellcheck disable=SC2029 # the sha expands here, on purpose
+          printf '%s\n' \
+            "GHCR_OWNER=${GITHUB_REPOSITORY_OWNER,,}" \
+            "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" \
+            "R2_ACCOUNT_ID=$R2_ACCOUNT_ID" \
+            "DJANGO_SECRET_KEY=$DJANGO_SECRET_KEY" \
+            "AWS_ACCESS_KEY_ID=$R2_MEDIA_ACCESS_KEY_ID" \
+            "AWS_SECRET_ACCESS_KEY=$R2_MEDIA_SECRET_ACCESS_KEY" \
+            "RESEND_API_KEY=$RESEND_API_KEY" \
+            "OPENROUTER_API_KEY=$OPENROUTER_API_KEY" \
+            "VAPID_PUBLIC_KEY=$VAPID_PUBLIC_KEY" \
+            "VAPID_PRIVATE_KEY=$VAPID_PRIVATE_KEY" \
+            "RESTIC_PASSWORD=$RESTIC_PASSWORD" \
+            "RESTIC_AWS_ACCESS_KEY_ID=$R2_RESTIC_ACCESS_KEY_ID" \
+            "RESTIC_AWS_SECRET_ACCESS_KEY=$R2_RESTIC_SECRET_ACCESS_KEY" \
+            "MEDIA_S3_ACCESS_KEY_ID=$R2_MEDIA_READ_ACCESS_KEY_ID" \
+            "MEDIA_S3_SECRET_ACCESS_KEY=$R2_MEDIA_READ_SECRET_ACCESS_KEY" \
+            "BACKUP_PING_URL=$BACKUP_PING_URL" |
+            ssh vps "bash pets/release/deploy.sh '$GITHUB_SHA'"
