@@ -5,6 +5,8 @@ carries it in the code. On-screen text is pt-BR; identifiers are English.
 
 | Term (pt-BR on screen) | Identifier | Meaning |
 |---|---|---|
+| Conta | `accounts.User` | A person's own account in this app, with e-mail and password (ADR-0002). Usable only once its e-mail is confirmed with the code e-mailed at sign-up (allauth's `verify_email`). |
+| Código | code | Eight letters and digits, `XXXX-XXXX`, e-mailed by the API and typed into the app, valid for 15 minutes: one confirms a new account's e-mail, another sets a new password. |
 | Animal | `Animal` | A dog or a cat (`species`: `dog`, `cat`) with its profile: name, photo, breed, sex, neutered, coat, microchip, birth and adoption. `active` or `archived`. |
 | Nascimento | `birth_precision`, `birth_date` | The birth as far as it is known: `exact` (a day), `month` (a month and year), `year`, or `unknown`. A coarser birth is stored as the first day of its month or year. The **age** is computed from it and marked approximate when the birth is. |
 | Adoção | `adopted_on` | The day the animal arrived, apart from its birth. |
