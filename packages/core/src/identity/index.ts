@@ -6,5 +6,7 @@ export {
   type IdentityConfig,
   type IdentityError,
   type PendingReset,
+  type PendingVerification,
   type Session,
+  type SignInResult,
 } from "./client";

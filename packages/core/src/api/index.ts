@@ -1,5 +1,6 @@
 export {
   configureApi,
+  apiFetch,
   authHeaders,
   apiBase,
   cardPdfUrl,

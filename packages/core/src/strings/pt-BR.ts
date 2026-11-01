@@ -50,6 +50,13 @@ export const strings = {
     codeHint: "O código tem 8 letras e números, no formato XXXX-XXXX.",
     codeInvalid: "Digite o código no formato XXXX-XXXX.",
     otherCode: "Pedir outro código",
+    verifyTitle: "Confirmar o e-mail",
+    verifyIntro: (email: string) =>
+      `Mandamos um código para ${email}. Digite-o aqui para começar a usar a conta. Ele vale por 15 minutos.`,
+    verify: "Confirmar o e-mail",
+    resendCode: "Mandar outro código",
+    codeResent: "Mandamos outro código. Confira a caixa de entrada.",
+    otherEmail: "Usar outro e-mail",
     signedInAs: (email: string) => `Conectado como ${email}`,
   },
   home: {

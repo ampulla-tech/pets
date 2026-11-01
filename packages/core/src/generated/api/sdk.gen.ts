@@ -131,6 +131,13 @@ export const listAnimals = <ThrowOnError extends boolean = false>(
   options?: Options<ListAnimalsData, ThrowOnError>,
 ): RequestResult<ListAnimalsResponses, unknown, ThrowOnError> =>
   (options?.client ?? client).get<ListAnimalsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals",
     ...options,
   });
@@ -144,6 +151,13 @@ export const createAnimal = <ThrowOnError extends boolean = false>(
   options: Options<CreateAnimalData, ThrowOnError>,
 ): RequestResult<CreateAnimalResponses, unknown, ThrowOnError> =>
   (options.client ?? client).post<CreateAnimalResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals",
     ...options,
     headers: {
@@ -161,6 +175,13 @@ export const deleteAnimal = <ThrowOnError extends boolean = false>(
   options: Options<DeleteAnimalData, ThrowOnError>,
 ): RequestResult<DeleteAnimalResponses, unknown, ThrowOnError> =>
   (options.client ?? client).delete<DeleteAnimalResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}",
     ...options,
   });
@@ -172,6 +193,13 @@ export const getAnimal = <ThrowOnError extends boolean = false>(
   options: Options<GetAnimalData, ThrowOnError>,
 ): RequestResult<GetAnimalResponses, unknown, ThrowOnError> =>
   (options.client ?? client).get<GetAnimalResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}",
     ...options,
   });
@@ -183,6 +211,13 @@ export const updateAnimal = <ThrowOnError extends boolean = false>(
   options: Options<UpdateAnimalData, ThrowOnError>,
 ): RequestResult<UpdateAnimalResponses, unknown, ThrowOnError> =>
   (options.client ?? client).put<UpdateAnimalResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}",
     ...options,
     headers: {
@@ -200,6 +235,13 @@ export const listAccesses = <ThrowOnError extends boolean = false>(
   options: Options<ListAccessesData, ThrowOnError>,
 ): RequestResult<ListAccessesResponses, unknown, ThrowOnError> =>
   (options.client ?? client).get<ListAccessesResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}/accesses",
     ...options,
   });
@@ -219,7 +261,17 @@ export const removeAccess = <ThrowOnError extends boolean = false>(
     RemoveAccessResponses,
     RemoveAccessErrors,
     ThrowOnError
-  >({ url: "/animals/{animal_id}/accesses/{access_id}", ...options });
+  >({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
+    url: "/animals/{animal_id}/accesses/{access_id}",
+    ...options,
+  });
 
 /**
  * Create
@@ -228,6 +280,13 @@ export const createAntiparasitic = <ThrowOnError extends boolean = false>(
   options: Options<CreateAntiparasiticData, ThrowOnError>,
 ): RequestResult<CreateAntiparasiticResponses, unknown, ThrowOnError> =>
   (options.client ?? client).post<CreateAntiparasiticResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}/antiparasitics",
     ...options,
     headers: {
@@ -243,6 +302,13 @@ export const deleteAntiparasitic = <ThrowOnError extends boolean = false>(
   options: Options<DeleteAntiparasiticData, ThrowOnError>,
 ): RequestResult<DeleteAntiparasiticResponses, unknown, ThrowOnError> =>
   (options.client ?? client).delete<DeleteAntiparasiticResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}/antiparasitics/{record_id}",
     ...options,
   });
@@ -254,6 +320,13 @@ export const updateAntiparasitic = <ThrowOnError extends boolean = false>(
   options: Options<UpdateAntiparasiticData, ThrowOnError>,
 ): RequestResult<UpdateAntiparasiticResponses, unknown, ThrowOnError> =>
   (options.client ?? client).put<UpdateAntiparasiticResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}/antiparasitics/{record_id}",
     ...options,
     headers: {
@@ -271,6 +344,13 @@ export const archiveAnimal = <ThrowOnError extends boolean = false>(
   options: Options<ArchiveAnimalData, ThrowOnError>,
 ): RequestResult<ArchiveAnimalResponses, unknown, ThrowOnError> =>
   (options.client ?? client).post<ArchiveAnimalResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}/archive",
     ...options,
     headers: {
@@ -289,6 +369,13 @@ export const uploadAttachments = <ThrowOnError extends boolean = false>(
 ): RequestResult<UploadAttachmentsResponses, unknown, ThrowOnError> =>
   (options.client ?? client).post<UploadAttachmentsResponses, unknown, ThrowOnError>({
     ...formDataBodySerializer,
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}/attachments",
     ...options,
     headers: {
@@ -306,6 +393,13 @@ export const getCard = <ThrowOnError extends boolean = false>(
   options: Options<GetCardData, ThrowOnError>,
 ): RequestResult<GetCardResponses, unknown, ThrowOnError> =>
   (options.client ?? client).get<GetCardResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}/card",
     ...options,
   });
@@ -320,6 +414,13 @@ export const createExtraction = <ThrowOnError extends boolean = false>(
 ): RequestResult<CreateExtractionResponses, unknown, ThrowOnError> =>
   (options.client ?? client).post<CreateExtractionResponses, unknown, ThrowOnError>({
     ...formDataBodySerializer,
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}/extractions",
     ...options,
     headers: {
@@ -337,6 +438,13 @@ export const createInvite = <ThrowOnError extends boolean = false>(
   options: Options<CreateInviteData, ThrowOnError>,
 ): RequestResult<CreateInviteResponses, unknown, ThrowOnError> =>
   (options.client ?? client).post<CreateInviteResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}/invites",
     ...options,
     headers: {
@@ -352,6 +460,13 @@ export const createNote = <ThrowOnError extends boolean = false>(
   options: Options<CreateNoteData, ThrowOnError>,
 ): RequestResult<CreateNoteResponses, unknown, ThrowOnError> =>
   (options.client ?? client).post<CreateNoteResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}/notes",
     ...options,
     headers: {
@@ -367,6 +482,13 @@ export const deleteNote = <ThrowOnError extends boolean = false>(
   options: Options<DeleteNoteData, ThrowOnError>,
 ): RequestResult<DeleteNoteResponses, unknown, ThrowOnError> =>
   (options.client ?? client).delete<DeleteNoteResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}/notes/{record_id}",
     ...options,
   });
@@ -378,6 +500,13 @@ export const updateNote = <ThrowOnError extends boolean = false>(
   options: Options<UpdateNoteData, ThrowOnError>,
 ): RequestResult<UpdateNoteResponses, unknown, ThrowOnError> =>
   (options.client ?? client).put<UpdateNoteResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}/notes/{record_id}",
     ...options,
     headers: {
@@ -394,6 +523,13 @@ export const setAnimalPhoto = <ThrowOnError extends boolean = false>(
 ): RequestResult<SetAnimalPhotoResponses, unknown, ThrowOnError> =>
   (options.client ?? client).post<SetAnimalPhotoResponses, unknown, ThrowOnError>({
     ...formDataBodySerializer,
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}/photo",
     ...options,
     headers: {
@@ -411,6 +547,13 @@ export const listRecords = <ThrowOnError extends boolean = false>(
   options: Options<ListRecordsData, ThrowOnError>,
 ): RequestResult<ListRecordsResponses, unknown, ThrowOnError> =>
   (options.client ?? client).get<ListRecordsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}/records",
     ...options,
   });
@@ -424,6 +567,13 @@ export const listAnimalReminders = <ThrowOnError extends boolean = false>(
   options: Options<ListAnimalRemindersData, ThrowOnError>,
 ): RequestResult<ListAnimalRemindersResponses, unknown, ThrowOnError> =>
   (options.client ?? client).get<ListAnimalRemindersResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}/reminders",
     ...options,
   });
@@ -435,6 +585,13 @@ export const createVaccine = <ThrowOnError extends boolean = false>(
   options: Options<CreateVaccineData, ThrowOnError>,
 ): RequestResult<CreateVaccineResponses, unknown, ThrowOnError> =>
   (options.client ?? client).post<CreateVaccineResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}/vaccines",
     ...options,
     headers: {
@@ -450,6 +607,13 @@ export const deleteVaccine = <ThrowOnError extends boolean = false>(
   options: Options<DeleteVaccineData, ThrowOnError>,
 ): RequestResult<DeleteVaccineResponses, unknown, ThrowOnError> =>
   (options.client ?? client).delete<DeleteVaccineResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}/vaccines/{record_id}",
     ...options,
   });
@@ -461,6 +625,13 @@ export const updateVaccine = <ThrowOnError extends boolean = false>(
   options: Options<UpdateVaccineData, ThrowOnError>,
 ): RequestResult<UpdateVaccineResponses, unknown, ThrowOnError> =>
   (options.client ?? client).put<UpdateVaccineResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}/vaccines/{record_id}",
     ...options,
     headers: {
@@ -476,6 +647,13 @@ export const createVisit = <ThrowOnError extends boolean = false>(
   options: Options<CreateVisitData, ThrowOnError>,
 ): RequestResult<CreateVisitResponses, unknown, ThrowOnError> =>
   (options.client ?? client).post<CreateVisitResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}/visits",
     ...options,
     headers: {
@@ -491,6 +669,13 @@ export const deleteVisit = <ThrowOnError extends boolean = false>(
   options: Options<DeleteVisitData, ThrowOnError>,
 ): RequestResult<DeleteVisitResponses, unknown, ThrowOnError> =>
   (options.client ?? client).delete<DeleteVisitResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}/visits/{record_id}",
     ...options,
   });
@@ -502,6 +687,13 @@ export const updateVisit = <ThrowOnError extends boolean = false>(
   options: Options<UpdateVisitData, ThrowOnError>,
 ): RequestResult<UpdateVisitResponses, unknown, ThrowOnError> =>
   (options.client ?? client).put<UpdateVisitResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}/visits/{record_id}",
     ...options,
     headers: {
@@ -517,6 +709,13 @@ export const createWeight = <ThrowOnError extends boolean = false>(
   options: Options<CreateWeightData, ThrowOnError>,
 ): RequestResult<CreateWeightResponses, unknown, ThrowOnError> =>
   (options.client ?? client).post<CreateWeightResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}/weights",
     ...options,
     headers: {
@@ -532,6 +731,13 @@ export const deleteWeight = <ThrowOnError extends boolean = false>(
   options: Options<DeleteWeightData, ThrowOnError>,
 ): RequestResult<DeleteWeightResponses, unknown, ThrowOnError> =>
   (options.client ?? client).delete<DeleteWeightResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}/weights/{record_id}",
     ...options,
   });
@@ -543,6 +749,13 @@ export const updateWeight = <ThrowOnError extends boolean = false>(
   options: Options<UpdateWeightData, ThrowOnError>,
 ): RequestResult<UpdateWeightResponses, unknown, ThrowOnError> =>
   (options.client ?? client).put<UpdateWeightResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/animals/{animal_id}/weights/{record_id}",
     ...options,
     headers: {
@@ -571,6 +784,13 @@ export const getExtraction = <ThrowOnError extends boolean = false>(
   options: Options<GetExtractionData, ThrowOnError>,
 ): RequestResult<GetExtractionResponses, unknown, ThrowOnError> =>
   (options.client ?? client).get<GetExtractionResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/extractions/{extraction_id}",
     ...options,
   });
@@ -584,6 +804,13 @@ export const confirmProposal = <ThrowOnError extends boolean = false>(
   options: Options<ConfirmProposalData, ThrowOnError>,
 ): RequestResult<ConfirmProposalResponses, unknown, ThrowOnError> =>
   (options.client ?? client).post<ConfirmProposalResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/extractions/{extraction_id}/proposals/{index}/confirm",
     ...options,
     headers: {
@@ -601,6 +828,13 @@ export const discardProposal = <ThrowOnError extends boolean = false>(
   options: Options<DiscardProposalData, ThrowOnError>,
 ): RequestResult<DiscardProposalResponses, unknown, ThrowOnError> =>
   (options.client ?? client).post<DiscardProposalResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/extractions/{extraction_id}/proposals/{index}/discard",
     ...options,
   });
@@ -614,6 +848,13 @@ export const retryExtraction = <ThrowOnError extends boolean = false>(
   options: Options<RetryExtractionData, ThrowOnError>,
 ): RequestResult<RetryExtractionResponses, unknown, ThrowOnError> =>
   (options.client ?? client).post<RetryExtractionResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/extractions/{extraction_id}/retry",
     ...options,
   });
@@ -638,6 +879,13 @@ export const previewInvite = <ThrowOnError extends boolean = false>(
   options: Options<PreviewInviteData, ThrowOnError>,
 ): RequestResult<PreviewInviteResponses, unknown, ThrowOnError> =>
   (options.client ?? client).get<PreviewInviteResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/invites/{token}",
     ...options,
   });
@@ -654,7 +902,17 @@ export const acceptInvite = <ThrowOnError extends boolean = false>(
     AcceptInviteResponses,
     AcceptInviteErrors,
     ThrowOnError
-  >({ url: "/invites/{token}/accept", ...options });
+  >({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
+    url: "/invites/{token}/accept",
+    ...options,
+  });
 
 /**
  * Get Me
@@ -663,6 +921,13 @@ export const getMe = <ThrowOnError extends boolean = false>(
   options?: Options<GetMeData, ThrowOnError>,
 ): RequestResult<GetMeResponses, unknown, ThrowOnError> =>
   (options?.client ?? client).get<GetMeResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/me",
     ...options,
   });
@@ -676,6 +941,13 @@ export const registerExpoToken = <ThrowOnError extends boolean = false>(
   options: Options<RegisterExpoTokenData, ThrowOnError>,
 ): RequestResult<RegisterExpoTokenResponses, unknown, ThrowOnError> =>
   (options.client ?? client).post<RegisterExpoTokenResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/push/expo",
     ...options,
     headers: {
@@ -693,6 +965,13 @@ export const removeExpoToken = <ThrowOnError extends boolean = false>(
   options: Options<RemoveExpoTokenData, ThrowOnError>,
 ): RequestResult<RemoveExpoTokenResponses, unknown, ThrowOnError> =>
   (options.client ?? client).post<RemoveExpoTokenResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/push/expo/remove",
     ...options,
     headers: {
@@ -708,6 +987,13 @@ export const registerWebpush = <ThrowOnError extends boolean = false>(
   options: Options<RegisterWebpushData, ThrowOnError>,
 ): RequestResult<RegisterWebpushResponses, unknown, ThrowOnError> =>
   (options.client ?? client).post<RegisterWebpushResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/push/webpush",
     ...options,
     headers: {
@@ -725,6 +1011,13 @@ export const getWebpushKey = <ThrowOnError extends boolean = false>(
   options?: Options<GetWebpushKeyData, ThrowOnError>,
 ): RequestResult<GetWebpushKeyResponses, unknown, ThrowOnError> =>
   (options?.client ?? client).get<GetWebpushKeyResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/push/webpush/key",
     ...options,
   });
@@ -736,6 +1029,13 @@ export const removeWebpush = <ThrowOnError extends boolean = false>(
   options: Options<RemoveWebpushData, ThrowOnError>,
 ): RequestResult<RemoveWebpushResponses, unknown, ThrowOnError> =>
   (options.client ?? client).post<RemoveWebpushResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/push/webpush/remove",
     ...options,
     headers: {
@@ -753,6 +1053,13 @@ export const listUpcoming = <ThrowOnError extends boolean = false>(
   options?: Options<ListUpcomingData, ThrowOnError>,
 ): RequestResult<ListUpcomingResponses, unknown, ThrowOnError> =>
   (options?.client ?? client).get<ListUpcomingResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
     url: "/reminders/upcoming",
     ...options,
   });
