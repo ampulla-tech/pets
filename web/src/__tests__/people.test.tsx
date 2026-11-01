@@ -215,9 +215,9 @@ describe("invite", () => {
     const { user, router } = renderApp("/convite/tk");
     await user.click(await screen.findByRole("button", { name: "Aceitar" }));
     await waitFor(() => expect(router.state.location.pathname).toBe("/animais/a1"));
-    expect(api.to("POST /invites/tk/accept")[0].headers.get("X-Session-Token")).toBe(
-      "token-1",
-    );
+    const accept = api.to("POST /invites/tk/accept")[0];
+    expect(accept.credentials).toBe("include");
+    expect(accept.headers.get("X-CSRFToken")).toBe("csrf-1");
   });
 
   it.each([

@@ -11,7 +11,7 @@ export function renderApp(
   path: string,
   { as = "ana@example.com" }: { as?: string | null } = {},
 ) {
-  if (as) session.set({ token: "token-1", email: as });
+  if (as) session.set({ email: as });
   else session.clear();
   const queryClient = createQueryClient();
   queryClient.setDefaultOptions({

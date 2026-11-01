@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Download, Image as ImageIcon, Loader2 } from "lucide-react";
-import { authHeaders, cardPdfUrl } from "@pets/core/api";
+import { apiFetch, cardPdfUrl } from "@pets/core/api";
 import type { AttachmentOut, CardRowOut } from "@pets/core/api/generated";
 import { getCardOptions } from "@pets/core/api/query";
 import {
@@ -27,9 +27,9 @@ function fileName(header: string | null, fallback: string) {
   return match?.[1] ?? fallback;
 }
 
-/** Fetch the PDF with the session header and hand it to the browser as a download. */
+/** Fetch the PDF with the session and hand it to the browser as a download. */
 export async function downloadCardPdf(animalId: string, animalName: string) {
-  const response = await fetch(cardPdfUrl(animalId), { headers: authHeaders() });
+  const response = await apiFetch(cardPdfUrl(animalId));
   if (!response.ok) throw new Error(`card.pdf ${response.status}`);
   const blob = await response.blob();
   const url = URL.createObjectURL(blob);

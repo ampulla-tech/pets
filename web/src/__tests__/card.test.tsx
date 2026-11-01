@@ -76,8 +76,7 @@ describe("card", () => {
     const { user } = renderApp("/animais/g1/carteirinha");
     await user.click(await screen.findByRole("button", { name: "Baixar PDF" }));
     await waitFor(() => expect(clicks).toEqual(["carteirinha-gata.pdf"]));
-    expect(api.to("GET /animals/g1/card.pdf")[0].headers.get("X-Session-Token")).toBe(
-      "token-1",
-    );
+    // The session is the cookie: the call carries it.
+    expect(api.to("GET /animals/g1/card.pdf")[0].credentials).toBe("include");
   });
 });

@@ -9,6 +9,7 @@ export interface Call {
   path: string;
   query: URLSearchParams;
   headers: Headers;
+  credentials: RequestCredentials;
   json: unknown;
   form: FormData | null;
 }
@@ -84,6 +85,7 @@ export function mockApi(routes: Record<string, Handler | unknown>) {
       path: url.pathname,
       query: url.searchParams,
       headers: request.headers,
+      credentials: init?.credentials ?? request.credentials,
       json,
       form,
     };

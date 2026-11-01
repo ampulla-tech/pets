@@ -6,6 +6,8 @@ import { session } from "@/lib/session";
 setUpApi();
 
 beforeEach(() => {
+  // The CSRF cookie the API sets with any allauth answer (ADR-0002).
+  document.cookie = "csrftoken=csrf-1; path=/";
   localStorage.clear();
   sessionStorage.clear();
   session.reload();

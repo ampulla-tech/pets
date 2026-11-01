@@ -4,6 +4,7 @@ import { returnTo } from "@/lib/returnTo";
 import { SignIn } from "@/pages/auth/SignIn";
 import { SignUp } from "@/pages/auth/SignUp";
 import { Reset } from "@/pages/auth/Reset";
+import { Verify } from "@/pages/auth/Verify";
 import { Home } from "@/pages/Home";
 import { AnimalForm } from "@/pages/AnimalForm";
 import { AnimalProfile } from "@/pages/AnimalProfile";
@@ -44,6 +45,7 @@ export const routes: RouteObject[] = [
       { path: "/entrar", element: <SignIn /> },
       { path: "/cadastro", element: <SignUp /> },
       { path: "/recuperar", element: <Reset /> },
+      { path: "/confirmar", element: <Verify /> },
     ],
   },
   // Open to anyone: the invite shows what it grants before asking for an account.

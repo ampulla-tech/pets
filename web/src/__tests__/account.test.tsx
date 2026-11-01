@@ -3,12 +3,19 @@ import { screen, waitFor } from "@testing-library/react";
 import { mockApi, reply } from "./api";
 import { renderApp } from "./render";
 import { animal } from "./fixtures";
+import { identity } from "@/lib/identity";
+import { session } from "@/lib/session";
 
-const ALLAUTH = "/_allauth/app/v1";
+const ALLAUTH = "/_allauth/browser/v1";
 const signedIn = (email: string) => ({
   status: 200,
   data: { user: { email } },
-  meta: { session_token: "tok-new", is_authenticated: true },
+  meta: { is_authenticated: true },
+});
+const verifying = reply(401, {
+  status: 401,
+  data: { flows: [{ id: "signup" }, { id: "verify_email", is_pending: true }] },
+  meta: { is_authenticated: false },
 });
 
 function emptyHome() {
@@ -20,23 +27,93 @@ function emptyHome() {
 }
 
 describe("account", () => {
-  it("signs up and lands on the empty home", async () => {
+  it("signs up, confirms the e-mail with the code and lands on the empty home", async () => {
     const api = mockApi({
       ...emptyHome(),
-      [`POST ${ALLAUTH}/auth/signup`]: signedIn("bia@example.com"),
+      [`POST ${ALLAUTH}/auth/signup`]: verifying,
+      [`POST ${ALLAUTH}/auth/email/verify`]: signedIn("bia@example.com"),
     });
     const { user, router } = renderApp("/cadastro", { as: null });
     await user.type(screen.getByLabelText("E-mail"), "bia@example.com");
     await user.type(screen.getByLabelText("Senha"), "uma-senha-boa");
     await user.click(screen.getByRole("button", { name: "Criar conta" }));
+    expect(
+      await screen.findByText(/Mandamos um código para bia@example.com/),
+    ).toBeTruthy();
+    expect(router.state.location.pathname).toBe("/confirmar");
+    const signup = api.to(`POST ${ALLAUTH}/auth/signup`)[0];
+    expect(signup.json).toEqual({ email: "bia@example.com", password: "uma-senha-boa" });
+    // allauth's browser client: the cookies go, and the CSRF cookie comes back
+    // as a header.
+    expect(signup.credentials).toBe("include");
+    expect(signup.headers.get("X-CSRFToken")).toBe("csrf-1");
+
+    await user.type(screen.getByLabelText("Código"), "ab12cd34");
+    await user.click(screen.getByRole("button", { name: "Confirmar o e-mail" }));
     expect(await screen.findByText("Nenhum animal ainda.")).toBeTruthy();
     expect(router.state.location.pathname).toBe("/");
-    expect(api.to(`POST ${ALLAUTH}/auth/signup`)[0].json).toEqual({
-      email: "bia@example.com",
-      password: "uma-senha-boa",
+    expect(api.to(`POST ${ALLAUTH}/auth/email/verify`)[0].json).toEqual({
+      key: "AB12-CD34",
     });
-    // The API is called with the new session token.
-    expect(api.to("GET /animals")[0].headers.get("X-Session-Token")).toBe("tok-new");
+    const animals = api.to("GET /animals")[0];
+    expect(animals.credentials).toBe("include");
+    expect(animals.headers.get("X-Session-Token")).toBeNull();
+    expect(JSON.parse(localStorage.getItem("pets.session")!)).toEqual({
+      email: "bia@example.com",
+    });
+  });
+
+  it("sends another code and says a wrong one is wrong", async () => {
+    const api = mockApi({
+      [`POST ${ALLAUTH}/auth/signup`]: verifying,
+      [`POST ${ALLAUTH}/auth/email/verify/resend`]: { status: 200 },
+      [`POST ${ALLAUTH}/auth/email/verify`]: reply(400, {
+        status: 400,
+        errors: [{ code: "incorrect_code", param: "key", message: "x" }],
+      }),
+    });
+    const { user } = renderApp("/cadastro", { as: null });
+    await user.type(screen.getByLabelText("E-mail"), "bia@example.com");
+    await user.type(screen.getByLabelText("Senha"), "uma-senha-boa");
+    await user.click(screen.getByRole("button", { name: "Criar conta" }));
+    await user.click(await screen.findByRole("button", { name: "Mandar outro código" }));
+    expect(await screen.findByText(/Mandamos outro código/)).toBeTruthy();
+    expect(api.to(`POST ${ALLAUTH}/auth/email/verify/resend`)).toHaveLength(1);
+    await user.type(screen.getByLabelText("Código"), "BBBB-BBBB");
+    await user.click(screen.getByRole("button", { name: "Confirmar o e-mail" }));
+    expect(await screen.findByText("Código incorreto. Confira o e-mail.")).toBeTruthy();
+  });
+
+  it("asks an account not yet confirmed for its code at sign-in, then goes where it was headed", async () => {
+    mockApi({
+      [`POST ${ALLAUTH}/auth/login`]: verifying,
+      [`POST ${ALLAUTH}/auth/email/verify`]: signedIn("bia@example.com"),
+      "GET /invites/tk": {
+        state: "valid",
+        role: "guest",
+        access_ends_on: null,
+        invited_by: "ana@example.com",
+        animal: { name: "Bug", species: "dog", photo_url: null },
+        already_member: false,
+        animal_id: null,
+      },
+    });
+    const { user, router } = renderApp("/entrar?volta=%2Fconvite%2Ftk", { as: null });
+    await user.type(screen.getByLabelText("E-mail"), "bia@example.com");
+    await user.type(screen.getByLabelText("Senha"), "uma-senha-boa");
+    await user.click(screen.getByRole("button", { name: "Entrar" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/confirmar"));
+    expect(router.state.location.search).toBe("?volta=%2Fconvite%2Ftk");
+    await user.type(screen.getByLabelText("Código"), "AB12-CD34");
+    await user.click(screen.getByRole("button", { name: "Confirmar o e-mail" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/convite/tk"));
+    expect(await screen.findByRole("button", { name: "Aceitar" })).toBeTruthy();
+  });
+
+  it("sends /confirmar with nothing pending to /entrar", async () => {
+    mockApi({});
+    const { router } = renderApp("/confirmar", { as: null });
+    await waitFor(() => expect(router.state.location.pathname).toBe("/entrar"));
   });
 
   it("refuses a short password before calling the server", async () => {
@@ -88,7 +165,7 @@ describe("account", () => {
       ...emptyHome(),
       [`POST ${ALLAUTH}/auth/password/request`]: reply(401, {
         status: 401,
-        meta: { session_token: "flow-1" },
+        meta: { is_authenticated: false },
       }),
       [`POST ${ALLAUTH}/auth/password/reset`]: signedIn("bia@example.com"),
     });
@@ -104,14 +181,16 @@ describe("account", () => {
     await waitFor(() => expect(router.state.location.pathname).toBe("/"));
     const reset = api.to(`POST ${ALLAUTH}/auth/password/reset`)[0];
     expect(reset.json).toEqual({ key: "AB12-CD34", password: "outra-senha-boa" });
-    expect(reset.headers.get("X-Session-Token")).toBe("flow-1");
+    // The reset in progress lives in the session cookie.
+    expect(reset.credentials).toBe("include");
+    expect(reset.headers.get("X-CSRFToken")).toBe("csrf-1");
   });
 
   it("asks for the code in its format", async () => {
     mockApi({
       [`POST ${ALLAUTH}/auth/password/request`]: reply(401, {
         status: 401,
-        meta: { session_token: "f" },
+        meta: { is_authenticated: false },
       }),
     });
     const { user } = renderApp("/recuperar", { as: null });
@@ -133,9 +212,26 @@ describe("account", () => {
     await user.click(screen.getByRole("button", { name: "Menu" }));
     await user.click(await screen.findByRole("menuitem", { name: "Sair da conta" }));
     await waitFor(() => expect(router.state.location.pathname).toBe("/entrar"));
-    expect(
-      api.to(`DELETE ${ALLAUTH}/auth/session`)[0].headers.get("X-Session-Token"),
-    ).toBe("token-1");
+    const ended = api.to(`DELETE ${ALLAUTH}/auth/session`)[0];
+    expect(ended.credentials).toBe("include");
+    expect(ended.headers.get("X-CSRFToken")).toBe("csrf-1");
     expect(localStorage.getItem("pets.session")).toBeNull();
+  });
+});
+
+describe("the session at start", () => {
+  it("is the server's: a cookie that is gone signs the web out", async () => {
+    mockApi({
+      [`GET ${ALLAUTH}/auth/session`]: reply(401, { status: 401, meta: {} }),
+    });
+    session.set({ email: "bia@example.com" });
+    await session.sync(() => identity.current());
+    expect(session.get()).toBeNull();
+  });
+
+  it("and a cookie still open signs it in", async () => {
+    mockApi({ [`GET ${ALLAUTH}/auth/session`]: signedIn("bia@example.com") });
+    await session.sync(() => identity.current());
+    expect(session.get()).toEqual({ email: "bia@example.com" });
   });
 });

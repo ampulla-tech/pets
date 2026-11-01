@@ -5,9 +5,8 @@ import { session } from "@/lib/session";
 
 /** Sign out: drop this browser's push, end the session on the server, forget it here. */
 export async function signOut(queryClient: QueryClient) {
-  const token = session.token();
   await disablePush();
-  if (token) await identity.signOut(token).catch(() => undefined);
+  await identity.signOut().catch(() => undefined);
   session.clear();
   queryClient.clear();
 }

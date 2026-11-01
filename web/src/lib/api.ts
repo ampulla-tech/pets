@@ -1,16 +1,17 @@
 /**
- * The generated API client, pointed at the API with the session token, and the
- * query client every screen shares.
+ * The generated API client, pointed at the API with the session cookie and
+ * CSRF, and the query client every screen shares.
  */
 import { QueryClient } from "@tanstack/react-query";
 import { configureApi } from "@pets/core/api";
+import { csrfToken } from "@/lib/csrf";
 import { API_URL } from "@/lib/env";
 import { session } from "@/lib/session";
 
 export function setUpApi() {
   configureApi({
     baseUrl: API_URL,
-    token: () => session.token(),
+    csrfToken,
     // The session is gone on the server: sign out here too.
     onUnauthorized: () => session.clear(),
   });

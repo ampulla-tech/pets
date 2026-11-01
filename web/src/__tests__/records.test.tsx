@@ -247,6 +247,11 @@ describe("antiparasitic, weight, note, visit", () => {
       reason: "Vômito",
       attachment_ids: ["p1", "p2"],
     });
+    // The upload goes with the session cookie and the CSRF header.
+    const upload = api.to("POST /animals/a1/attachments")[0];
+    expect(upload.credentials).toBe("include");
+    expect(upload.headers.get("X-CSRFToken")).toBe("csrf-1");
+    expect(upload.form?.get("files")).toBeTruthy();
     const links = within(item).getAllByRole("link", { name: /receita.jpg|exame.pdf/ });
     expect(links.map((l) => l.getAttribute("href"))).toEqual([
       files[0].url,

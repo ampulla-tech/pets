@@ -10,6 +10,7 @@ import { Notice } from "@/components/Feedback";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { identity } from "@/lib/identity";
+import { pendingVerification } from "@/lib/pending";
 import { session } from "@/lib/session";
 import { returnTo, withReturn } from "@/lib/returnTo";
 import { AuthLayout } from "./AuthLayout";
@@ -32,7 +33,13 @@ export function SignUp() {
   const onSubmit = form.handleSubmit(async ({ email, password }) => {
     setFailure(null);
     try {
-      session.set(await identity.signUp(email, password));
+      const result = await identity.signUp(email, password);
+      if (result.status === "verifyEmail") {
+        pendingVerification.set(result.pending);
+        navigate(withReturn("/confirmar", target));
+        return;
+      }
+      session.set(result.session);
       navigate(target, { replace: true });
     } catch (error) {
       setFailure(identityMessage(error));
