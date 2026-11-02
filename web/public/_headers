@@ -1,0 +1,20 @@
+# Cloudflare Pages response headers (copied into dist/ by Vite). No two rules
+# match the same path, because Pages joins the values of a header that two
+# matching rules set.
+#
+# The service worker must always be fetched fresh, or a deploy never reaches an
+# installed app; the shell is revalidated on every load so a deploy is picked
+# up at once. The bundles under /assets carry a content hash in their name, so
+# they never change and are cached for good.
+#
+# There is no 404.html and no _redirects on purpose: without a top-level
+# 404.html, Pages treats the site as a single-page app and answers a deep link
+# with the index.
+/sw.js
+  Cache-Control: no-cache
+/
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

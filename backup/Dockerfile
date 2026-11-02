@@ -24,6 +24,6 @@ RUN set -eux; \
     echo "${sha}  /tmp/${file}" | sha256sum -c -; \
     install -m 0755 "/tmp/${file}" /usr/local/bin/supercronic
 
-COPY backup/backup.sh backup/restore.sh backup/crontab /opt/backup/
+COPY backup/backup.sh backup/restore.sh backup/first-run.sh backup/counts.sql backup/crontab /opt/backup/
 RUN chmod +x /opt/backup/*.sh && supercronic -test /opt/backup/crontab
 WORKDIR /opt/backup

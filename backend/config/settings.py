@@ -263,7 +263,10 @@ INTAKE_TIMEOUT_SECONDS = int(os.environ.get("INTAKE_TIMEOUT_SECONDS", "120"))
 
 # ── Push (ADR-0004) ─────────────────────────────────────────────────────────
 # Web push signs with VAPID; the key pair comes from the environment. The
-# public half is also served to the web app, which subscribes with it.
+# public half is also served to the web app, which subscribes with it. Both
+# are one-line base64url strings (the public key as an uncompressed point, the
+# private key as its raw 32 bytes): pywebpush reads a private key given as a
+# string as raw or DER, never as PEM (backend/deploy/RUNBOOK.md generates them).
 VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
 VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "").replace(r"\n", "\n")
 VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "mailto:pets@ampulla.tech")

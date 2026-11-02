@@ -1,113 +1,217 @@
 # Production runbook
 
-Pets in production: the API at `https://api.pets.ampulla.tech` and the web app
-at `https://pets.ampulla.tech` (provisional names; changing them is DNS plus
-the names in `compose.prod.yml` and `Caddyfile`). One VPS runs everything in
-`compose.prod.yml`: Caddy, the API, the photo-reading worker, the scheduled
-commands, Postgres and the nightly backup. Media lives in a private
-S3-compatible bucket, never on the container's disk.
+Pets in production: the API at `https://api.pets.ampulla.tech` on the shared
+VPS, and the web app at `https://pets.ampulla.tech` on Cloudflare Pages
+(ADR-0008). On the VPS, the compose project in `compose.prod.yml` runs the
+API, the photo-reading worker, the scheduled commands, Postgres and the nightly
+backup, and publishes no port: the host's edge proxy reads the `caddy` labels
+of the `pets` service on the `edge` network. Media lives in the private R2
+bucket `ampulla-pets-media`; the nightly restic snapshot of the database and
+the media goes to `ampulla-backup-pets`.
 
-## What it needs (none of it is in the repository)
+A merge to `main` deploys both: Backend CI pushes
+`ghcr.io/ampulla-tech/pets` and `ghcr.io/ampulla-tech/pets-backup`, tagged
+with the commit, and its `deploy` job runs `deploy.sh` on the host; Web CI
+publishes `web/dist` to the Pages project `ampulla-pets`. Each deploy is skipped with
+a warning, and the run stays green, until its secrets exist.
 
-| What | Where it goes |
-|---|---|
-| A VPS with Docker and SSH access for a `deploy` user | the host |
-| DNS: `api.pets.ampulla.tech` and `pets.ampulla.tech` pointing at the VPS | the DNS zone |
-| A private bucket and a read-write key pair for the API | `.env.pets` |
-| A read-only key pair for the same bucket | `.env.backup` |
-| A restic repository (another bucket) and its password | `.env.backup` |
-| The Resend API key, with the sending domain verified | `.env.pets` |
-| `DJANGO_SECRET_KEY` (50+ random characters) | `.env.pets` |
-| VAPID key pair for web push | `.env.pets` |
-| The OpenRouter key and the benchmark's chosen `INTAKE_MODEL` | `.env.pets` |
+## What lives elsewhere
 
-**A host that already runs another Caddy on ports 80 and 443** cannot run this
-file's Caddy as is: either give Pets its own host, or drop the `caddy` service
-and add the two site blocks of `Caddyfile` to the existing Caddy, on a shared
-Docker network with the `pets` service.
+The host and the cloud resources are the infra repository's
+(`ampulla-tech/infra`), and its `vps/RUNBOOK.md` is the procedure for them:
 
-## First install
+- the VPS, Docker, the `deploy` user and its SSH key, and the host key the
+  deploy job pins;
+- the `edge` Docker network and the edge proxy (Caddy with
+  caddy-docker-proxy, DNS-01 certificates);
+- the host's `docker login ghcr.io` with a `read:packages` token, which these
+  private images need;
+- DNS `api.pets.ampulla.tech` to the VPS; the Pages project `ampulla-pets` with the
+  custom domain `pets.ampulla.tech`; the R2 buckets `ampulla-pets-media` and
+  `ampulla-backup-pets`; the `ampulla.tech` sending domain in Resend.
 
-On the host, in `/srv/pets` (owned by `deploy`):
+## Secrets
 
-1. Copy `compose.prod.yml`, `Caddyfile` and `deploy.sh` there.
-2. Write `.env` (mode 0600):
+Nothing below is ever written into the repository. Secrets are set in the
+repository's GitHub environments (Settings, Environments): `vps` for the
+backend deploy, `production` for the web deploy. Generated values are kept in
+the password manager as well; `RESTIC_PASSWORD` must be, or no backup can ever
+be read.
 
-   ```
-   GHCR_OWNER=ampulla-tech
-   IMAGE_TAG=<sha>
-   POSTGRES_PASSWORD=<random>
-   ```
+### `vps` (Backend CI, `deploy` job)
 
-3. Write `.env.pets` (mode 0600):
+| Secret | What | Where it comes from |
+|---|---|---|
+| `VPS_HOST` | the VPS's address; while it is unset the deploy is skipped | infra's `vps/RUNBOOK.md` |
+| `VPS_SSH_KEY` | the private key of the `deploy` user | infra's `vps/RUNBOOK.md` |
+| `VPS_KNOWN_HOSTS` | the host key line(s), pinned (`ssh-keyscan` checked against the console) | infra's `vps/RUNBOOK.md` |
+| `POSTGRES_PASSWORD` | the database password | generated: `openssl rand -hex 32` |
+| `DJANGO_SECRET_KEY` | Django's signing key | generated: `openssl rand -base64 48 \| tr -d '\n='` |
+| `RESTIC_PASSWORD` | the restic repository's password | generated: `openssl rand -base64 48 \| tr -d '\n='` |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | the web push key pair, both one-line base64url | generated, below |
+| `R2_ACCOUNT_ID` | the Cloudflare account that holds the buckets (the `<account>` of `https://<account>.r2.cloudflarestorage.com`) | by hand: Cloudflare dashboard, R2 overview |
+| `R2_MEDIA_ACCESS_KEY_ID`, `R2_MEDIA_SECRET_ACCESS_KEY` | the API's key on `ampulla-pets-media`, Object Read & Write, that bucket only | by hand: R2, Manage API tokens |
+| `R2_MEDIA_READ_ACCESS_KEY_ID`, `R2_MEDIA_READ_SECRET_ACCESS_KEY` | the backup's key on `ampulla-pets-media`, Object Read only, that bucket only | by hand: R2, Manage API tokens |
+| `R2_RESTIC_ACCESS_KEY_ID`, `R2_RESTIC_SECRET_ACCESS_KEY` | restic's key on `ampulla-backup-pets`, Object Read & Write, that bucket only | by hand: R2, Manage API tokens |
+| `RESEND_API_KEY` | Resend, sending access, domain `ampulla.tech` | by hand: Resend dashboard, API keys |
+| `OPENROUTER_API_KEY` | the photo reading's key | by hand: OpenRouter dashboard, Keys |
+| `BACKUP_PING_URL` | optional: a heartbeat URL pinged after each backup | by hand, from the monitor; may stay unset |
 
-   ```
-   DJANGO_SECRET_KEY=<random>
-   AWS_STORAGE_BUCKET_NAME=<bucket>
-   AWS_S3_ENDPOINT_URL=https://<account>.r2.cloudflarestorage.com
-   AWS_ACCESS_KEY_ID=<read-write key>
-   AWS_SECRET_ACCESS_KEY=<read-write secret>
-   RESEND_API_KEY=<key>
-   DEFAULT_FROM_EMAIL=pets@ampulla.tech
-   OPENROUTER_API_KEY=<key>
-   INTAKE_MODEL=openai/gpt-6.1-terra   # ADR-0007
-   VAPID_PUBLIC_KEY=<base64url public key>
-   VAPID_PRIVATE_KEY=<PEM, newlines escaped>
-   ```
+GHCR needs no secret here: the `ghcr` job pushes with the run's own
+`GITHUB_TOKEN`, and the host pulls with its own login (above).
 
-   Generate the VAPID pair with
-   `docker compose -f compose.prod.yml run --rm pets python -c "from py_vapid import Vapid; v=Vapid(); v.generate_keys(); v.save_key('/tmp/k.pem'); print(v.public_key)"`,
-   or any VAPID generator; the public half is also what the web app subscribes with
-   (the API serves it at `/push/webpush/key`).
+Not secrets, and kept in `compose.prod.yml`: the host names, the bucket names,
+`DEFAULT_FROM_EMAIL=pets@ampulla.tech` and `INTAKE_MODEL` (ADR-0007).
 
-4. Write `.env.backup` (mode 0600):
+The VAPID pair, generated with the API image (the private key is its raw 32
+bytes: pywebpush does not read a PEM given as a string):
 
-   ```
-   RESTIC_REPOSITORY=s3:https://<account>.r2.cloudflarestorage.com/<backup-bucket>
-   RESTIC_PASSWORD=<random, kept in the password manager too>
-   AWS_ACCESS_KEY_ID=<restic bucket key>
-   AWS_SECRET_ACCESS_KEY=<restic bucket secret>
-   MEDIA_S3_ENDPOINT=https://<account>.r2.cloudflarestorage.com
-   MEDIA_S3_BUCKET=<media bucket>
-   MEDIA_S3_ACCESS_KEY_ID=<read-only key>
-   MEDIA_S3_SECRET_ACCESS_KEY=<read-only secret>
-   HEARTBEAT_URL=<optional>
-   ```
+```sh
+docker run --rm ghcr.io/ampulla-tech/pets:<sha> python -c "
+from cryptography.hazmat.primitives import serialization as s
+from py_vapid import Vapid
+from py_vapid.utils import b64urlencode
+v = Vapid(); v.generate_keys()
+print('VAPID_PUBLIC_KEY=' + b64urlencode(v.public_key.public_bytes(s.Encoding.X962, s.PublicFormat.UncompressedPoint)))
+print('VAPID_PRIVATE_KEY=' + b64urlencode(v.private_key.private_numbers().private_value.to_bytes(32, 'big')))"
+```
 
-5. Put the web build in `/srv/pets/web` (`pnpm --filter @pets/web build`, then
-   copy `web/dist/` there).
-6. `IMAGE_TAG=<sha> ./deploy.sh`. It migrates, recreates and checks
-   `/health`.
+Changing the pair later unsubscribes every browser that subscribed with the
+old public key.
 
-## Deploying a new version
+### `production` (Web CI, `deploy` job)
 
-Build and push the images (`ghcr.io/<owner>/pets` from `backend/Dockerfile`,
-target `prod`; `ghcr.io/<owner>/pets-backup` from `backup/Dockerfile`, both
-from the repository root), then on the host: `IMAGE_TAG=<sha> ./deploy.sh`.
-A failed migration leaves the running version up.
+| Secret | What | Where it comes from |
+|---|---|---|
+| `CLOUDFLARE_PAGES_TOKEN` | an API token with Account, Cloudflare Pages, Edit, on this account only; while it is unset the publish is skipped | by hand: Cloudflare dashboard, API Tokens |
+| `CLOUDFLARE_ACCOUNT_ID` | the account that holds the Pages project `ampulla-pets` | by hand: Cloudflare dashboard (the same account as `R2_ACCOUNT_ID`) |
+
+The web build's API host is public and committed: `web/.env.production`.
+
+## On the host
+
+The deploy directory is `/home/deploy/pets`, owned by `deploy`. The deploy
+job copies `compose.prod.yml` and `deploy.sh` into `pets/release/` and runs
+`bash pets/release/deploy.sh <sha>` with the secrets on stdin. `deploy.sh`
+writes, mode 0600:
+
+- `.env`: `COMPOSE_FILE`, `IMAGE_TAG`, `GHCR_OWNER`, `POSTGRES_PASSWORD`,
+  `R2_ACCOUNT_ID`, read by Compose;
+- `.env.pets`: `DJANGO_SECRET_KEY`, `AWS_ACCESS_KEY_ID` and
+  `AWS_SECRET_ACCESS_KEY` (the media read-write key), `RESEND_API_KEY`,
+  `OPENROUTER_API_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, for the API,
+  the worker and cron;
+- `.env.backup`: `RESTIC_PASSWORD`, `RESTIC_AWS_ACCESS_KEY_ID` and
+  `RESTIC_AWS_SECRET_ACCESS_KEY`, `MEDIA_S3_ACCESS_KEY_ID` and
+  `MEDIA_S3_SECRET_ACCESS_KEY` (the media read-only key), `BACKUP_PING_URL`
+  when set, for the backup only;
+
+and keeps the running release in `previous/`. It migrates on the new tag
+before anything is recreated (a failed migration leaves the running version
+up), recreates the services, asks `/health` from inside the API container,
+and goes back to the previous tag if it does not answer 200; the job is red
+whenever the new tag did not stay up. Last, it runs `backup/first-run.sh` in
+the backup container, which creates the restic repository if it does not
+exist and gives a host with no snapshot its first backup and restore check;
+the job is red if the backup cannot run, with the new tag left up. Every
+command below runs in
+`/home/deploy/pets`, where `.env` names the compose file, so
+`docker compose` needs no `-f`.
+
+## First deploy
+
+1. Infra's `vps/RUNBOOK.md` is done for this app: `ssh deploy@<host>` works,
+   `docker network inspect edge` answers, `docker login ghcr.io` is in place,
+   DNS, the Pages project and both buckets exist.
+2. Create the R2 keys and the other secrets above, and set them in the `vps`
+   and `production` environments.
+3. Merge, or run Backend CI and Web CI on `main` again (Run workflow). The
+   deploy job writes the files, starts Postgres on its empty volume, migrates
+   and starts everything. Then `backup/first-run.sh` initialises the restic
+   repository, takes the first backup, restores it into a scratch database,
+   checks counts and manifest, and drops the copy; the job is red if any of
+   that fails. Web CI publishes the web app.
+4. Run the checks below.
 
 ## Checks
 
-- `curl https://api.pets.ampulla.tech/health` answers `{"status": "ok"}`.
-- `docker compose -f compose.prod.yml exec backup restic snapshots` lists the
-  night's snapshot with `db` and `media`.
-- Signing up on the web app e-mails a code that confirms the address, and a
-  password reset e-mails a code.
-- After signing in on the web app, the browser holds `sessionid` and
-  `csrftoken` for `pets.ampulla.tech`, and the API's calls carry them.
-- `docker compose -f compose.prod.yml exec pets python manage.py send_reminders --date <day>`
-  evaluates the reminders of that day by hand (it sends for real).
+After the first deploy, and after any change to the host or the secrets:
 
-## Restoring
+1. **`/health` answers 200**:
+   `curl -sS -o /dev/null -w '%{http_code}\n' https://api.pets.ampulla.tech/health`
+   prints `200` (the body is `{"status": "ok"}`).
+2. **The backup holds the database and the media**:
 
-Into a scratch database, never over the live one:
+   ```sh
+   docker compose exec backup sh -c 'export AWS_ACCESS_KEY_ID="$RESTIC_AWS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$RESTIC_AWS_SECRET_ACCESS_KEY"; restic snapshots --host pets-vps && restic ls latest /db /media | head'
+   ```
+
+   lists the night's snapshot of host `pets-vps`, tagged `nightly`, whose two
+   paths end in `/db` and `/media`, then `/db/pets.dump`,
+   `/db/row-counts.txt`, `/db/media-manifest.txt` and the media files.
+3. **A password reset e-mail arrives**: on `https://pets.ampulla.tech/recuperar`,
+   ask for a code for a real inbox with an account; the e-mail from
+   `pets@ampulla.tech` arrives with the code, and the code resets the password.
+
+Also worth a look after the first sign-in on the web app: the browser holds
+`sessionid` and `csrftoken` for `pets.ampulla.tech`, and the API's calls carry
+them (the deploy harness checks the same flow on every change).
+
+## Restore test
+
+The first deploy runs it once by itself (`first-run.sh`). Run it again every
+few months. It restores into a
+scratch database, never over the live one (`restore.sh` refuses a database
+that already holds tables):
 
 ```sh
-docker compose -f compose.prod.yml exec backup /opt/backup/restore.sh latest pets_restore
+docker compose exec backup /opt/backup/restore.sh latest pets_restore_test
 ```
 
-It prints the row counts of the snapshot next to the restored data; compare
-with `row-counts.txt` and the media manifest. To put the media back, copy the
-restored `media/` directory into the bucket with `rclone copy` using the
-read-write keys. Promoting a restored database is stopping `pets`, `worker`
-and `cron`, renaming the databases, and starting them again.
+It prints `database pets_restore_test: <n> tables, counts match` and
+`media: <n> files under /tmp/restore.<x>/media, manifest matches`, and exits
+non-zero on any difference from what the snapshot recorded. Then drop the
+scratch database and the files:
+
+```sh
+docker compose exec backup sh -c 'dropdb pets_restore_test && rm -rf /tmp/restore.*'
+```
+
+The same round trip runs in CI against a MinIO (`backup/test.sh`).
+
+## Restoring for real
+
+1. Restore into a new database as in the test, with a name of the day
+   (`pets_restored_<date>`), from `latest` or a snapshot id from
+   `restic snapshots`.
+2. Media, if the bucket lost files: copy the restored `media/` directory back
+   into `ampulla-pets-media` with the **read-write** key (the backup container
+   holds only the read-only one), e.g. from the backup container:
+
+   ```sh
+   RCLONE_CONFIG_M_TYPE=s3 RCLONE_CONFIG_M_PROVIDER=Cloudflare \
+   RCLONE_CONFIG_M_ENDPOINT="$MEDIA_S3_ENDPOINT" \
+   RCLONE_CONFIG_M_ACCESS_KEY_ID=<read-write key id> \
+   RCLONE_CONFIG_M_SECRET_ACCESS_KEY=<read-write secret> \
+   rclone copy /tmp/restore.<x>/media m:ampulla-pets-media
+   ```
+
+   typed at the prompt, never saved to a file.
+3. Promote the database: `docker compose stop pets worker cron`, then in
+   Postgres `ALTER DATABASE pets RENAME TO pets_broken_<date>` and
+   `ALTER DATABASE pets_restored_<date> RENAME TO pets` (from the `postgres`
+   database, `docker compose exec postgres psql -U pets -d postgres`), then
+   `docker compose up -d`, and the checks above.
+
+## Rolling back by hand
+
+`previous/` holds the release before the last deploy. To run an older tag,
+re-run that commit's Backend CI run on `main`, or on the host:
+`cp previous/.env previous/.env.pets previous/.env.backup previous/compose.prod.yml . && docker compose up -d`.
+Migrations are additive, so an older tag runs on the newer schema.
+
+## By hand on the host
+
+- Reminders of a given day, sent for real:
+  `docker compose exec pets python manage.py send_reminders --date <day>`.
+- Logs: `docker compose logs -f pets worker cron backup`.

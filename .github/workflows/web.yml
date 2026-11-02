@@ -1,5 +1,9 @@
 name: Web CI
 
+# The web app: type-check, tests and build on every change; on a push to main,
+# the same build is published to the Cloudflare Pages project `ampulla-pets`, served
+# at pets.ampulla.tech, and checked live.
+
 on:
   push:
     branches: [main]
@@ -7,10 +11,17 @@ on:
   pull_request:
     branches: [main]
     paths: ["web/**", "packages/core/**", "pnpm-lock.yaml", ".github/workflows/web.yml"]
+  # Publishes again by hand, from main only.
+  workflow_dispatch:
 
 concurrency:
   group: web-ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Cancel superseded PR runs, never a run on main: it may be mid-upload.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Exact, so a publish never picks up a wrangler released that morning.
+  WRANGLER_VERSION: 4.150.0
 
 permissions:
   contents: read
@@ -30,3 +41,122 @@ jobs:
       - run: pnpm --filter @pets/web typecheck
       - run: pnpm --filter @pets/web test
       - run: pnpm --filter @pets/web build
+
+  deploy:
+    name: Build · Publish to Pages · Smoke
+    needs: quality
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    environment: production
+    concurrency:
+      group: pages-pets
+      cancel-in-progress: false
+    env:
+      # A token scoped to Cloudflare Pages on this account only, and the account
+      # it belongs to. Both are secrets; the account ID is never written here.
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      PAGES_PROJECT: ampulla-pets
+      SITE_URL: https://pets.ampulla.tech
+      # The one host the build calls (web/.env.production).
+      API_URL: https://api.pets.ampulla.tech
+    steps:
+      - name: Secrets set?
+        # Until the production environment holds both secrets, nothing is
+        # published: every step below is skipped and the run says so. Secrets
+        # cannot be read in a job-level `if`, hence the step.
+        id: secrets
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::warning title=publish skipped::CLOUDFLARE_PAGES_TOKEN or CLOUDFLARE_ACCOUNT_ID is not set in the production environment of this repository, so the web app was not published."
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.secrets.outputs.present == 'true'
+        uses: actions/checkout@v4
+      - if: steps.secrets.outputs.present == 'true'
+        uses: pnpm/action-setup@v4
+      - if: steps.secrets.outputs.present == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - if: steps.secrets.outputs.present == 'true'
+        run: pnpm install --frozen-lockfile --filter "@pets/web..." --filter pets
+      - name: Build (API host from web/.env.production)
+        if: steps.secrets.outputs.present == 'true'
+        # web/public/_headers rides into dist. There is no 404.html and no
+        # _redirects, so Pages answers a deep link with the index.
+        run: pnpm --filter @pets/web build
+      - name: The build calls the API host and is a single-page app
+        if: steps.secrets.outputs.present == 'true'
+        run: |
+          set -euo pipefail
+          grep -rqF "$API_URL" web/dist/assets ||
+            { echo "::error::the build does not name $API_URL"; exit 1; }
+          [ -f web/dist/_headers ] || { echo "::error::web/dist has no _headers"; exit 1; }
+          if [ -e web/dist/404.html ] || [ -e web/dist/_redirects ]; then
+            echo "::error::a 404.html or a _redirects in the build would end the SPA fallback"
+            exit 1
+          fi
+      - name: Publish to Pages
+        id: deploy
+        if: steps.secrets.outputs.present == 'true'
+        run: |
+          set -euo pipefail
+          npx --yes "wrangler@$WRANGLER_VERSION" pages deploy web/dist \
+            --project-name "$PAGES_PROJECT" --branch main \
+            --commit-hash "$GITHUB_SHA" \
+            --commit-message "$(git log -1 --format=%s)" 2>&1 | tee "$RUNNER_TEMP/deploy.log"
+          url=$(grep -oE 'https://[a-z0-9.-]+\.pages\.dev' "$RUNNER_TEMP/deploy.log" | tail -1)
+          if [ -z "$url" ]; then
+            echo "::error::wrangler printed no pages.dev URL"
+            exit 1
+          fi
+          echo "Deployment: $url"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+      - name: The domain serves this deployment
+        if: steps.secrets.outputs.present == 'true'
+        run: |
+          set -euo pipefail
+          entry=$(grep -oE 'src="/assets/[^"]+\.js"' web/dist/index.html)
+          for attempt in $(seq 1 12); do
+            if curl -s "$SITE_URL/" | grep -qF "$entry"; then
+              echo "$SITE_URL serves $entry"
+              exit 0
+            fi
+            echo "attempt $attempt: $SITE_URL does not serve $entry yet"
+            sleep 10
+          done
+          echo "::error::$SITE_URL still serves another build two minutes after the upload"
+          exit 1
+      - name: Smoke (deployment URL and domain)
+        if: steps.secrets.outputs.present == 'true'
+        # A deep link must come back as the shell with a 200, or a reload on
+        # any screen other than the first is a dead page; the service worker
+        # and the shell are revalidated on every load; the bundles are
+        # immutable.
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          set -euo pipefail
+          tmp="$RUNNER_TEMP/smoke"
+          mkdir -p "$tmp"
+          fail() { echo "::error::$1"; exit 1; }
+          js=$(find web/dist/assets -name '*.js' | head -1)
+          for URL in "$DEPLOY_URL" "$SITE_URL"; do
+            for path in / /animais/123; do
+              code=$(curl -s -o "$tmp/shell" -w '%{http_code}' "$URL$path")
+              [ "$code" = "200" ] || fail "$URL$path answered $code"
+              grep -q '<div id="app">' "$tmp/shell" || fail "$URL$path is not the app shell"
+              echo "$URL$path -> 200, the app shell"
+            done
+            curl -sI "$URL/" | grep -qi '^cache-control: no-cache' ||
+              fail "$URL/ is not served with Cache-Control: no-cache"
+            curl -sI "$URL/sw.js" | grep -qi '^cache-control: no-cache' ||
+              fail "$URL/sw.js is not served with Cache-Control: no-cache"
+            curl -sI "$URL/assets/$(basename "$js")" | grep -qi '^cache-control: .*immutable' ||
+              fail "$URL/assets is not served immutable"
+            echo "$URL: / and /sw.js no-cache, /assets immutable"
+          done
