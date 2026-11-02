@@ -11,9 +11,9 @@
 #   media bucket's read-only keys, handed to rclone only), BACKUP_PING_URL
 #   (optional, pinged on success).
 #
-# The repository must already exist (`restic init` is a step of the runbook),
-# so a wrong RESTIC_REPOSITORY fails here instead of silently starting a new,
-# empty repository somewhere else.
+# The repository must already exist (first-run.sh creates it, from the
+# deploy), so a wrong RESTIC_REPOSITORY fails here instead of silently
+# starting a new, empty repository somewhere else.
 set -eu
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT

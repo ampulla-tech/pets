@@ -59,10 +59,32 @@ stack run --rm backup bash -c '
   head -c 300000 /dev/urandom > "/tmp/src/attachments/7/card photo.jpg"
   printf "pdf\n" > /tmp/src/attachments/visit.pdf
   rclone copy /tmp/src m:media
-  # The runbook initialises the repository once, by hand; backup.sh never does.
-  AWS_ACCESS_KEY_ID="$RESTIC_AWS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$RESTIC_AWS_SECRET_ACCESS_KEY" \
-    restic init >/dev/null
-' || fail "could not fill the media bucket or initialise the repository"
+' || fail "could not fill the media bucket"
+
+echo "== First run: no repository yet"
+out="$(stack run --rm backup /opt/backup/backup.sh 2>&1)" && fail "backup.sh ran without a repository: $out"
+echo "backup.sh: refuses a repository that does not exist"
+out="$(stack run --rm backup /opt/backup/first-run.sh 2>&1)" || fail "first-run.sh failed: $out"
+for line in "first-run: repository initialised" "first-run: first backup taken and restored"; do
+  grep -qx "$line" <<<"$out" || fail "first-run.sh did not print '$line': $out"
+done
+grep -qE '^database first_run_check_[0-9]+: [0-9]+ tables, counts match$' <<<"$out" ||
+  fail "first-run.sh did not check its restore: $out"
+left="$(stack exec -T postgres psql -U pets -d postgres -At -c \
+  "SELECT count(*) FROM pg_database WHERE datname LIKE 'first_run_check_%'")"
+[ "$left" = 0 ] || fail "first-run.sh left $left scratch databases"
+echo "first-run.sh: initialised, backed up, restored and checked, scratch dropped"
+
+out="$(stack run --rm backup /opt/backup/first-run.sh 2>&1)" || fail "a second first-run.sh failed: $out"
+if ! grep -qx "first-run: repository exists" <<<"$out" || ! grep -q "nothing to do$" <<<"$out"; then
+  fail "a second first-run.sh did something: $out"
+fi
+echo "first-run.sh: a second run only reads"
+
+out="$(stack run --rm -e RESTIC_PASSWORD=wrong-password backup /opt/backup/first-run.sh 2>&1)" &&
+  fail "first-run.sh accepted a wrong password: $out"
+grep -q "restic cannot open the repository" <<<"$out" || fail "unexpected failure with a wrong password: $out"
+echo "first-run.sh: a wrong password fails, nothing initialised"
 
 echo "== Back it up"
 out="$(stack run --rm backup /opt/backup/backup.sh 2>&1)" || fail "backup.sh failed: $out"

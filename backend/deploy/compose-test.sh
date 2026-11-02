@@ -25,7 +25,7 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 root="$(cd "$here/../.." && pwd)"
 
 owner=ci
-export COMPOSE_PROJECT_NAME=pets-deploy-test HEALTH_TIMEOUT=30 DEPLOY_SKIP_PULL=1
+export COMPOSE_PROJECT_NAME=pets-deploy-test HEALTH_TIMEOUT=30 DEPLOY_SKIP_PULL=1 DEPLOY_SKIP_BACKUP_CHECK=1
 work="$(mktemp -d)"
 export PETS_DIR="$work/pets"
 edge_proxy=pets-deploy-test-edge

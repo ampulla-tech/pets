@@ -110,7 +110,11 @@ and keeps the running release in `previous/`. It migrates on the new tag
 before anything is recreated (a failed migration leaves the running version
 up), recreates the services, asks `/health` from inside the API container,
 and goes back to the previous tag if it does not answer 200; the job is red
-whenever the new tag did not stay up. Every command below runs in
+whenever the new tag did not stay up. Last, it runs `backup/first-run.sh` in
+the backup container, which creates the restic repository if it does not
+exist and gives a host with no snapshot its first backup and restore check;
+the job is red if the backup cannot run, with the new tag left up. Every
+command below runs in
 `/home/deploy/pets`, where `.env` names the compose file, so
 `docker compose` needs no `-f`.
 
@@ -121,20 +125,13 @@ whenever the new tag did not stay up. Every command below runs in
    DNS, the Pages project and both buckets exist.
 2. Create the R2 keys and the other secrets above, and set them in the `vps`
    and `production` environments.
-3. Run Backend CI on `main` again (re-run the last push's run). The deploy
-   job writes the files, starts Postgres on its empty volume, migrates and
-   starts everything. Run Web CI on `main` (workflow dispatch) to publish the
-   web app.
-4. On the host, initialise the restic repository once (`backup.sh` never does,
-   so a wrong repository fails instead of starting an empty one elsewhere):
-
-   ```sh
-   docker compose exec backup sh -c 'export AWS_ACCESS_KEY_ID="$RESTIC_AWS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$RESTIC_AWS_SECRET_ACCESS_KEY"; restic init'
-   ```
-
-5. Take the first backup now rather than at 03:30:
-   `docker compose exec backup /opt/backup/backup.sh`.
-6. Run the checks and the restore test below.
+3. Merge, or run Backend CI and Web CI on `main` again (Run workflow). The
+   deploy job writes the files, starts Postgres on its empty volume, migrates
+   and starts everything. Then `backup/first-run.sh` initialises the restic
+   repository, takes the first backup, restores it into a scratch database,
+   checks counts and manifest, and drops the copy; the job is red if any of
+   that fails. Web CI publishes the web app.
+4. Run the checks below.
 
 ## Checks
 
@@ -162,7 +159,8 @@ them (the deploy harness checks the same flow on every change).
 
 ## Restore test
 
-Run after the first backup, and again every few months. It restores into a
+The first deploy runs it once by itself (`first-run.sh`). Run it again every
+few months. It restores into a
 scratch database, never over the live one (`restore.sh` refuses a database
 that already holds tables):
 

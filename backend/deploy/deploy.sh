@@ -27,6 +27,11 @@
 #   5. Asks the new API for /health, from inside its container (the edge proxy
 #      and DNS are not on the path), until it answers 200 or HEALTH_TIMEOUT
 #      seconds pass.
+#   6. Runs backup/first-run.sh in the new backup container: the restic
+#      repository is initialised if it does not exist, and a host with no
+#      snapshot yet gets its first backup, restored into a scratch database
+#      and checked. A failure here leaves the new tag running (the app is
+#      fine; its backup is not) and exits 1, so the job is red.
 #
 # A failure before step 4 puts previous/ back in place and exits non-zero. No
 # container of the running release was recreated, so the old version keeps
@@ -41,8 +46,9 @@
 #
 # Environment, for the test harness only: PETS_DIR (default ~/pets),
 # COMPOSE_PROJECT_NAME (default `pets`, from the compose file),
-# HEALTH_TIMEOUT (default 60) and DEPLOY_SKIP_PULL (the harness's images are
-# local and never pushed).
+# HEALTH_TIMEOUT (default 60), DEPLOY_SKIP_PULL (the harness's images are
+# local and never pushed) and DEPLOY_SKIP_BACKUP_CHECK (the harness has no
+# repository; backup/test.sh runs first-run.sh against one).
 set -euo pipefail
 
 # Compose's own configuration: read by Compose to fill compose.prod.yml.
@@ -274,5 +280,15 @@ log "recreate the services on $tag"
 compose up -d --wait --wait-timeout 180 --remove-orphans || go_back "the new release did not start"
 log "/health on $tag, up to ${health_timeout}s"
 healthy || go_back "/health does not answer 200"
+
+# --- The backup can run ---
+
+if [ -n "${DEPLOY_SKIP_BACKUP_CHECK:-}" ]; then
+  log "backup check skipped (DEPLOY_SKIP_BACKUP_CHECK)"
+else
+  log "backup check"
+  compose exec -T backup /opt/backup/first-run.sh ||
+    die "$tag is running, but its backup is not: first-run.sh failed"
+fi
 
 log "done: $tag is running (previous: ${from:-none})"
