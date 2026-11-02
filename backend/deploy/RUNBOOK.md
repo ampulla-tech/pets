@@ -55,7 +55,7 @@ be read.
 | `R2_RESTIC_ACCESS_KEY_ID`, `R2_RESTIC_SECRET_ACCESS_KEY` | restic's key on `ampulla-backup-pets`, Object Read & Write, that bucket only | by hand: R2, Manage API tokens |
 | `RESEND_API_KEY` | Resend, sending access, domain `ampulla.tech` | by hand: Resend dashboard, API keys |
 | `OPENROUTER_API_KEY` | the photo reading's key | by hand: OpenRouter dashboard, Keys |
-| `BACKUP_PING_URL` | optional: a heartbeat URL pinged after each backup | by hand, from the monitor; may stay unset |
+| `BACKUP_PING_URL` | the ping URL of the `pets backup` check, pinged after each backup that completes; optional, the backup runs without it | by hand: Healthchecks.io (Monitoring, below) |
 
 GHCR needs no secret here: the `ghcr` job pushes with the run's own
 `GITHUB_TOKEN`, and the host pulls with its own login (above).
@@ -125,13 +125,16 @@ command below runs in
    DNS, the Pages project and both buckets exist.
 2. Create the R2 keys and the other secrets above, and set them in the `vps`
    and `production` environments.
-3. Merge, or run Backend CI and Web CI on `main` again (Run workflow). The
-   deploy job writes the files, starts Postgres on its empty volume, migrates
+3. Merge. To deploy the same commit again, re-run the `Deploy to the VPS`
+   job of the last Backend CI run on `main`: a Backend CI started with Run
+   workflow tests but does not deploy, since its deploy job runs on a push
+   only. Web CI's Run workflow on `main` does publish. The deploy job writes the files, starts Postgres on its empty volume, migrates
    and starts everything. Then `backup/first-run.sh` initialises the restic
    repository, takes the first backup, restores it into a scratch database,
    checks counts and manifest, and drops the copy; the job is red if any of
    that fails. Web CI publishes the web app.
 4. Run the checks below.
+5. Set up the monitoring below.
 
 ## Checks
 
@@ -156,6 +159,26 @@ After the first deploy, and after any change to the host or the secrets:
 Also worth a look after the first sign-in on the web app: the browser holds
 `sessionid` and `csrftoken` for `pets.ampulla.tech`, and the API's calls carry
 them (the deploy harness checks the same flow on every change).
+
+## Monitoring
+
+Set up by hand once, in the same accounts as the gym's:
+
+1. **Backup heartbeat.** In Healthchecks.io, a check named `pets backup`,
+   schedule Simple, period 1 day, grace 2 hours, e-mail to the owner, no
+   slug (the URL then carries the check's UUID, which no one can guess). Its
+   ping URL goes into `BACKUP_PING_URL` and is secret: anyone holding it can
+   silence the check. It reaches the host on the next deploy, which writes
+   `.env.backup`. `backup.sh` pings only after a backup that completed, at
+   03:30 in Brasília; the check stays "new" until the first night, and
+   Healthchecks.io sends nothing for a check that has never been pinged.
+2. **Uptime.** In UptimeRobot, an HTTP(s) monitor named `pets api` on
+   `https://api.pets.ampulla.tech/health`, every 5 minutes, e-mail to the
+   owner.
+
+A night that fails or does not run leaves the check unpinged, and
+Healthchecks.io e-mails two hours after the ping was due. The output of the
+last runs is in `docker compose logs backup`.
 
 ## Restore test
 
