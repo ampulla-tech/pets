@@ -41,6 +41,14 @@ def health(request):
     return {"status": "ok"}
 
 
+# Uptime monitors on a free plan probe with HEAD only (UptimeRobot), and a 405
+# reads to them as down. Kept out of the schema, so the generated client is
+# unchanged.
+@api.api_operation(["HEAD"], "/health", auth=None, include_in_schema=False)
+def health_head(request):
+    return {"status": "ok"}
+
+
 class MeOut(Schema):
     id: str
     email: str

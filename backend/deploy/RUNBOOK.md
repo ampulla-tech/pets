@@ -174,7 +174,8 @@ Set up by hand once, in the same accounts as the gym's:
    Healthchecks.io sends nothing for a check that has never been pinged.
 2. **Uptime.** In UptimeRobot, an HTTP(s) monitor named `pets api` on
    `https://api.pets.ampulla.tech/health`, every 5 minutes, e-mail to the
-   owner.
+   owner. The free plan probes with HEAD only, so `/health` answers HEAD as
+   well as GET; a 405 there would read as down.
 
 A night that fails or does not run leaves the check unpinged, and
 Healthchecks.io e-mails two hours after the ping was due. The output of the
