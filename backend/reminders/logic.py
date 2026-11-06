@@ -42,6 +42,8 @@ class Dose:
     record_id: str
     # Records of one day keep their order of entry.
     sequence: float = 0.0
+    # The vaccine's brand or the antiparasitic's product, as written.
+    product: str = ""
 
 
 @dataclass(frozen=True)

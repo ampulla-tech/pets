@@ -1,4 +1,7 @@
-"""Where a person receives pushes, and the log that keeps each notice to one send."""
+"""The notices a person was told, where they were delivered, and where a
+person receives pushes."""
+
+import uuid
 
 from django.conf import settings
 from django.db import models
@@ -10,26 +13,70 @@ class Channel(models.TextChoices):
     WEBPUSH = "webpush"
 
 
-class Delivery(models.Model):
-    """One notice of one reminder at one milestone, to one person, on one channel.
+class Notice(models.Model):
+    """What the app told one tutor about one animal on one day (ADR-0009).
 
-    The unique constraint is the idempotency: the daily job can run twice and
-    the second run finds every row already there.
+    Written once, with its words frozen; every channel delivers this same
+    notice, and the app lists it. `read_at` stays empty until the person opens
+    it or marks every notice read.
     """
 
-    reminder_key = models.CharField(max_length=200)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notices"
+    )
     animal = models.ForeignKey("animals.Animal", on_delete=models.CASCADE, related_name="+")
-    milestone = models.CharField(max_length=20)
+    day = models.DateField()
+    title = models.CharField(max_length=300)
+    body = models.CharField(max_length=500, blank=True)
+    # The app path of the animal, e.g. /animais/<id>?assunto=rabies.
+    path = models.CharField(max_length=300)
+    read_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["user", "-created_at"])]
+
+
+class NoticeItem(models.Model):
+    """One reminder at one milestone that a person was told about.
+
+    Unique per person: it is what keeps a milestone from becoming two notices.
+    An item with no notice stands for a milestone sent before notices were
+    kept, so the change of model sends nothing again.
+    """
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="+")
+    notice = models.ForeignKey(
+        Notice, null=True, blank=True, on_delete=models.CASCADE, related_name="items"
+    )
+    reminder_key = models.CharField(max_length=200)
+    milestone = models.CharField(max_length=20)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "reminder_key", "milestone"],
+                name="one_notice_per_milestone",
+            )
+        ]
+
+
+class Delivery(models.Model):
+    """One notice delivered on one channel.
+
+    The unique constraint is the idempotency: the daily job can run twice and
+    the second run finds every row already there. A channel that failed has no
+    row, so the next run delivers the same notice again.
+    """
+
+    notice = models.ForeignKey(Notice, on_delete=models.CASCADE, related_name="deliveries")
     channel = models.CharField(max_length=10, choices=Channel.choices)
     sent_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(
-                fields=["reminder_key", "animal", "milestone", "user", "channel"],
-                name="one_delivery_per_notice",
-            )
+            models.UniqueConstraint(fields=["notice", "channel"], name="one_delivery_per_channel")
         ]
 
 
