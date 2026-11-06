@@ -13,7 +13,7 @@ dose is one vaccine, one dewormer or one flea and tick treatment.
 from dataclasses import dataclass
 from datetime import date
 
-from reminders.logic import Reminder
+from reminders.logic import Reminder, kind_of
 
 VACCINE = "vaccine"
 INTERNAL = "internal"
@@ -29,12 +29,6 @@ FEMININE = {VACCINE}
 class Wording:
     title: str
     body: str
-
-
-def kind_of(reminder: Reminder) -> str:
-    if reminder.source.record_kind == "vaccine":
-        return VACCINE
-    return INTERNAL if reminder.subject == INTERNAL else EXTERNAL
 
 
 def _object(name: str, sex: str) -> str:

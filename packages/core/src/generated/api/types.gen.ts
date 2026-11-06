@@ -386,6 +386,14 @@ export type BadgeOut = {
    */
   days?: number | null;
   /**
+   * Kind
+   */
+  kind?: "vaccine" | "internal" | "external" | null;
+  /**
+   * Others
+   */
+  others?: number;
+  /**
    * State
    */
   state: "none" | "up_to_date" | "due_soon" | "overdue";
@@ -781,6 +789,44 @@ export type NoteOut = {
 };
 
 /**
+ * NoticeOut
+ */
+export type NoticeOut = {
+  /**
+   * Animal Id
+   */
+  animal_id: string;
+  /**
+   * Animal Name
+   */
+  animal_name: string;
+  /**
+   * Body
+   */
+  body: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Read
+   */
+  read: boolean;
+  /**
+   * Sent At
+   */
+  sent_at: string;
+  /**
+   * Title
+   */
+  title: string;
+  /**
+   * Url
+   */
+  url: string;
+};
+
+/**
  * NumberValueOut
  */
 export type NumberValueOut = {
@@ -907,6 +953,16 @@ export type TextValueOut = {
    * Value
    */
   value: string | null;
+};
+
+/**
+ * UnreadOut
+ */
+export type UnreadOut = {
+  /**
+   * Unread
+   */
+  unread: boolean;
 };
 
 /**
@@ -2265,6 +2321,78 @@ export type GetMeResponses = {
 
 export type GetMeResponse = GetMeResponses[keyof GetMeResponses];
 
+export type ListNoticesData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/notices";
+};
+
+export type ListNoticesResponses = {
+  /**
+   * Response
+   *
+   * OK
+   */
+  200: Array<NoticeOut>;
+};
+
+export type ListNoticesResponse = ListNoticesResponses[keyof ListNoticesResponses];
+
+export type ReadAllNoticesData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/notices/read";
+};
+
+export type ReadAllNoticesResponses = {
+  /**
+   * No Content
+   */
+  204: void;
+};
+
+export type ReadAllNoticesResponse =
+  ReadAllNoticesResponses[keyof ReadAllNoticesResponses];
+
+export type GetUnreadData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/notices/unread";
+};
+
+export type GetUnreadResponses = {
+  /**
+   * OK
+   */
+  200: UnreadOut;
+};
+
+export type GetUnreadResponse = GetUnreadResponses[keyof GetUnreadResponses];
+
+export type ReadNoticeData = {
+  body?: never;
+  path: {
+    /**
+     * Notice Id
+     */
+    notice_id: string;
+  };
+  query?: never;
+  url: "/notices/{notice_id}/read";
+};
+
+export type ReadNoticeResponses = {
+  /**
+   * No Content
+   */
+  204: void;
+};
+
+export type ReadNoticeResponse = ReadNoticeResponses[keyof ReadNoticeResponses];
+
 export type RegisterExpoTokenData = {
   body: ExpoTokenIn;
   path?: never;
@@ -2347,21 +2475,3 @@ export type RemoveWebpushResponses = {
 };
 
 export type RemoveWebpushResponse = RemoveWebpushResponses[keyof RemoveWebpushResponses];
-
-export type ListUpcomingData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: "/reminders/upcoming";
-};
-
-export type ListUpcomingResponses = {
-  /**
-   * Response
-   *
-   * OK
-   */
-  200: Array<ReminderOut>;
-};
-
-export type ListUpcomingResponse = ListUpcomingResponses[keyof ListUpcomingResponses];

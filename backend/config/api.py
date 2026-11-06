@@ -8,6 +8,7 @@ from animals.api import router as animals_router
 from animals.errors import ApiError
 from intake.api import router as intake_router
 from reminders.api import router as reminders_router
+from reminders.notices_api import router as notices_router
 
 
 class PetsAPI(NinjaAPI):
@@ -61,4 +62,5 @@ def get_me(request):
 
 api.add_router("", animals_router)
 api.add_router("", reminders_router)
+api.add_router("", notices_router)
 api.add_router("", intake_router)

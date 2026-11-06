@@ -133,6 +133,8 @@ export const zAntiparasiticOut = z.object({
  */
 export const zBadgeOut = z.object({
   days: z.int().nullish(),
+  kind: z.enum(["vaccine", "internal", "external"]).nullish(),
+  others: z.int().optional().default(0),
   state: z.enum(["none", "up_to_date", "due_soon", "overdue"]),
 });
 
@@ -345,6 +347,20 @@ export const zNoteOut = z.object({
 });
 
 /**
+ * NoticeOut
+ */
+export const zNoticeOut = z.object({
+  animal_id: z.uuid(),
+  animal_name: z.string(),
+  body: z.string(),
+  id: z.uuid(),
+  read: z.boolean(),
+  sent_at: z.iso.datetime(),
+  title: z.string(),
+  url: z.string(),
+});
+
+/**
  * NumberValueOut
  */
 export const zNumberValueOut = z.object({
@@ -424,6 +440,13 @@ export const zExtractionOut = z.object({
   photos: z.array(zAttachmentOut),
   proposals: z.array(zProposalOut),
   status: z.enum(["processing", "ready", "failed"]),
+});
+
+/**
+ * UnreadOut
+ */
+export const zUnreadOut = z.object({
+  unread: z.boolean(),
 });
 
 /**
@@ -1079,6 +1102,32 @@ export const zAcceptInviteResponse = zAcceptedOut;
  */
 export const zGetMeResponse = zMeOut;
 
+/**
+ * Response
+ *
+ * OK
+ */
+export const zListNoticesResponse = z.array(zNoticeOut);
+
+/**
+ * No Content
+ */
+export const zReadAllNoticesResponse = z.void();
+
+/**
+ * OK
+ */
+export const zGetUnreadResponse = zUnreadOut;
+
+export const zReadNoticePath = z.object({
+  notice_id: z.uuid(),
+});
+
+/**
+ * No Content
+ */
+export const zReadNoticeResponse = z.void();
+
 export const zRegisterExpoTokenBody = zExpoTokenIn;
 
 /**
@@ -1111,10 +1160,3 @@ export const zRemoveWebpushBody = zWebPushEndpointIn;
  * No Content
  */
 export const zRemoveWebpushResponse = z.void();
-
-/**
- * Response
- *
- * OK
- */
-export const zListUpcomingResponse = z.array(zReminderOut);

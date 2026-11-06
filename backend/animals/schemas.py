@@ -36,6 +36,8 @@ class AgeOut(Schema):
 class BadgeOut(Schema):
     state: Literal["none", "up_to_date", "due_soon", "overdue"]
     days: int | None = None
+    kind: Literal["vaccine", "internal", "external"] | None = None
+    others: int = 0
 
 
 class LastWeightOut(Schema):

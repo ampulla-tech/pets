@@ -126,7 +126,7 @@ def animal_out(request, animal: Animal, role: str, today: date | None = None) ->
         "archived_reason": animal.archived_reason,
         "archived_on": animal.archived_on,
         "role": role,
-        "badge": {"state": badge.state, "days": badge.days},
+        "badge": badge.__dict__,
         "last_weight": ({"kg": last_weight.kg, "date": last_weight.date} if last_weight else None),
     }
 

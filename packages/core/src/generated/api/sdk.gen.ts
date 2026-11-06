@@ -57,6 +57,8 @@ import type {
   GetExtractionResponses,
   GetMeData,
   GetMeResponses,
+  GetUnreadData,
+  GetUnreadResponses,
   GetWebpushKeyData,
   GetWebpushKeyResponses,
   HealthData,
@@ -67,12 +69,16 @@ import type {
   ListAnimalRemindersResponses,
   ListAnimalsData,
   ListAnimalsResponses,
+  ListNoticesData,
+  ListNoticesResponses,
   ListRecordsData,
   ListRecordsResponses,
-  ListUpcomingData,
-  ListUpcomingResponses,
   PreviewInviteData,
   PreviewInviteResponses,
+  ReadAllNoticesData,
+  ReadAllNoticesResponses,
+  ReadNoticeData,
+  ReadNoticeResponses,
   RegisterExpoTokenData,
   RegisterExpoTokenResponses,
   RegisterWebpushData,
@@ -933,6 +939,86 @@ export const getMe = <ThrowOnError extends boolean = false>(
   });
 
 /**
+ * List Notices
+ *
+ * The caller's latest 50 notices, newest first.
+ */
+export const listNotices = <ThrowOnError extends boolean = false>(
+  options?: Options<ListNoticesData, ThrowOnError>,
+): RequestResult<ListNoticesResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<ListNoticesResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
+    url: "/notices",
+    ...options,
+  });
+
+/**
+ * Read All Notices
+ *
+ * Mark every notice of the caller read.
+ */
+export const readAllNotices = <ThrowOnError extends boolean = false>(
+  options?: Options<ReadAllNoticesData, ThrowOnError>,
+): RequestResult<ReadAllNoticesResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).post<ReadAllNoticesResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
+    url: "/notices/read",
+    ...options,
+  });
+
+/**
+ * Get Unread
+ *
+ * Whether the caller has a notice not yet read: the dot on the tab.
+ */
+export const getUnread = <ThrowOnError extends boolean = false>(
+  options?: Options<GetUnreadData, ThrowOnError>,
+): RequestResult<GetUnreadResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<GetUnreadResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
+    url: "/notices/unread",
+    ...options,
+  });
+
+/**
+ * Read Notice
+ *
+ * Mark one notice read (opened from the list or from a push).
+ */
+export const readNotice = <ThrowOnError extends boolean = false>(
+  options: Options<ReadNoticeData, ThrowOnError>,
+): RequestResult<ReadNoticeResponses, unknown, ThrowOnError> =>
+  (options.client ?? client).post<ReadNoticeResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
+    url: "/notices/{notice_id}/read",
+    ...options,
+  });
+
+/**
  * Register Expo Token
  *
  * Register this phone's Expo push token for the caller (moves it if another had it).
@@ -1042,24 +1128,4 @@ export const removeWebpush = <ThrowOnError extends boolean = false>(
       "Content-Type": "application/json",
       ...options.headers,
     },
-  });
-
-/**
- * List Upcoming
- *
- * Next up: what is overdue and what falls due in 30 days, every animal, by date.
- */
-export const listUpcoming = <ThrowOnError extends boolean = false>(
-  options?: Options<ListUpcomingData, ThrowOnError>,
-): RequestResult<ListUpcomingResponses, unknown, ThrowOnError> =>
-  (options?.client ?? client).get<ListUpcomingResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
-    url: "/reminders/upcoming",
-    ...options,
   });

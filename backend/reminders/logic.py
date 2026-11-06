@@ -15,7 +15,7 @@ from enum import StrEnum
 
 EARLY_NOTICE = timedelta(days=7)
 OVERDUE_EVERY = timedelta(days=7)
-UPCOMING_WINDOW = timedelta(days=30)
+BADGE_WINDOW = timedelta(days=30)
 
 
 class State(StrEnum):
@@ -132,28 +132,37 @@ def milestone_on(due_on: date, today: date) -> str | None:
 
 @dataclass(frozen=True)
 class Badge:
-    """The one-glance state of an animal on its card."""
+    """The one-glance state of an animal on its card.
+
+    For `due_soon` and `overdue`, `kind` is the most urgent dose's (`vaccine`,
+    `internal`, `external`) and `others` how many other doses are overdue or
+    fall due within 30 days. A dose that covers several diseases counts once.
+    """
 
     state: str  # "none" | "up_to_date" | "due_soon" | "overdue"
     days: int | None = None
+    kind: str | None = None
+    others: int = 0
+
+
+def kind_of(reminder: Reminder) -> str:
+    """What a reminder's dose is: a vaccine, a dewormer or a flea treatment."""
+    if reminder.source.record_kind == "vaccine":
+        return "vaccine"
+    return reminder.subject
 
 
 def badge_for(reminders: list[Reminder], today: date) -> Badge:
     open_ = open_reminders(reminders)
     if not open_ and not any(r.state == State.CLOSED for r in reminders):
         return Badge("none")
-    if any(r.state == State.OVERDUE for r in open_):
-        return Badge("overdue")
-    soon = [r for r in open_ if r.due_on and r.due_on - today <= UPCOMING_WINDOW]
-    if soon:
-        return Badge("due_soon", min((r.due_on - today).days for r in soon))
-    return Badge("up_to_date")
-
-
-def is_upcoming(reminder: Reminder, today: date) -> bool:
-    """Whether a reminder belongs in "next up": overdue, or due within 30 days."""
-    return (
-        reminder.state in OPEN_STATES
-        and reminder.due_on is not None
-        and reminder.due_on - today <= UPCOMING_WINDOW
-    )
+    window: dict[tuple, Reminder] = {}
+    for r in open_:
+        if r.due_on and r.due_on - today <= BADGE_WINDOW:
+            window.setdefault((r.source.record_kind, r.source.record_id, r.due_on), r)
+    if not window:
+        return Badge("up_to_date")
+    # The longest overdue, or else the one that falls due first.
+    first = min(window.values(), key=lambda r: r.due_on)
+    state = "overdue" if first.due_on < today else "due_soon"
+    return Badge(state, (first.due_on - today).days, kind_of(first), len(window) - 1)
