@@ -31,8 +31,7 @@ carries it in the code. On-screen text is pt-BR; identifiers are English.
 | Notificação | push | A notice shown outside the app, by push, on one device (`expo` on a phone, `webpush` in a browser). Switched on per device. |
 | Envio | `Delivery` | One notice delivered on one channel: (notice, channel), unique. A channel that failed has none, and the next run delivers the same notice again. |
 | Canal | `Channel` | How a notice reaches a tutor: `email` (always), `expo` (each phone), `webpush` (each browser). |
-| Próximos | upcoming | The home screen's list: what is overdue and what falls due within 30 days, across the caller's animals, by date. |
-| Selo | badge | An animal card's one-glance state: `up_to_date`, `due_soon` (with the days), `overdue`, or `none`. |
+| Selo | badge | What an animal card says needs care: the kind of the most urgent dose (`vaccine`, `internal`, `external`), when it falls due (`due_soon`, within 30 days, with the days) or that it is late (`overdue`), and how many other doses are due in the same window (" · +1"). An animal `up_to_date` or with no records (`none`) shows no badge. |
 | Leitura / extração | `Extraction` | One reading of a card's photos by the model, with its state (`processing`, `ready`, `failed`) and its proposals. |
 | Registro proposto | proposal | One line the reading found, each field `{value, read}`; `pending` until the tutor confirms it (it becomes a record) or discards it. |
 | Gabarito | answer key | The confirmed transcription of the evaluation cards the benchmark scores the models against. Kept out of the repository. |
