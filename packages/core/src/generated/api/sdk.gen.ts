@@ -236,6 +236,9 @@ export const updateAnimal = <ThrowOnError extends boolean = false>(
  * List Accesses
  *
  * Who has access to the animal, and with which role.
+ *
+ * A guest is told only the tutors and their own access: the other guests are
+ * none of their business.
  */
 export const listAccesses = <ThrowOnError extends boolean = false>(
   options: Options<ListAccessesData, ThrowOnError>,

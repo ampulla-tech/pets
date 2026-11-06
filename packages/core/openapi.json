@@ -2726,7 +2726,7 @@
     },
     "/animals/{animal_id}/accesses": {
       "get": {
-        "description": "Who has access to the animal, and with which role.",
+        "description": "Who has access to the animal, and with which role.\n\nA guest is told only the tutors and their own access: the other guests are\nnone of their business.",
         "operationId": "list_accesses",
         "parameters": [
           {

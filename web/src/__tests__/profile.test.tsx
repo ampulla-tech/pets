@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import { mockApi, reply } from "./api";
 import { renderApp } from "./render";
-import { animal, animalRoutes, reminder, vaccine, weight } from "./fixtures";
+import { access, animal, animalRoutes, reminder, vaccine, weight } from "./fixtures";
 
 const lacan = animal({ last_weight: { kg: "4.900", date: "2026-08-02" } });
 const records = [
@@ -226,7 +226,7 @@ describe("animal profile", () => {
   it("shows a guest Registrar with weight and note only, and Tutores", async () => {
     mockApi(animalRoutes(animal({ role: "guest" }), records));
     const { user } = renderApp("/animais/a1");
-    expect(await screen.findByRole("link", { name: "Tutores" })).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Tutores" })).toBeTruthy();
     expect(screen.queryByRole("link", { name: "Pessoas" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Mais ações" })).toBeNull();
     await user.click(screen.getByRole("button", { name: "Registrar" }));
@@ -236,6 +236,43 @@ describe("animal profile", () => {
         .getAllByRole("link")
         .map((l) => l.textContent),
     ).toEqual(["Peso", "Observação"]);
+  });
+
+  it("opens a guest's Tutores sheet: the tutors, the access end, and leaving", async () => {
+    const api = mockApi({
+      ...animalRoutes(animal({ role: "guest", name: "Paçoca", sex: "female" }), records),
+      "GET /animals/a1/accesses": [
+        access({ id: 1, email: "ana@example.com", is_me: false }),
+        access({ id: 2, email: "carlos@example.com", is_me: false }),
+        access({
+          id: 3,
+          email: "bruno@example.com",
+          role: "guest",
+          ends_on: "2026-11-30",
+        }),
+      ],
+      "DELETE /animals/a1/accesses/3": reply(204),
+      "GET /animals": [],
+      "GET /notices/unread": { unread: false },
+      "GET /push/webpush/key": { public_key: "" },
+    });
+    const { user, router } = renderApp("/animais/a1");
+    await user.click(await screen.findByRole("button", { name: "Tutores" }));
+    const sheet = await screen.findByRole("dialog", { name: "Tutores da Paçoca" });
+    expect(
+      within(sheet).getByText("Recebem os lembretes e podem mudar tudo."),
+    ).toBeTruthy();
+    expect(
+      within(sheet)
+        .getAllByRole("listitem")
+        .map((li) => li.textContent),
+    ).toEqual(["Aana@example.com", "Ccarlos@example.com"]);
+    expect(within(sheet).getByText("Seu acesso vai até 30/11/2026.")).toBeTruthy();
+    await user.click(within(sheet).getByRole("button", { name: "Sair deste animal" }));
+    const confirm = await screen.findByRole("alertdialog");
+    await user.click(within(confirm).getByRole("button", { name: "Sair deste animal" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/"));
+    expect(api.to("DELETE /animals/a1/accesses/3")).toHaveLength(1);
   });
 
   it("archives with a reason and a day", async () => {

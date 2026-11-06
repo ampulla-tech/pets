@@ -21,6 +21,7 @@ import { AnimalAvatar } from "@/components/AnimalAvatar";
 import { DashedBox } from "@/components/DashedBox";
 import { newRecordHref, RegisterSheet } from "@/components/RegisterSheet";
 import { ReminderRow } from "@/components/ReminderRow";
+import { TutorsSheet } from "@/components/TutorsSheet";
 import { WeightCard } from "@/components/WeightCard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -42,7 +43,7 @@ export default function AnimalScreen() {
   const reminders = useQuery(listAnimalRemindersOptions(path));
   // The reminder the person tapped, whose actions show under it.
   const [picked, setPicked] = useState<string | null>(null);
-  const [sheet, setSheet] = useState<"register" | "menu" | null>(null);
+  const [sheet, setSheet] = useState<"register" | "menu" | "tutors" | null>(null);
 
   if (animal.isPending) return <Loading />;
   if (animal.isError) return <ErrorState message={strings.animal.notFound} onRetry={() => void animal.refetch()} />;
@@ -133,7 +134,7 @@ export default function AnimalScreen() {
             label={tutor ? strings.animal.people : strings.animal.tutors}
             testID="open-people"
             icon={<Users color={colors.foreground} size={16} />}
-            onPress={() => router.push(`/animais/${id}/pessoas` as never)}
+            onPress={() => (tutor ? router.push(`/animais/${id}/pessoas` as never) : setSheet("tutors"))}
           />
         </View>
 
@@ -250,6 +251,7 @@ export default function AnimalScreen() {
         </Section>
       </Screen>
 
+      {!tutor ? <TutorsSheet animal={a} visible={sheet === "tutors"} onClose={() => setSheet(null)} /> : null}
       <RegisterSheet animalId={id} tutor={tutor} visible={sheet === "register"} onClose={() => setSheet(null)} />
       <Sheet visible={sheet === "menu"} onClose={() => setSheet(null)} testID="animal-menu">
         <View>

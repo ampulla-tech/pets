@@ -37,6 +37,7 @@ import { ChoiceGroup, Field } from "@/components/Field";
 import { ErrorState, Loading, Notice } from "@/components/Feedback";
 import { Page, Section } from "@/components/Page";
 import { RegisterSheet } from "@/components/RegisterSheet";
+import { TutorsSheet } from "@/components/TutorsSheet";
 import { StatusBadge } from "@/components/StatusBadge";
 import { WeightCard } from "@/components/WeightCard";
 import { DashedBox } from "@/components/DashedBox";
@@ -99,6 +100,7 @@ function Profile({ animal }: { animal: AnimalOut }) {
   // The reminder the person tapped; until then, the one a notice pointed at.
   const [picked, setPicked] = useState<string | null>(null);
   const [registering, setRegistering] = useState(false);
+  const [tutorsOpen, setTutorsOpen] = useState(false);
   const [archiving, setArchiving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -221,12 +223,24 @@ function Profile({ animal }: { animal: AnimalOut }) {
             {S.card}
           </Link>
         </Button>
-        <Button asChild size="xl" variant="outline" className={ACTION}>
-          <Link to={`/animais/${animal.id}/pessoas`}>
+        {tutor ? (
+          <Button asChild size="xl" variant="outline" className={ACTION}>
+            <Link to={`/animais/${animal.id}/pessoas`}>
+              <Users />
+              {S.people}
+            </Link>
+          </Button>
+        ) : (
+          <Button
+            size="xl"
+            variant="outline"
+            className={ACTION}
+            onClick={() => setTutorsOpen(true)}
+          >
             <Users />
-            {tutor ? S.people : S.tutors}
-          </Link>
-        </Button>
+            {S.tutors}
+          </Button>
+        )}
       </div>
 
       {records.isPending ? null : (records.data ?? []).length === 0 ? (
@@ -311,6 +325,13 @@ function Profile({ animal }: { animal: AnimalOut }) {
         </dl>
       </Section>
 
+      {!tutor ? (
+        <TutorsSheet
+          animal={animal}
+          open={tutorsOpen}
+          onClose={() => setTutorsOpen(false)}
+        />
+      ) : null}
       <RegisterSheet
         animal={animal}
         open={registering}

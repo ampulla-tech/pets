@@ -13,7 +13,7 @@ carries it in the code. On-screen text is pt-BR; identifiers are English.
 | Arquivar | `archive`, `archived_reason`, `archived_on` | Taking an animal off the home screen with a reason (`died`, `rehomed`, `other`) and a day. Its history stays readable; its reminders are suspended. |
 | Acesso | `Access` | A person's access to an animal, with a role. Every active animal has at least one tutor. |
 | Tutor | `Role.TUTOR` | The role that can do everything to an animal, and the only one that receives reminders. |
-| Convidado | `Role.GUEST` | The role that reads everything and writes only weights and notes. Its access may have a last day (`ends_on`), after which it no longer holds. |
+| Convidado | `Role.GUEST` | The role that reads everything and writes only weights and notes. Its access may have a last day (`ends_on`), after which it no longer holds. Of the animal's accesses it is told only the tutors and its own. |
 | Convite | `Invite` | A single-use link, valid for 3 days, that grants a role on one animal (and, for a guest, an access end). |
 | Registro | record (`Record`) | One thing that happened to an animal on a day: a vaccine, an antiparasitic, a weight, a note or a visit. It keeps its author, its last edit and its attachments. |
 | Vacina | `Vaccine` | A record of a vaccine: brand, lot, lot expiry, the diseases it covers (one or more), "repeat on", vet and CRMV. |

@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { Alert } from "react-native";
 
 import { fakeApi } from "@/test-utils/api";
-import { animal, ANIMAL_ID, animalRoutes, antiparasitic, reminder, vaccine, weight } from "@/test-utils/fixtures";
+import { access, animal, ANIMAL_ID, animalRoutes, antiparasitic, reminder, vaccine, weight } from "@/test-utils/fixtures";
 import { renderApp, signedIn } from "@/test-utils/render";
 import { strings } from "@pets/core/strings";
 
@@ -162,6 +162,31 @@ describe("the animal's profile", () => {
     for (const id of ["register-photos", "register-vaccine", "register-antiparasitic", "register-visit"]) {
       expect(screen.queryByTestId(id)).toBeNull();
     }
+  });
+
+  it("opens a guest's Tutores sheet: the tutors, the access end, and leaving", async () => {
+    const api = fakeApi({
+      ...animalRoutes(animal({ role: "guest", name: "Paçoca", sex: "female" }), [vaccine({ can_edit: false })]),
+      [`GET /animals/${ANIMAL_ID}/accesses`]: {
+        body: [
+          access({ id: 1, email: "ana@example.com", is_me: false }),
+          access({ id: 3, email: "bruno@example.com", role: "guest", ends_on: "2026-11-30", is_me: true }),
+        ],
+      },
+      [`DELETE /animals/${ANIMAL_ID}/accesses/3`]: { status: 204 },
+      "GET /animals": { body: [] },
+      "GET /notices/unread": { body: { unread: false } },
+    });
+    confirmAlerts();
+    const app = await renderApp(`/animais/${ANIMAL_ID}`);
+    await fireEvent.press(await screen.findByTestId("open-people"));
+    expect(await screen.findByText("Tutores da Paçoca")).toBeTruthy();
+    expect(await screen.findByTestId("tutor-ana@example.com")).toBeTruthy();
+    expect(screen.queryByTestId("tutor-bruno@example.com")).toBeNull();
+    expect(screen.getByText("Seu acesso vai até 30/11/2026.")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("tutors-leave"));
+    await waitFor(() => expect(api.callsTo(`DELETE /animals/${ANIMAL_ID}/accesses/3`)).toHaveLength(1));
+    await waitFor(() => expect(app.pathname()).toBe("/"));
   });
 
   it("an archived animal is read-only, and a tutor can still delete it for good", async () => {

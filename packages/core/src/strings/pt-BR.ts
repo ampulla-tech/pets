@@ -291,6 +291,10 @@ export const strings = {
       `Sair de ${name}? Você deixa de ver o histórico dele.`,
     shareTitle: (name: string) => `Convite para cuidar de ${name}`,
     deleteInstead: "Apagar o animal",
+    /** The Tutores sheet a guest opens from the animal's profile. */
+    tutorsTitle: (ofAnimal: string) => `Tutores ${ofAnimal}`,
+    tutorsHint: "Recebem os lembretes e podem mudar tudo.",
+    accessUntil: (date: string) => `Seu acesso vai até ${date}.`,
   },
   invite: {
     title: "Convite",

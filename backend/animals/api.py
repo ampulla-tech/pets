@@ -6,7 +6,7 @@ from typing import Literal
 from uuid import UUID
 
 from django.conf import settings
-from django.db import transaction
+from django.db import models, transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -16,7 +16,7 @@ from ninja.errors import HttpError
 
 from accounts.auth import caller, signed_in_or_anonymous
 from animals import attachments as storage
-from animals.access import access_to, as_tutor, readable
+from animals.access import access_to, as_tutor
 from animals.age import age_of
 from animals.card import card_pdf, card_sections
 from animals.diseases import DISEASES, PARASITES, codes_for
@@ -508,9 +508,15 @@ def list_records(request, animal_id: UUID):
 
 @router.get("/animals/{animal_id}/accesses", response=list[AccessOut], tags=["people"])
 def list_accesses(request, animal_id: UUID):
-    """Who has access to the animal, and with which role."""
-    animal = readable(request.auth, animal_id)
-    accesses = Access.objects.valid().filter(animal=animal).select_related("user")
+    """Who has access to the animal, and with which role.
+
+    A guest is told only the tutors and their own access: the other guests are
+    none of their business.
+    """
+    mine = access_to(request.auth, animal_id)
+    accesses = Access.objects.valid().filter(animal=mine.animal).select_related("user")
+    if mine.role == Role.GUEST:
+        accesses = accesses.filter(models.Q(role=Role.TUTOR) | models.Q(id=mine.id))
     order = {Role.TUTOR: 0, Role.GUEST: 1}
     return sorted(
         (
