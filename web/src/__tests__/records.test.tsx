@@ -285,7 +285,7 @@ describe("antiparasitic, weight, note, visit", () => {
     expect(upload.form?.get("files")).toBeTruthy();
     await router.navigate("/animais/a1/registros/c1");
     await screen.findByDisplayValue("Clínica Centro");
-    const links = screen.getAllByRole("link", { name: /receita.jpg|exame.pdf/ });
+    const links = await screen.findAllByRole("link", { name: /receita.jpg|exame.pdf/ });
     expect(links.map((l) => l.getAttribute("href"))).toEqual([
       files[0].url,
       files[1].url,
