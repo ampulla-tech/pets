@@ -130,7 +130,7 @@ export function PushSheet({
     <Dialog open={kind !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         showCloseButton={false}
-        className="top-auto bottom-0 left-0 max-w-none translate-x-0 translate-y-0 gap-3 rounded-t-2xl rounded-b-none border-x-0 border-b-0 px-5 pt-3 pb-[calc(1.75rem+env(safe-area-inset-bottom))] sm:left-1/2 sm:max-w-xl sm:-translate-x-1/2"
+        className="top-auto bottom-0 left-0 w-full max-w-none translate-x-0 translate-y-0 gap-3 rounded-t-2xl rounded-b-none border-x-0 border-b-0 px-5 pt-3 pb-[calc(1.75rem+env(safe-area-inset-bottom))] sm:left-1/2 sm:max-w-xl sm:-translate-x-1/2"
       >
         <span
           aria-hidden
