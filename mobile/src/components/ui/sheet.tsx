@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { Modal, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Text } from "@/components/ui/text";
+
 import { strings } from "@pets/core/strings";
 
 /** A sheet from the bottom of the screen, over a dimmed backdrop that closes it. */
@@ -36,5 +38,32 @@ export function Sheet({
         </View>
       </View>
     </Modal>
+  );
+}
+
+/** One action in a sheet used as a menu. */
+export function MenuItem({
+  label,
+  icon,
+  onPress,
+  testID,
+  destructive,
+}: {
+  label: string;
+  icon: ReactNode;
+  onPress: () => void;
+  testID: string;
+  destructive?: boolean;
+}) {
+  return (
+    <Pressable
+      role="menuitem"
+      testID={testID}
+      onPress={onPress}
+      className="min-h-12 flex-row items-center gap-3 rounded-lg px-1 active:bg-muted"
+    >
+      {icon}
+      <Text className={destructive ? "text-late" : undefined}>{label}</Text>
+    </Pressable>
   );
 }

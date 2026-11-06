@@ -3,38 +3,28 @@ import { Link, useLocation, useNavigate, useParams, useSearchParams } from "reac
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Archive,
-  Camera,
   ChevronRight,
-  ClipboardList,
   IdCard,
   MoreVertical,
-  NotebookPen,
   Pencil,
   Plus,
-  Scale,
-  ShieldPlus,
-  Syringe,
   Trash2,
   Users,
 } from "lucide-react";
 import { archiveAnimal, deleteAnimal } from "@pets/core/api/generated";
 import { listAnimalRemindersOptions } from "@pets/core/api/query";
 import {
+  animalLine,
   ARCHIVE_REASON_LABEL,
-  badgeText,
-  breedText,
-  formatAge,
   formatBirth,
   formatDate,
   formatKg,
   groupReminders,
   groupTitle,
-  RECORD_KIND_LABEL,
   type ReminderGroup,
   reminderText,
   reminderTone,
   SEX_LABEL,
-  SPECIES_LABEL,
   todayIso,
 } from "@pets/core/domain";
 import { strings } from "@pets/core/strings";
@@ -43,7 +33,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { ChoiceGroup, Field } from "@/components/Field";
 import { EmptyText, ErrorState, Loading, Notice } from "@/components/Feedback";
 import { Page, Section } from "@/components/Page";
-import { RecordItem } from "@/components/RecordItem";
+import { RegisterSheet } from "@/components/RegisterSheet";
 import { StatusBadge } from "@/components/StatusBadge";
 import { WeightChart } from "@/components/WeightChart";
 import { Button } from "@/components/ui/button";
@@ -61,14 +51,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import {
-  canWrite,
-  isTutor,
-  refreshAll,
-  useAnimal,
-  useCatalog,
-  useRecords,
-} from "@/lib/queries";
+import { canWrite, isTutor, refreshAll, useAnimal, useRecords } from "@/lib/queries";
 import {
   editRecordPath,
   newRecordPath,
@@ -78,7 +61,8 @@ import {
 
 const S = strings.animal;
 // The action grid's buttons wrap a long label instead of overflowing a phone.
-const ACTION = "h-auto min-h-11 whitespace-normal py-2 text-center leading-tight";
+const ACTION =
+  "h-auto min-h-12 whitespace-normal rounded-2xl bg-card py-2 text-center font-semibold leading-tight";
 
 export function AnimalProfile() {
   const { id = "" } = useParams();
@@ -105,34 +89,21 @@ function Profile({ animal }: { animal: AnimalOut }) {
   const reminders = useQuery(
     listAnimalRemindersOptions({ path: { animal_id: animal.id } }),
   );
-  const catalog = useCatalog();
   const [params] = useSearchParams();
   const location = useLocation();
   const subject = params.get("assunto");
   // The reminder the person tapped; until then, the one a notice pointed at.
   const [picked, setPicked] = useState<string | null>(null);
-  const [recordPicker, setRecordPicker] = useState(false);
+  const [registering, setRegistering] = useState(false);
   const [archiving, setArchiving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const tutor = isTutor(animal);
   const active = canWrite(animal);
-  const badge = badgeText(animal.badge);
   // A screen that opened the animal can say where back leads (Avisos does).
   const from = (location.state as { back?: string } | null)?.back;
   const back = from ?? (active ? "/" : "/arquivados");
-
-  const labels = useMemo(() => {
-    const map: Record<string, string> = {};
-    for (const entry of [
-      ...(catalog.data?.dog ?? []),
-      ...(catalog.data?.cat ?? []),
-      ...(catalog.data?.parasites ?? []),
-    ])
-      map[entry.code] = entry.label;
-    return map;
-  }, [catalog.data]);
 
   const weights = useMemo(
     () =>
@@ -195,30 +166,29 @@ function Profile({ animal }: { animal: AnimalOut }) {
   ) : null;
 
   return (
-    <Page title={animal.name} back={back} actions={menu}>
-      <div className="flex items-center gap-4">
-        <AnimalAvatar
-          name={animal.name}
-          species={animal.species}
-          photoUrl={animal.photo_url}
-          className="size-20 rounded-3xl"
-        />
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-2xl font-semibold tracking-tight">{animal.name}</p>
-          <p className="text-sm text-muted-foreground">
-            {[SPECIES_LABEL[animal.species], breedText(animal.breed)].join(" · ")}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {formatAge(animal.age) ?? formatBirth(animal.birth)}
-          </p>
-          {badge && active ? (
-            <StatusBadge tone={badge.tone} className="mt-1.5">
-              {badge.text}
-            </StatusBadge>
-          ) : null}
-        </div>
-      </div>
-
+    <Page
+      title={
+        <span className="flex min-w-0 items-center gap-2.5">
+          <AnimalAvatar
+            name={animal.name}
+            species={animal.species}
+            photoUrl={animal.photo_url}
+            initial
+            className="size-9 rounded-xl text-[0.95rem]"
+          />
+          <span className="flex min-w-0 flex-col">
+            <span className="truncate text-base leading-tight font-semibold">
+              {animal.name}
+            </span>
+            <span className="truncate text-xs leading-tight font-normal tracking-normal text-muted-foreground">
+              {animalLine(animal)}
+            </span>
+          </span>
+        </span>
+      }
+      back={back}
+      actions={menu}
+    >
       {!active ? (
         <Notice tone="warn">
           {animal.archived_reason
@@ -231,35 +201,15 @@ function Profile({ animal }: { animal: AnimalOut }) {
       ) : null}
 
       <div className="grid grid-cols-2 gap-2">
-        {active && tutor ? (
-          <>
-            <Button size="xl" className={ACTION} onClick={() => setRecordPicker(true)}>
-              <Plus />
-              {S.addRecord}
-            </Button>
-            <Button asChild size="xl" variant="secondary" className={ACTION}>
-              <Link to={`/animais/${animal.id}/foto`}>
-                <Camera />
-                {S.addByPhoto}
-              </Link>
-            </Button>
-          </>
-        ) : null}
-        {active && !tutor ? (
-          <>
-            <Button asChild size="xl" className={ACTION}>
-              <Link to={newRecordPath(animal.id, "weight")}>
-                <Scale />
-                {S.registerWeight}
-              </Link>
-            </Button>
-            <Button asChild size="xl" variant="secondary" className={ACTION}>
-              <Link to={newRecordPath(animal.id, "note")}>
-                <NotebookPen />
-                {S.registerNote}
-              </Link>
-            </Button>
-          </>
+        {active ? (
+          <Button
+            size="xl"
+            className="col-span-2 h-12 rounded-2xl text-[0.95rem] font-semibold"
+            onClick={() => setRegistering(true)}
+          >
+            <Plus />
+            {S.addRecord}
+          </Button>
         ) : null}
         <Button asChild size="xl" variant="outline" className={ACTION}>
           <Link to={`/animais/${animal.id}/carteirinha`}>
@@ -270,7 +220,7 @@ function Profile({ animal }: { animal: AnimalOut }) {
         <Button asChild size="xl" variant="outline" className={ACTION}>
           <Link to={`/animais/${animal.id}/pessoas`}>
             <Users />
-            {S.people}
+            {tutor ? S.people : S.tutors}
           </Link>
         </Button>
       </div>
@@ -339,33 +289,10 @@ function Profile({ animal }: { animal: AnimalOut }) {
         </dl>
       </Section>
 
-      <Section title={S.history} id="history">
-        {records.isPending ? (
-          <Loading />
-        ) : records.isError ? (
-          <ErrorState onRetry={() => void records.refetch()} />
-        ) : records.data.length === 0 ? (
-          <EmptyText>{S.historyEmpty}</EmptyText>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {records.data.map((record) => (
-              <li key={record.id}>
-                <RecordItem
-                  animalId={animal.id}
-                  record={record}
-                  labels={labels}
-                  editable={active && record.can_edit}
-                />
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
-
-      <RecordPicker
-        animalId={animal.id}
-        open={recordPicker}
-        onOpenChange={setRecordPicker}
+      <RegisterSheet
+        animal={animal}
+        open={registering}
+        onClose={() => setRegistering(false)}
       />
       {archiving ? (
         <ArchiveDialog animal={animal} onClose={() => setArchiving(false)} />
@@ -465,55 +392,6 @@ function ReminderRow({
         </Button>
       ) : null}
     </li>
-  );
-}
-
-const KIND_ICON = {
-  vaccine: Syringe,
-  antiparasitic: ShieldPlus,
-  weight: Scale,
-  note: NotebookPen,
-  visit: ClipboardList,
-} as const;
-
-function RecordPicker({
-  animalId,
-  open,
-  onOpenChange,
-}: {
-  animalId: string;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  const kinds: RecordKind[] = ["vaccine", "antiparasitic", "weight", "note", "visit"];
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent closeLabel={strings.app.close}>
-        <DialogHeader>
-          <DialogTitle>{S.whatToRecord}</DialogTitle>
-        </DialogHeader>
-        <ul className="flex flex-col gap-2">
-          {kinds.map((kind) => {
-            const Icon = KIND_ICON[kind];
-            return (
-              <li key={kind}>
-                <Link
-                  to={newRecordPath(animalId, kind)}
-                  className="flex items-center gap-3 rounded-xl border bg-card px-4 py-3 font-medium hover:bg-muted"
-                >
-                  <Icon className="size-5 text-primary" aria-hidden />
-                  {RECORD_KIND_LABEL[kind]}
-                  <ChevronRight
-                    className="ml-auto size-4 text-muted-foreground"
-                    aria-hidden
-                  />
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </DialogContent>
-    </Dialog>
   );
 }
 

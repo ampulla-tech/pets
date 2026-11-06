@@ -56,11 +56,25 @@ export function ErrorState({ message, onRetry }: { message?: string; onRetry?: (
   );
 }
 
-export function Section({ title, children, action }: { title: string; children: ReactNode; action?: ReactNode }) {
+export function Section({
+  title,
+  children,
+  action,
+  caps,
+}: {
+  title: string;
+  children: ReactNode;
+  action?: ReactNode;
+  /** The small upper-case heading of the animal's profile and card. */
+  caps?: boolean;
+}) {
   return (
     <View className="gap-2">
       <View className="flex-row items-center justify-between">
-        <Text role="heading" className="text-lg font-semibold">
+        <Text
+          role="heading"
+          className={caps ? "text-xs font-semibold uppercase tracking-wide text-muted-foreground" : "text-lg font-semibold"}
+        >
           {title}
         </Text>
         {action}

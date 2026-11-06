@@ -8,7 +8,7 @@ import { useState } from "react";
 import { Alert, View } from "react-native";
 
 import { FilePicker } from "@/components/FilePicker";
-import type { AnyRecord } from "@/components/RecordItem";
+import type { AnyRecord } from "@/lib/records";
 import { Button } from "@/components/ui/button";
 import { DateInput, MonthInput } from "@/components/ui/date-input";
 import { Field } from "@/components/ui/field";

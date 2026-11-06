@@ -20,13 +20,26 @@ import {
   updateVisit,
   updateWeight,
   type AntiparasiticIn,
+  type AntiparasiticOut,
   type NoteIn,
+  type NoteOut,
   type VaccineIn,
+  type VaccineOut,
   type VisitIn,
+  type VisitOut,
   type WeightIn,
+  type WeightOut,
 } from "@pets/core/api/generated";
 
 export type RecordKind = "vaccine" | "antiparasitic" | "weight" | "note" | "visit";
+
+/** A record with its kind; the API always sends `kind`, the generated type leaves it optional. */
+export type AnyRecord =
+  | (VaccineOut & { kind: "vaccine" })
+  | (AntiparasiticOut & { kind: "antiparasitic" })
+  | (WeightOut & { kind: "weight" })
+  | (NoteOut & { kind: "note" })
+  | (VisitOut & { kind: "visit" });
 
 export type RecordPayload = {
   vaccine: VaccineIn;

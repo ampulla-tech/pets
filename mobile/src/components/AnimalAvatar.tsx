@@ -5,6 +5,7 @@ import { View } from "react-native";
 
 import { Text } from "@/components/ui/text";
 import { colors } from "@/lib/theme";
+import { initialOf } from "@pets/core/domain";
 import { strings } from "@pets/core/strings";
 
 /**
@@ -35,7 +36,7 @@ export function AnimalAvatar({
     return (
       <View style={style} className="items-center justify-center bg-accent" testID="avatar-initial">
         <Text className="font-bold text-primary" style={{ fontSize: size * 0.4 }}>
-          {animal.name.trim().charAt(0).toUpperCase()}
+          {initialOf(animal.name)}
         </Text>
       </View>
     );

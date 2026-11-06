@@ -119,14 +119,13 @@ export const strings = {
     lastWeight: "Último peso",
     noWeight: "Nenhum peso registrado.",
     weightChart: "Peso no tempo",
-    history: "Histórico",
-    historyEmpty: "Nada registrado ainda.",
     reminders: "Lembretes",
     remindersEmpty: "Nenhuma vacina ou antiparasitário com data de repetir.",
     card: "Carteirinha",
     people: "Pessoas",
+    /** What a guest sees in the place of Pessoas: the animal's tutors. */
+    tutors: "Tutores",
     addRecord: "Registrar",
-    addByPhoto: "Adicionar por foto",
     /** The Registrar sheet: the reading of the paper card first, for a tutor. */
     readPhotos: "Ler fotos da carteirinha",
     readPhotosHint: "Várias doses de uma vez. Você confere antes de salvar.",
@@ -147,8 +146,6 @@ export const strings = {
     photoFailed: "O animal foi salvo, mas a foto não subiu. Tente trocar a foto de novo.",
     profile: "Perfil",
     registerWeight: "Registrar peso",
-    registerNote: "Registrar observação",
-    whatToRecord: "O que registrar?",
     more: "Mais ações",
     guestNotice: "Você é convidado: vê tudo e registra peso e observação.",
     lastWeightOn: (kg: string, date: string) => `${kg} em ${date}`,
@@ -184,7 +181,6 @@ export const strings = {
     addAttachment: "Anexar foto ou PDF",
     photo: "Foto",
     deleteConfirm: "Apagar este registro?",
-    by: (email: string) => `por ${email}`,
     newTitle: (kind: string) => `Registrar ${kind.toLowerCase()}`,
     editTitle: (kind: string) => `Editar ${kind.toLowerCase()}`,
     dateRequired: "Informe a data.",
@@ -196,10 +192,6 @@ export const strings = {
     uploading: "Enviando…",
     uploadFailed: "O envio do arquivo falhou. Tente de novo.",
     removeAttachment: (name: string) => `Tirar ${name}`,
-    against: (labels: string) => `Contra ${labels}`,
-    repeatOnShort: (date: string) => `Repetir em ${date}`,
-    lotShort: (lot: string) => `Partida ${lot}`,
-    weightAlso: (kg: string) => `Peso no dia: ${kg}`,
     fromPhoto: "Fotos da leitura anexadas.",
     fromLastDose: "Copiado da dose anterior. Confira com a etiqueta do frasco.",
     changeDiseases: "Alterar",
@@ -383,13 +375,12 @@ export const strings = {
       ],
     },
   },
-  /** Text only the native app shows (the camera, Files, the history filter). */
+  /** Text only the native app shows (the camera, Files). */
   native: {
     cameraDenied: "Sem acesso à câmera. Libere o acesso do Pets nos Ajustes do aparelho.",
     cameraUnavailable:
       "A câmera não está disponível neste aparelho. Escolha uma foto da galeria.",
     attachPdf: "Anexar PDF",
-    allRecords: "Tudo",
   },
 } as const;
 

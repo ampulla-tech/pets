@@ -1,4 +1,5 @@
 import { Cat, Dog } from "lucide-react";
+import { initialOf } from "@pets/core/domain";
 import { strings } from "@pets/core/strings";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +38,7 @@ export function AnimalAvatar({
           className,
         )}
       >
-        {name.trim().charAt(0).toUpperCase()}
+        {initialOf(name)}
       </div>
     );
   }

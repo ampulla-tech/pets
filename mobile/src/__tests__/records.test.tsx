@@ -213,7 +213,7 @@ describe("the other kinds", () => {
     );
   });
 
-  it("opens a visit's PDF from the history in the in-app browser", async () => {
+  it("opens a visit's PDF from its record in the in-app browser", async () => {
     fakeApi(
       animalRoutes(animal(), [
         {
@@ -228,7 +228,7 @@ describe("the other kinds", () => {
         },
       ]),
     );
-    await renderApp(`/animais/${ANIMAL_ID}`);
+    await renderApp(`/animais/${ANIMAL_ID}/registro?tipo=visit&registro=vi1`);
     await fireEvent.press(await screen.findByLabelText("hemograma.pdf"));
     expect(browser.openBrowserAsync).toHaveBeenCalledWith("http://x/h.pdf");
   });

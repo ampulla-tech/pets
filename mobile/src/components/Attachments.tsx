@@ -1,54 +1,11 @@
 import type { AttachmentOut } from "@pets/core/api/generated";
 import { strings } from "@pets/core/strings";
 import { Image } from "expo-image";
-import { FileText, X } from "lucide-react-native";
-import { useState } from "react";
+import { X } from "lucide-react-native";
 import { Modal, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Text } from "@/components/ui/text";
-import { isPdf, openInBrowser } from "@/lib/sharing";
-import { colors } from "@/lib/theme";
-
-/**
- * A record's attachments: a photo opens full screen in the app, a PDF in the
- * in-app browser, both through the signed link the API gave.
- */
-export function AttachmentList({ attachments }: { attachments: AttachmentOut[] }) {
-  const [open, setOpen] = useState<AttachmentOut | null>(null);
-  if (attachments.length === 0) return null;
-  return (
-    <View className="flex-row flex-wrap gap-2">
-      {attachments.map((attachment) =>
-        isPdf(attachment) ? (
-          <Pressable
-            key={attachment.id}
-            role="link"
-            accessibilityLabel={attachment.name}
-            onPress={() => void openInBrowser(attachment.url)}
-            className="h-16 max-w-48 flex-row items-center gap-2 rounded-lg border border-border bg-muted px-3"
-          >
-            <FileText color={colors.primary} size={20} />
-            <Text numberOfLines={2} className="flex-shrink text-sm">
-              {attachment.name}
-            </Text>
-          </Pressable>
-        ) : (
-          <Pressable
-            key={attachment.id}
-            role="button"
-            accessibilityLabel={attachment.name}
-            onPress={() => setOpen(attachment)}
-          >
-            <Image source={{ uri: attachment.url }} style={{ width: 64, height: 64, borderRadius: 8 }} contentFit="cover" />
-          </Pressable>
-        ),
-      )}
-      <PhotoViewer attachment={open} onClose={() => setOpen(null)} />
-    </View>
-  );
-}
-
+/** A stored photo, full screen in the app, through the signed link the API gave. */
 export function PhotoViewer({ attachment, onClose }: { attachment: AttachmentOut | null; onClose(): void }) {
   const insets = useSafeAreaInsets();
   return (

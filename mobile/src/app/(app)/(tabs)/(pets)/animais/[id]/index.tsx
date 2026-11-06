@@ -1,48 +1,36 @@
+import type { AnimalOut } from "@pets/core/api/generated";
 import { getAnimalOptions, listAnimalRemindersOptions } from "@pets/core/api/query";
 import {
-  badgeText,
-  breedText,
-  formatAge,
+  animalLine,
   formatBirth,
   formatDate,
   formatKg,
   groupReminders,
   groupTitle,
-  RECORD_KIND_LABEL,
   reminderText,
   SEX_LABEL,
-  SPECIES_LABEL,
 } from "@pets/core/domain";
 import { strings } from "@pets/core/strings";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { Camera, FileText, Pencil, Archive, Trash2, Users } from "lucide-react-native";
+import { Archive, Ellipsis, IdCard, Pencil, Plus, Trash2, Users } from "lucide-react-native";
 import { useState } from "react";
-import { Alert, Pressable, RefreshControl, View } from "react-native";
+import { Pressable, RefreshControl, View } from "react-native";
 
 import { AnimalAvatar } from "@/components/AnimalAvatar";
-import { RecordItem, type AnyRecord } from "@/components/RecordItem";
+import { newRecordHref, RegisterSheet } from "@/components/RegisterSheet";
 import { ReminderRow } from "@/components/ReminderRow";
 import { WeightChart } from "@/components/WeightChart";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ErrorState, Loading, Notice, Screen, Section } from "@/components/ui/screen";
+import { MenuItem, Sheet } from "@/components/ui/sheet";
 import { Muted, Text } from "@/components/ui/text";
 import { confirmDeleteAnimal } from "@/lib/animal-actions";
-import { useCatalog } from "@/lib/catalog";
 import { refreshAnimal } from "@/lib/invalidate";
-import { deleteRecord, type RecordKind } from "@/lib/records";
+import type { AnyRecord } from "@/lib/records";
 import { colors } from "@/lib/theme";
 import { useRecords } from "@/lib/use-records";
-import { cn } from "@/lib/utils";
-
-type Filter = "all" | RecordKind;
-
-function recordHref(id: string, kind: RecordKind, params: Record<string, string> = {}) {
-  const query = new URLSearchParams({ tipo: kind, ...params }).toString();
-  return `/animais/${id}/registro?${query}`;
-}
 
 export default function AnimalScreen() {
   const { id, assunto } = useLocalSearchParams<{ id: string; assunto?: string }>();
@@ -51,10 +39,9 @@ export default function AnimalScreen() {
   const animal = useQuery(getAnimalOptions(path));
   const records = useRecords(id);
   const reminders = useQuery(listAnimalRemindersOptions(path));
-  const { label } = useCatalog();
-  const [filter, setFilter] = useState<Filter>("all");
   // The reminder the person tapped, whose actions show under it.
   const [picked, setPicked] = useState<string | null>(null);
+  const [sheet, setSheet] = useState<"register" | "menu" | null>(null);
 
   if (animal.isPending) return <Loading />;
   if (animal.isError) return <ErrorState message={strings.animal.notFound} onRetry={() => void animal.refetch()} />;
@@ -62,13 +49,10 @@ export default function AnimalScreen() {
   const a = animal.data;
   const tutor = a.role === "tutor";
   const active = a.status === "active";
-  const badge = badgeText(a.badge);
-  const age = formatAge(a.age);
   const all = records.data ?? [];
   const weights = all
     .filter((r): r is Extract<AnyRecord, { kind: "weight" }> => r.kind === "weight")
     .map((r) => ({ date: r.date, kg: Number(r.kg) }));
-  const shown = filter === "all" ? all : all.filter((r) => r.kind === filter);
   // A closed reminder is history (a later dose closed it); the list shows what is still open.
   const open = (reminders.data ?? []).filter((r) => r.state !== "closed");
   const groups = groupReminders(open);
@@ -80,7 +64,6 @@ export default function AnimalScreen() {
     return null;
   };
   const focusName = focus ? groupTitle(focus, brandOf(focus.first.record_id)) : null;
-  const kinds: RecordKind[] = tutor ? ["vaccine", "antiparasitic", "weight", "note", "visit"] : ["weight", "note"];
 
   const refresh = () => {
     void animal.refetch();
@@ -88,41 +71,70 @@ export default function AnimalScreen() {
     void reminders.refetch();
   };
 
-  function remove(record: AnyRecord) {
-    Alert.alert(strings.records.deleteConfirm, undefined, [
-      { text: strings.app.cancel, style: "cancel" },
-      {
-        text: strings.app.delete,
-        style: "destructive",
-        onPress: async () => {
-          await deleteRecord(record.kind, id, record.id).catch(() =>
-            Alert.alert(strings.app.delete, strings.app.genericError),
-          );
-          await refreshAnimal(queryClient);
-        },
-      },
-    ]);
-  }
+  const go = (href: string) => {
+    setSheet(null);
+    router.push(href as never);
+  };
 
   return (
     <>
-      <Stack.Screen options={{ title: a.name }} />
+      <Stack.Screen
+        options={{
+          title: a.name,
+          headerTitle: () => <HeaderTitle animal={a} />,
+          headerRight: tutor
+            ? () => (
+                <Pressable
+                  role="button"
+                  accessibilityLabel={strings.animal.more}
+                  testID="animal-more"
+                  hitSlop={8}
+                  onPress={() => setSheet("menu")}
+                  className="px-1 active:opacity-60"
+                >
+                  <Ellipsis color={colors.foreground} size={22} />
+                </Pressable>
+              )
+            : undefined,
+        }}
+      />
       <Screen
         testID="animal-screen"
         refreshControl={<RefreshControl refreshing={records.isRefetching} onRefresh={refresh} />}
       >
-        <View className="flex-row items-center gap-4">
-          <AnimalAvatar animal={a} size={88} />
-          <View className="flex-1 gap-1">
-            <Text className="text-2xl font-bold">{a.name}</Text>
-            <Muted>{[SPECIES_LABEL[a.species], breedText(a.breed), SEX_LABEL[a.sex]].filter(Boolean).join(" · ")}</Muted>
-            {age ? <Muted>{`${strings.animal.age}: ${age}`}</Muted> : null}
-            {badge && active ? <Badge text={badge.text} tone={badge.tone} /> : null}
-          </View>
-        </View>
-
         {!active ? <Notice tone="soon">{strings.archive.readOnly}</Notice> : null}
         {active && !tutor ? <Notice>{strings.animal.guestNotice}</Notice> : null}
+
+        <View className="flex-row flex-wrap gap-2">
+          {active ? (
+            <Button
+              size="lg"
+              className="w-full rounded-2xl"
+              label={strings.animal.addRecord}
+              testID="register"
+              icon={<Plus color={colors["primary-foreground"]} size={18} />}
+              onPress={() => setSheet("register")}
+            />
+          ) : null}
+          <Button
+            size="lg"
+            variant="outline"
+            className="flex-1 rounded-2xl"
+            label={strings.animal.card}
+            testID="open-card"
+            icon={<IdCard color={colors.foreground} size={16} />}
+            onPress={() => router.push(`/animais/${id}/carteirinha` as never)}
+          />
+          <Button
+            size="lg"
+            variant="outline"
+            className="flex-1 rounded-2xl"
+            label={tutor ? strings.animal.people : strings.animal.tutors}
+            testID="open-people"
+            icon={<Users color={colors.foreground} size={16} />}
+            onPress={() => router.push(`/animais/${id}/pessoas` as never)}
+          />
+        </View>
 
         {focus ? (
           <Card className="gap-2 border-primary" testID="focus">
@@ -134,51 +146,14 @@ export default function AnimalScreen() {
                 label={strings.reminders.registerDose}
                 testID="register-dose"
                 onPress={() =>
-                  router.push(recordHref(id, focus.first.record_kind, { dose: focus.first.record_id }) as never)
+                  router.push(newRecordHref(id, focus.first.record_kind, { dose: focus.first.record_id }) as never)
                 }
               />
             ) : null}
           </Card>
         ) : null}
 
-        {active ? (
-          <Section title={strings.animal.addRecord}>
-            <View className="flex-row flex-wrap gap-2">
-              {kinds.map((kind) => (
-                <Button
-                  key={kind}
-                  size="sm"
-                  variant="secondary"
-                  label={RECORD_KIND_LABEL[kind]}
-                  testID={`add-${kind}`}
-                  onPress={() => router.push(recordHref(id, kind) as never)}
-                />
-              ))}
-            </View>
-            {tutor ? (
-              <Button
-                variant="outline"
-                label={strings.animal.addByPhoto}
-                testID="add-by-photo"
-                icon={<Camera color={colors.foreground} size={18} />}
-                onPress={() => router.push(`/animais/${id}/foto` as never)}
-              />
-            ) : null}
-          </Section>
-        ) : null}
-
-        <Section title={strings.animal.lastWeight}>
-          {a.last_weight ? (
-            <Text testID="last-weight" className="text-lg font-semibold">
-              {strings.animal.lastWeightOn(formatKg(a.last_weight.kg), formatDate(a.last_weight.date))}
-            </Text>
-          ) : (
-            <Muted>{strings.animal.noWeight}</Muted>
-          )}
-          {weights.length > 0 ? <WeightChart points={weights} /> : null}
-        </Section>
-
-        <Section title={strings.animal.reminders}>
+        <Section caps title={strings.animal.reminders}>
           {open.length > 0 ? (
             groups.map(({ first: reminder, ...group }) => (
               <View key={group.key} className="gap-1">
@@ -202,7 +177,7 @@ export default function AnimalScreen() {
                     label={strings.reminders.registerDose}
                     testID={`register-dose-${reminder.subject}`}
                     onPress={() =>
-                      router.push(recordHref(id, reminder.record_kind, { dose: reminder.record_id }) as never)
+                      router.push(newRecordHref(id, reminder.record_kind, { dose: reminder.record_id }) as never)
                     }
                   />
                 ) : null}
@@ -215,7 +190,7 @@ export default function AnimalScreen() {
                     testID={`set-date-${reminder.subject}`}
                     onPress={() =>
                       router.push(
-                        recordHref(id, reminder.record_kind, { registro: reminder.record_id, campo: "repeat_on" }) as never,
+                        newRecordHref(id, reminder.record_kind, { registro: reminder.record_id, campo: "repeat_on" }) as never,
                       )
                     }
                   />
@@ -227,78 +202,93 @@ export default function AnimalScreen() {
           )}
         </Section>
 
-        <Section title={strings.animal.profile}>
-          <Card className="gap-1">
-            <Muted>{`${strings.animal.birth}: ${formatBirth(a.birth)}`}</Muted>
-            {a.adopted_on ? <Muted>{`${strings.animal.adoptedOn}: ${formatDate(a.adopted_on)}`}</Muted> : null}
-            <Muted>{`${strings.animal.neutered}: ${a.neutered === null ? strings.animal.unknown : a.neutered ? strings.animal.yes : strings.animal.no}`}</Muted>
-            {a.coat ? <Muted>{`${strings.animal.coat}: ${a.coat}`}</Muted> : null}
-            {a.microchip ? <Muted>{`${strings.animal.microchip}: ${a.microchip}`}</Muted> : null}
-          </Card>
-          <View className="flex-row flex-wrap gap-2">
-            <Button size="sm" variant="outline" label={strings.animal.card} testID="open-card" icon={<FileText color={colors.foreground} size={16} />} onPress={() => router.push(`/animais/${id}/carteirinha` as never)} />
-            <Button size="sm" variant="outline" label={strings.animal.people} testID="open-people" icon={<Users color={colors.foreground} size={16} />} onPress={() => router.push(`/animais/${id}/pessoas` as never)} />
-            {tutor && active ? (
-              <>
-                <Button size="sm" variant="outline" label={strings.app.edit} testID="edit-animal" icon={<Pencil color={colors.foreground} size={16} />} onPress={() => router.push(`/animais/${id}/editar` as never)} />
-                <Button size="sm" variant="outline" label={strings.animal.archive} testID="archive-animal" icon={<Archive color={colors.foreground} size={16} />} onPress={() => router.push(`/animais/${id}/arquivar` as never)} />
-              </>
-            ) : null}
-            {tutor ? (
-              <Button
-                size="sm"
-                variant="destructive"
-                label={strings.animal.deleteAnimal}
-                testID="delete-animal"
-                icon={<Trash2 color={colors.late} size={16} />}
-                onPress={() =>
-                  confirmDeleteAnimal(id, a.name, () => {
-                    void refreshAnimal(queryClient);
-                    router.replace("/");
-                  })
-                }
-              />
-            ) : null}
-          </View>
+        <Section caps title={strings.animal.lastWeight}>
+          {a.last_weight ? (
+            <Text testID="last-weight" className="text-lg font-semibold">
+              {strings.animal.lastWeightOn(formatKg(a.last_weight.kg), formatDate(a.last_weight.date))}
+            </Text>
+          ) : (
+            <Muted>{strings.animal.noWeight}</Muted>
+          )}
+          {weights.length > 0 ? <WeightChart points={weights} /> : null}
         </Section>
 
-        <Section title={strings.animal.history}>
-          <View className="flex-row flex-wrap gap-2" role="tablist">
-            {(["all", "vaccine", "antiparasitic", "weight", "note", "visit"] as Filter[]).map((value) => (
-              <Pressable
-                key={value}
-                role="tab"
-                aria-selected={filter === value}
-                accessibilityState={{ selected: filter === value }}
-                testID={`filter-${value}`}
-                onPress={() => setFilter(value)}
-                className={cn(
-                  "rounded-full border px-3 py-1.5",
-                  filter === value ? "border-primary bg-primary" : "border-input bg-card",
-                )}
-              >
-                <Text className={cn("text-sm", filter === value && "text-primary-foreground")}>
-                  {value === "all" ? strings.native.allRecords : RECORD_KIND_LABEL[value]}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-          {records.isPending ? null : shown.length === 0 ? (
-            <Muted>{strings.animal.historyEmpty}</Muted>
-          ) : (
-            shown.map((record) => (
-              <RecordItem
-                key={record.id}
-                record={record}
-                label={label}
-                editable={record.can_edit && active}
-                onEdit={() => router.push(recordHref(id, record.kind, { registro: record.id }) as never)}
-                onDelete={() => remove(record)}
-              />
-            ))
-          )}
+        <Section caps title={strings.animal.profile}>
+          <Facts animal={a} />
         </Section>
       </Screen>
+
+      <RegisterSheet animalId={id} tutor={tutor} visible={sheet === "register"} onClose={() => setSheet(null)} />
+      <Sheet visible={sheet === "menu"} onClose={() => setSheet(null)} testID="animal-menu">
+        <View>
+          {active ? (
+            <>
+              <MenuItem
+                label={strings.app.edit}
+                icon={<Pencil color={colors.foreground} size={18} />}
+                testID="edit-animal"
+                onPress={() => go(`/animais/${id}/editar`)}
+              />
+              <MenuItem
+                label={strings.animal.archive}
+                icon={<Archive color={colors.foreground} size={18} />}
+                testID="archive-animal"
+                onPress={() => go(`/animais/${id}/arquivar`)}
+              />
+            </>
+          ) : null}
+          <MenuItem
+            label={strings.animal.deleteAnimal}
+            icon={<Trash2 color={colors.late} size={18} />}
+            testID="delete-animal"
+            destructive
+            onPress={() => {
+              setSheet(null);
+              confirmDeleteAnimal(id, a.name, () => {
+                void refreshAnimal(queryClient);
+                router.replace("/");
+              });
+            }}
+          />
+        </View>
+      </Sheet>
     </>
+  );
+}
+
+/** The header's title: the photo (or the initial), the name, and who the animal is. */
+function HeaderTitle({ animal }: { animal: AnimalOut }) {
+  return (
+    <View className="flex-row items-center gap-2.5" testID="animal-header">
+      <AnimalAvatar animal={animal} size={36} initial />
+      <View>
+        <Text className="text-base font-semibold leading-tight">{animal.name}</Text>
+        <Muted className="text-xs leading-tight">{animalLine(animal)}</Muted>
+      </View>
+    </View>
+  );
+}
+
+/** The animal's data in two columns; what was not filled in is "—". */
+function Facts({ animal }: { animal: AnimalOut }) {
+  const S = strings.animal;
+  const neutered = animal.neutered === null ? S.unknown : animal.neutered ? S.yes : S.no;
+  const facts: [string, string][] = [
+    [S.sex, SEX_LABEL[animal.sex]],
+    [S.neutered, neutered],
+    [S.birth, formatBirth(animal.birth)],
+    [S.adoptedOn, formatDate(animal.adopted_on)],
+    [S.coat, animal.coat || "—"],
+    [S.microchip, animal.microchip || "—"],
+  ];
+  return (
+    <Card className="flex-row flex-wrap gap-y-3 rounded-2xl p-3.5" testID="facts">
+      {facts.map(([label, value]) => (
+        <View key={label} className="w-1/2 pr-2">
+          <Muted className="text-xs">{label}</Muted>
+          <Text className="text-sm font-medium">{value}</Text>
+        </View>
+      ))}
+    </Card>
   );
 }
