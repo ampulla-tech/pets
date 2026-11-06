@@ -1,12 +1,14 @@
 /**
- * Web push for the reminders (ADR-0004): the service worker, the browser's
- * subscription and its registration with the API.
+ * Web push for the notices (ADR-0004, ADR-0009): the service worker, the
+ * browser's subscription and its registration with the API, and the state of
+ * the notification in this browser as the Avisos tab shows it.
  *
  * On an iPhone, a site receives pushes only when it runs from the Home Screen
  * (iOS 16.4+, `display: standalone`), and the permission may be asked only in
  * response to a tap.
  */
 import { getWebpushKey, registerWebpush, removeWebpush } from "@pets/core/api/generated";
+import type { DevicePush, UnblockPlatform } from "@pets/core/domain";
 
 export type PushSupport = "available" | "ios-install" | "unsupported";
 
@@ -57,6 +59,57 @@ export async function currentSubscription(): Promise<PushSubscription | null> {
   if (!("serviceWorker" in navigator)) return null;
   const registration = await navigator.serviceWorker.getRegistration();
   return (await registration?.pushManager.getSubscription()) ?? null;
+}
+
+/**
+ * This browser's notification state. `publicKey` is the server's VAPID key
+ * (empty when push is off there). Only a live subscription is `active`.
+ */
+export async function devicePush(publicKey: string): Promise<DevicePush> {
+  const support = pushSupport();
+  if (support === "ios-install") return "ios-install";
+  if (support === "unsupported" || !publicKey) return "unsupported";
+  if (Notification.permission === "denied") return "blocked";
+  if (Notification.permission === "granted" && (await currentSubscription())) {
+    return "active";
+  }
+  return "askable";
+}
+
+/**
+ * When the permission was taken away in the browser's or the system's
+ * settings while this browser still holds a subscription: forget it on the
+ * server and here, so the server stops pushing to nobody.
+ */
+export async function forgetIfRevoked(): Promise<void> {
+  if (pushSupport() !== "available" || Notification.permission === "granted") return;
+  await disablePush();
+}
+
+const NOT_NOW = "pets.push.notNow";
+
+/** "Agora não" is kept per device: the notification is a device's own. */
+export function pushDismissed(): boolean {
+  return localStorage.getItem(NOT_NOW) === "1";
+}
+
+export function dismissPush(): void {
+  localStorage.setItem(NOT_NOW, "1");
+}
+
+/** Whose settings the unblock steps walk through, from the browser's name. */
+export function unblockPlatform(nav: Navigator = navigator): UnblockPlatform {
+  const ua = nav.userAgent;
+  if (isIos(nav)) return "ios";
+  if (/Android/.test(ua)) {
+    // Installed, the site is an app of its own in Android's settings.
+    if (isStandalone()) return "android";
+    return /Chrome\//.test(ua) ? "chromeAndroid" : "other";
+  }
+  if (/Edg\//.test(ua)) return "edge";
+  if (/Chrome\//.test(ua)) return "chrome";
+  if (/Macintosh/.test(ua) && /Safari\//.test(ua)) return "safariMac";
+  return "other";
 }
 
 export type EnableResult = "enabled" | "denied" | "off" | "failed";

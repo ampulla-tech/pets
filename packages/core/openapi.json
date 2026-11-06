@@ -757,6 +757,27 @@
             ],
             "title": "Days"
           },
+          "kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "vaccine",
+                  "internal",
+                  "external"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "others": {
+            "default": 0,
+            "title": "Others",
+            "type": "integer"
+          },
           "state": {
             "enum": [
               "none",
@@ -1440,6 +1461,57 @@
         "title": "NoteOut",
         "type": "object"
       },
+      "NoticeOut": {
+        "properties": {
+          "animal_id": {
+            "format": "uuid",
+            "title": "Animal Id",
+            "type": "string"
+          },
+          "animal_name": {
+            "title": "Animal Name",
+            "type": "string"
+          },
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "read": {
+            "title": "Read",
+            "type": "boolean"
+          },
+          "sent_at": {
+            "format": "date-time",
+            "title": "Sent At",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "animal_id",
+          "animal_name",
+          "sent_at",
+          "title",
+          "body",
+          "url",
+          "read"
+        ],
+        "title": "NoticeOut",
+        "type": "object"
+      },
       "NumberValueOut": {
         "properties": {
           "read": {
@@ -1713,6 +1785,19 @@
           "read"
         ],
         "title": "TextValueOut",
+        "type": "object"
+      },
+      "UnreadOut": {
+        "properties": {
+          "unread": {
+            "title": "Unread",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "unread"
+        ],
+        "title": "UnreadOut",
         "type": "object"
       },
       "VaccineConfirm": {
@@ -4334,6 +4419,131 @@
         ]
       }
     },
+    "/notices": {
+      "get": {
+        "description": "The caller's latest 50 notices, newest first.",
+        "operationId": "list_notices",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/NoticeOut"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          },
+          {
+            "SessionCookieAuth": []
+          }
+        ],
+        "summary": "List Notices",
+        "tags": [
+          "notices"
+        ]
+      }
+    },
+    "/notices/read": {
+      "post": {
+        "description": "Mark every notice of the caller read.",
+        "operationId": "read_all_notices",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          },
+          {
+            "SessionCookieAuth": []
+          }
+        ],
+        "summary": "Read All Notices",
+        "tags": [
+          "notices"
+        ]
+      }
+    },
+    "/notices/unread": {
+      "get": {
+        "description": "Whether the caller has a notice not yet read: the dot on the tab.",
+        "operationId": "get_unread",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnreadOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          },
+          {
+            "SessionCookieAuth": []
+          }
+        ],
+        "summary": "Get Unread",
+        "tags": [
+          "notices"
+        ]
+      }
+    },
+    "/notices/{notice_id}/read": {
+      "post": {
+        "description": "Mark one notice read (opened from the list or from a push).",
+        "operationId": "read_notice",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Notice Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "XSessionTokenAuth": []
+          },
+          {
+            "SessionCookieAuth": []
+          }
+        ],
+        "summary": "Read Notice",
+        "tags": [
+          "notices"
+        ]
+      }
+    },
     "/push/expo": {
       "post": {
         "description": "Register this phone's Expo push token for the caller (moves it if another had it).",
@@ -4496,41 +4706,6 @@
         "summary": "Remove Webpush",
         "tags": [
           "push"
-        ]
-      }
-    },
-    "/reminders/upcoming": {
-      "get": {
-        "description": "Next up: what is overdue and what falls due in 30 days, every animal, by date.",
-        "operationId": "list_upcoming",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/ReminderOut"
-                  },
-                  "title": "Response",
-                  "type": "array"
-                }
-              }
-            },
-            "description": "OK"
-          }
-        },
-        "security": [
-          {
-            "XSessionTokenAuth": []
-          },
-          {
-            "SessionCookieAuth": []
-          }
-        ],
-        "summary": "List Upcoming",
-        "tags": [
-          "reminders"
         ]
       }
     }

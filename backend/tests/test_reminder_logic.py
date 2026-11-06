@@ -103,3 +103,13 @@ def test_the_badge_says_overdue_due_soon_or_up_to_date():
         "up_to_date"
     )
     assert badge_for([], date(2026, 7, 1)).state == "none"
+
+
+def test_the_badge_names_the_most_urgent_dose_and_counts_the_others():
+    flea = Dose("external", date(2027, 5, 1), date(2027, 6, 1), "antiparasitic", "a1")
+    worms = Dose("internal", date(2027, 5, 1), date(2027, 6, 20), "antiparasitic", "a2")
+    day = date(2027, 6, 7)
+    badge = badge_for(reminders_for([RABIES, flea, worms], day), day)
+    assert (badge.state, badge.days, badge.kind, badge.others) == ("overdue", -6, "external", 2)
+    soon = badge_for(reminders_for([RABIES, worms], date(2027, 6, 1)), date(2027, 6, 1))
+    assert (soon.state, soon.days, soon.kind, soon.others) == ("due_soon", 5, "vaccine", 1)

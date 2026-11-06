@@ -32,6 +32,9 @@ jest.mock("expo-notifications", () => ({
   clearLastNotificationResponse: jest.fn(),
 }));
 
+// A physical phone unless a test says otherwise (push needs one).
+jest.mock("expo-device", () => ({ __esModule: true, isDevice: true }));
+
 jest.mock("expo-image-picker", () => ({
   __esModule: true,
   requestCameraPermissionsAsync: jest.fn(async () => ({ granted: true })),

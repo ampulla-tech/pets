@@ -1,9 +1,10 @@
 /*
- * The Pets service worker: it shows the reminder pushes the backend sends
- * (ADR-0004) and opens the animal when one is tapped. It caches nothing; the
- * app needs the API to be useful.
+ * The Pets service worker: it shows the notice pushes the backend sends
+ * (ADR-0004, ADR-0009) and opens the animal when one is tapped, with the
+ * notice's id as ?aviso= so the app marks it read. It caches nothing; the app
+ * needs the API to be useful.
  *
- * Payload: {title, body, url, animal_id, subject}.
+ * Payload: {title, body, url, animal_id, notice_id}.
  */
 
 self.addEventListener("install", () => {
@@ -28,14 +29,16 @@ self.addEventListener("push", (event) => {
       icon: "/icons/icon-192.png",
       badge: "/icons/icon-192.png",
       tag: payload.animal_id ? `animal-${payload.animal_id}` : undefined,
-      data: { url: payload.url || "/" },
+      data: { url: payload.url || "/", notice_id: payload.notice_id },
     }),
   );
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const target = new URL(event.notification.data?.url || "/", self.location.origin);
+  const data = event.notification.data || {};
+  const target = new URL(data.url || "/", self.location.origin);
+  if (data.notice_id) target.searchParams.set("aviso", data.notice_id);
   event.waitUntil(
     (async () => {
       const windows = await self.clients.matchAll({

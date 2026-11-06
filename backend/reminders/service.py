@@ -18,6 +18,7 @@ def doses_of(animal: Animal) -> list[Dose]:
                     record_kind="vaccine",
                     record_id=str(vaccine.id),
                     sequence=vaccine.created_at.timestamp(),
+                    product=vaccine.brand,
                 )
             )
     for treatment in Antiparasitic.objects.filter(animal=animal):
@@ -29,6 +30,7 @@ def doses_of(animal: Animal) -> list[Dose]:
                 record_kind="antiparasitic",
                 record_id=str(treatment.id),
                 sequence=treatment.created_at.timestamp(),
+                product=treatment.product,
             )
         )
     return doses

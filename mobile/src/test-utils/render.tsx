@@ -32,7 +32,28 @@ export async function renderApp(initialUrl: string) {
   return {
     pathname: () => result.getPathname(),
     params: () => result.getSearchParams(),
+    segments: () => result.getSegments(),
   };
+}
+
+type Json = { type: string; props: Record<string, unknown>; children: (Json | string)[] | null };
+
+/**
+ * The titles of the native headers on screen: a native stack hands its title
+ * to the header config as a prop, never as text a query can find.
+ */
+export function headerTitles(): string[] {
+  const titles: string[] = [];
+  const walk = (node: Json | Json[] | string | null) => {
+    if (!node || typeof node === "string") return;
+    if (Array.isArray(node)) return node.forEach(walk);
+    if (node.type === "RNSScreenStackHeaderConfig" && typeof node.props.title === "string") {
+      titles.push(node.props.title);
+    }
+    node.children?.forEach(walk);
+  };
+  walk(screen.toJSON() as Json | Json[] | null);
+  return titles;
 }
 
 export { screen };

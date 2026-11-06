@@ -11,8 +11,7 @@ from ninja import Router, Schema, Status
 
 from animals.access import access_to
 from animals.diseases import label
-from animals.models import Access, AnimalStatus
-from reminders.logic import Reminder, is_upcoming
+from reminders.logic import Reminder
 from reminders.models import ExpoDevice, WebPushSubscription
 from reminders.service import reminders_of
 
@@ -49,24 +48,6 @@ def reminder_out(animal, reminder: Reminder, today: date) -> dict:
         "record_id": reminder.source.record_id,
         "dose_date": reminder.source.date,
     }
-
-
-@router.get("/reminders/upcoming", response=list[ReminderOut])
-def list_upcoming(request):
-    """Next up: what is overdue and what falls due in 30 days, every animal, by date."""
-    today = timezone.localdate()
-    accesses = (
-        Access.objects.valid()
-        .filter(user=request.auth, animal__status=AnimalStatus.ACTIVE)
-        .select_related("animal")
-    )
-    items = []
-    for access in accesses:
-        for reminder in reminders_of(access.animal, today):
-            if is_upcoming(reminder, today):
-                items.append(reminder_out(access.animal, reminder, today))
-    items.sort(key=lambda r: (r["due_on"], r["animal_name"], r["subject_label"]))
-    return items
 
 
 @router.get("/animals/{animal_id}/reminders", response=list[ReminderOut])

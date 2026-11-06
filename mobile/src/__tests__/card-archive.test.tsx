@@ -83,7 +83,7 @@ describe("archiving", () => {
         body: [animal({ status: "archived", archived_reason: "rehomed", archived_on: "2026-10-31" })],
       },
       "GET /animals": { body: [] },
-      "GET /reminders/upcoming": { body: [] },
+      "GET /notices/unread": { body: { unread: false } },
     });
     await renderApp("/arquivados");
     expect(await screen.findByText("Doado em 31/10/2026")).toBeTruthy();

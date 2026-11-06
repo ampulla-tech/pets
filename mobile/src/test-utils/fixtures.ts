@@ -1,6 +1,6 @@
 /** API answers shaped like the backend's, for the screens' tests. */
 
-import type { AccessOut, AnimalOut, CatalogOut, ReminderOut } from "@pets/core/api/generated";
+import type { AccessOut, AnimalOut, CatalogOut, NoticeOut, ReminderOut } from "@pets/core/api/generated";
 
 export const ANIMAL_ID = "a1";
 
@@ -22,7 +22,7 @@ export function animal(over: Partial<AnimalOut> = {}): AnimalOut {
     archived_reason: "",
     archived_on: null,
     role: "tutor",
-    badge: { state: "up_to_date", days: null },
+    badge: { state: "up_to_date", days: null, kind: null, others: 0 },
     last_weight: { kg: "4.900", date: "2026-10-12" },
     ...over,
   };
@@ -124,8 +124,22 @@ export function animalRoutes(a: AnimalOut, records: unknown[] = [], reminders: R
     [`GET /animals/${a.id}/records`]: { body: records },
     [`GET /animals/${a.id}/reminders`]: { body: reminders },
     "GET /catalog": { body: CATALOG },
-    // The home sits beneath every animal screen.
+    // The home sits beneath every animal screen, and the tab bar asks for unread notices.
     "GET /animals": { body: [a] },
-    "GET /reminders/upcoming": { body: reminders },
+    "GET /notices/unread": { body: { unread: false } },
+  };
+}
+
+export function notice(over: Partial<NoticeOut> = {}): NoticeOut {
+  return {
+    id: "n1",
+    animal_id: ANIMAL_ID,
+    animal_name: "Lacan",
+    sent_at: new Date().toISOString(),
+    title: "Hoje é dia de vacinar o Lacan.",
+    body: "Quantum Raiva",
+    url: `/animais/${ANIMAL_ID}?assunto=rabies`,
+    read: false,
+    ...over,
   };
 }

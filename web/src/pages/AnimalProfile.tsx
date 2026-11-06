@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router";
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Archive,
@@ -106,7 +106,10 @@ function Profile({ animal }: { animal: AnimalOut }) {
   );
   const catalog = useCatalog();
   const [params] = useSearchParams();
+  const location = useLocation();
   const subject = params.get("assunto");
+  // The reminder the person tapped; until then, the one a notice pointed at.
+  const [picked, setPicked] = useState<string | null>(null);
   const [recordPicker, setRecordPicker] = useState(false);
   const [archiving, setArchiving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -115,7 +118,9 @@ function Profile({ animal }: { animal: AnimalOut }) {
   const tutor = isTutor(animal);
   const active = canWrite(animal);
   const badge = badgeText(animal.badge);
-  const back = active ? "/" : "/arquivados";
+  // A screen that opened the animal can say where back leads (Avisos does).
+  const from = (location.state as { back?: string } | null)?.back;
+  const back = from ?? (active ? "/" : "/arquivados");
 
   const labels = useMemo(() => {
     const map: Record<string, string> = {};
@@ -279,7 +284,13 @@ function Profile({ animal }: { animal: AnimalOut }) {
                 key={group.key}
                 group={group}
                 brand={brandOf(group.first.record_id)}
-                highlighted={subject !== null && group.subjects.includes(subject)}
+                highlighted={
+                  picked !== null
+                    ? group.key === picked
+                    : subject !== null && group.subjects.includes(subject)
+                }
+                scrollTo={picked === null && subject !== null && group.subjects.includes(subject)}
+                onPick={() => setPicked(picked === group.key ? "" : group.key)}
                 writable={active && tutor}
               />
             ))}
@@ -384,20 +395,26 @@ function ReminderRow({
   group,
   brand,
   highlighted,
+  scrollTo,
+  onPick,
   writable,
 }: {
   group: ReminderGroup;
   brand: string | null;
   highlighted: boolean;
+  /** Bring it into view: a notice pointed at it. */
+  scrollTo: boolean;
+  /** Tapping a reminder opens its actions, and tapping it again closes them. */
+  onPick: () => void;
   writable: boolean;
 }) {
   const reminder = group.first;
   const { title, detail } = groupTitle(group, brand);
   const [node, setNode] = useState<HTMLLIElement | null>(null);
   useEffect(() => {
-    if (highlighted && node)
+    if (scrollTo && node)
       node.scrollIntoView?.({ block: "center", behavior: "smooth" });
-  }, [highlighted, node]);
+  }, [scrollTo, node]);
   const tone = reminderTone(reminder.state);
   const doseKind: RecordKind = reminder.record_kind;
   return (
@@ -407,7 +424,13 @@ function ReminderRow({
       aria-current={highlighted ? "true" : undefined}
       className={`flex flex-col gap-2 rounded-2xl border bg-card px-4 py-3 ${highlighted ? "subject-highlight" : ""}`}
     >
-      <div className="flex items-center justify-between gap-3">
+      <button
+        type="button"
+        onClick={onPick}
+        disabled={!writable}
+        aria-expanded={writable ? highlighted : undefined}
+        className="flex items-center justify-between gap-3 text-left disabled:cursor-default"
+      >
         <div className="min-w-0">
           <p className="font-medium">{title}</p>
           {detail ? <p className="text-sm text-muted-foreground">{detail}</p> : null}
@@ -416,7 +439,7 @@ function ReminderRow({
           </p>
         </div>
         <StatusBadge tone={tone}>{reminderText(reminder)}</StatusBadge>
-      </div>
+      </button>
       {writable && reminder.state === "no_date" ? (
         <Button asChild variant="outline" size="lg" className="self-start">
           <Link to={editRecordPath(reminder.animal_id, reminder.record_id)}>

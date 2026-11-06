@@ -31,15 +31,18 @@ import {
   getCatalog,
   getExtraction,
   getMe,
+  getUnread,
   getWebpushKey,
   health,
   listAccesses,
   listAnimalReminders,
   listAnimals,
+  listNotices,
   listRecords,
-  listUpcoming,
   type Options,
   previewInvite,
+  readAllNotices,
+  readNotice,
   registerExpoToken,
   registerWebpush,
   removeAccess,
@@ -103,6 +106,8 @@ import type {
   GetExtractionResponse,
   GetMeData,
   GetMeResponse,
+  GetUnreadData,
+  GetUnreadResponse,
   GetWebpushKeyData,
   GetWebpushKeyResponse,
   HealthData,
@@ -113,12 +118,16 @@ import type {
   ListAnimalRemindersResponse,
   ListAnimalsData,
   ListAnimalsResponse,
+  ListNoticesData,
+  ListNoticesResponse,
   ListRecordsData,
   ListRecordsResponse,
-  ListUpcomingData,
-  ListUpcomingResponse,
   PreviewInviteData,
   PreviewInviteResponse,
+  ReadAllNoticesData,
+  ReadAllNoticesResponse,
+  ReadNoticeData,
+  ReadNoticeResponse,
   RegisterExpoTokenData,
   RegisterExpoTokenResponse,
   RegisterWebpushData,
@@ -1207,6 +1216,114 @@ export const getMeOptions = (options?: Options<GetMeData>) =>
     queryKey: getMeQueryKey(options),
   });
 
+export const listNoticesQueryKey = (options?: Options<ListNoticesData>) =>
+  createQueryKey("listNotices", options);
+
+/**
+ * List Notices
+ *
+ * The caller's latest 50 notices, newest first.
+ */
+export const listNoticesOptions = (options?: Options<ListNoticesData>) =>
+  queryOptions<
+    ListNoticesResponse,
+    DefaultError,
+    ListNoticesResponse,
+    ReturnType<typeof listNoticesQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await listNotices({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: listNoticesQueryKey(options),
+  });
+
+/**
+ * Read All Notices
+ *
+ * Mark every notice of the caller read.
+ */
+export const readAllNoticesMutation = (
+  options?: Partial<Options<ReadAllNoticesData>>,
+): UseMutationOptions<
+  ReadAllNoticesResponse,
+  DefaultError,
+  Options<ReadAllNoticesData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    ReadAllNoticesResponse,
+    DefaultError,
+    Options<ReadAllNoticesData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await readAllNotices({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const getUnreadQueryKey = (options?: Options<GetUnreadData>) =>
+  createQueryKey("getUnread", options);
+
+/**
+ * Get Unread
+ *
+ * Whether the caller has a notice not yet read: the dot on the tab.
+ */
+export const getUnreadOptions = (options?: Options<GetUnreadData>) =>
+  queryOptions<
+    GetUnreadResponse,
+    DefaultError,
+    GetUnreadResponse,
+    ReturnType<typeof getUnreadQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getUnread({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getUnreadQueryKey(options),
+  });
+
+/**
+ * Read Notice
+ *
+ * Mark one notice read (opened from the list or from a push).
+ */
+export const readNoticeMutation = (
+  options?: Partial<Options<ReadNoticeData>>,
+): UseMutationOptions<ReadNoticeResponse, DefaultError, Options<ReadNoticeData>> => {
+  const mutationOptions: UseMutationOptions<
+    ReadNoticeResponse,
+    DefaultError,
+    Options<ReadNoticeData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await readNotice({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
 /**
  * Register Expo Token
  *
@@ -1345,30 +1462,3 @@ export const removeWebpushMutation = (
   };
   return mutationOptions;
 };
-
-export const listUpcomingQueryKey = (options?: Options<ListUpcomingData>) =>
-  createQueryKey("listUpcoming", options);
-
-/**
- * List Upcoming
- *
- * Next up: what is overdue and what falls due in 30 days, every animal, by date.
- */
-export const listUpcomingOptions = (options?: Options<ListUpcomingData>) =>
-  queryOptions<
-    ListUpcomingResponse,
-    DefaultError,
-    ListUpcomingResponse,
-    ReturnType<typeof listUpcomingQueryKey>
-  >({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await listUpcoming({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: listUpcomingQueryKey(options),
-  });

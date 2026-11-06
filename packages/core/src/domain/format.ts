@@ -87,22 +87,29 @@ export const MONTHS = [
 
 export type BadgeTone = "ok" | "soon" | "late";
 
-/** The card's badge: its text and its tone; null when there is nothing to say yet. */
+const BADGE_KIND_LABEL = {
+  vaccine: "Vacina",
+  internal: "Vermífugo",
+  external: "Antipulgas",
+} as const;
+
+/**
+ * The card's badge: what is due and when ("Vacina vence hoje", "Antipulgas vence
+ * em 6 dias", "Vermífugo atrasado · +1") and its tone. Null for an animal with
+ * nothing overdue or due in 30 days: the colour shows only what needs care.
+ */
 export function badgeText(badge: BadgeOut): { text: string; tone: BadgeTone } | null {
-  switch (badge.state) {
-    case "overdue":
-      return { text: "Atrasado", tone: "late" };
-    case "due_soon": {
-      const days = badge.days ?? 0;
-      const text =
-        days <= 0 ? "Vence hoje" : days === 1 ? "Vence amanhã" : `Vence em ${days} dias`;
-      return { text, tone: "soon" };
-    }
-    case "up_to_date":
-      return { text: "Em dia", tone: "ok" };
-    default:
-      return null;
+  if (badge.state !== "overdue" && badge.state !== "due_soon") return null;
+  const kind = badge.kind ? BADGE_KIND_LABEL[badge.kind] : "Lembrete";
+  const others = badge.others ? ` · +${badge.others}` : "";
+  if (badge.state === "overdue") {
+    const late = badge.kind === "vaccine" ? "atrasada" : "atrasado";
+    return { text: `${kind} ${late}${others}`, tone: "late" };
   }
+  const days = badge.days ?? 0;
+  const when =
+    days <= 0 ? "vence hoje" : days === 1 ? "vence amanhã" : `vence em ${days} dias`;
+  return { text: `${kind} ${when}${others}`, tone: "soon" };
 }
 
 /** A reminder's state in words, from its days left. */

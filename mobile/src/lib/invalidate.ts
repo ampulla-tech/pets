@@ -10,7 +10,6 @@ export function refreshAnimal(queryClient: QueryClient) {
       "listAnimals",
       "listRecords",
       "listAnimalReminders",
-      "listUpcoming",
       "getCard",
       "listAccesses",
     ),

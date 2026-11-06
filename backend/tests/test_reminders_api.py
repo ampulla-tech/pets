@@ -1,4 +1,4 @@
-"""Reminders as the app shows them: next up, the badge, an animal's subjects.
+"""Reminders as the app shows them: the badge and an animal's subjects.
 
 The fixture is the three cards' dates and diseases as of 2026-10-31.
 """
@@ -62,14 +62,8 @@ def cards(tutor, today):
     return dog, cat
 
 
-def test_next_up_has_the_dhppi_l_due_on_the_sixth(tutor, cards):
-    upcoming = tutor.get("/reminders/upcoming").json()
-    subjects = [(r["animal_name"], r["subject"], r["due_on"], r["state"]) for r in upcoming]
-    assert ("Bug", "internal", "2026-10-23", "overdue") in subjects
-    for disease in DHPPI_L:
-        assert ("Bug", disease, "2026-11-06", "upcoming") in subjects
-    assert all(r["animal_name"] != "Lacan" for r in upcoming)
-    assert [r["due_on"] for r in upcoming] == sorted(r["due_on"] for r in upcoming)
+def test_there_is_no_next_up_list_any_more(tutor, cards):
+    assert tutor.get("/reminders/upcoming").status_code == 404
 
 
 def test_the_felv_booster_is_closed_by_the_dose_of_the_27th(tutor, cards):
@@ -81,8 +75,10 @@ def test_the_felv_booster_is_closed_by_the_dose_of_the_27th(tutor, cards):
 
 def test_the_cards_carry_the_badge(tutor, cards):
     animals = {a["name"]: a["badge"] for a in tutor.get("/animals").json()}
-    assert animals["Bug"] == {"state": "overdue", "days": None}
-    assert animals["Lacan"] == {"state": "up_to_date", "days": None}
+    # The dewormer is 8 days late; the DHPPi+L, five diseases of one dose,
+    # falls due in 6 days and counts as one other.
+    assert animals["Bug"] == {"state": "overdue", "days": -8, "kind": "internal", "others": 1}
+    assert animals["Lacan"] == {"state": "up_to_date", "days": None, "kind": None, "others": 0}
 
 
 def test_no_reminder_is_computed_without_repeat_on(tutor, today):
@@ -91,13 +87,11 @@ def test_no_reminder_is_computed_without_repeat_on(tutor, today):
     tutor.post(f"/animals/{cat['id']}/vaccines", {"date": "2026-10-05", "diseases": ["rabies"]})
     [reminder] = tutor.get(f"/animals/{cat['id']}/reminders").json()
     assert (reminder["state"], reminder["due_on"]) == ("no_date", None)
-    assert tutor.get("/reminders/upcoming").json() == []
 
 
-def test_an_archived_animal_leaves_next_up(tutor, cards):
+def test_an_archived_animal_leaves_the_home(tutor, cards):
     dog, _ = cards
     tutor.post(f"/animals/{dog['id']}/archive", {"reason": "died", "on": "2026-10-31"})
-    assert tutor.get("/reminders/upcoming").json() == []
     assert [a["name"] for a in tutor.get("/animals").json()] == ["Lacan"]
     archived = tutor.get("/animals?status=archived").json()
     assert [(a["name"], a["archived_reason"]) for a in archived] == [("Bug", "died")]

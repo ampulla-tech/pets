@@ -14,6 +14,9 @@ import { CardPage } from "@/pages/CardPage";
 import { People } from "@/pages/People";
 import { InvitePage } from "@/pages/InvitePage";
 import { Archived } from "@/pages/Archived";
+import { Notices } from "@/pages/Notices";
+import { Profile } from "@/pages/Profile";
+import { TabsLayout } from "@/components/TabsLayout";
 import { NotFound } from "@/pages/NotFound";
 
 /** Signed-in only: anyone else goes to /entrar and comes back here after. */
@@ -37,7 +40,8 @@ function SignedOut() {
 }
 
 // The paths are the app's own words; the backend builds links to
-// /animais/:id?assunto=… (reminder e-mails and pushes) and /convite/:token.
+// /animais/:id?assunto=… (notice e-mails and pushes) and /convite/:token. A
+// push opened from the service worker adds &aviso=<notice id>.
 export const routes: RouteObject[] = [
   {
     element: <SignedOut />,
@@ -53,10 +57,19 @@ export const routes: RouteObject[] = [
   {
     element: <RequireAuth />,
     children: [
-      { path: "/", element: <Home /> },
-      { path: "/arquivados", element: <Archived /> },
+      {
+        // The tab bar: the three tabs, an animal and the archived list. The
+        // forms and the camera have the whole screen.
+        element: <TabsLayout />,
+        children: [
+          { path: "/", element: <Home /> },
+          { path: "/avisos", element: <Notices /> },
+          { path: "/perfil", element: <Profile /> },
+          { path: "/arquivados", element: <Archived /> },
+          { path: "/animais/:id", element: <AnimalProfile /> },
+        ],
+      },
       { path: "/animais/novo", element: <AnimalForm /> },
-      { path: "/animais/:id", element: <AnimalProfile /> },
       { path: "/animais/:id/editar", element: <AnimalForm /> },
       { path: "/animais/:id/registrar/:tipo", element: <NewRecord /> },
       { path: "/animais/:id/registros/:recordId", element: <EditRecord /> },

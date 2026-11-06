@@ -52,6 +52,8 @@ export default function AnimalScreen() {
   const reminders = useQuery(listAnimalRemindersOptions(path));
   const { label } = useCatalog();
   const [filter, setFilter] = useState<Filter>("all");
+  // The reminder the person tapped, whose actions show under it.
+  const [picked, setPicked] = useState<string | null>(null);
 
   if (animal.isPending) return <Loading />;
   if (animal.isError) return <ErrorState message={strings.animal.notFound} onRetry={() => void animal.refetch()} />;
@@ -182,8 +184,27 @@ export default function AnimalScreen() {
                 <ReminderRow
                   group={{ first: reminder, ...group }}
                   brand={brandOf(reminder.record_id)}
-                  highlighted={assunto !== undefined && group.subjects.includes(assunto)}
+                  highlighted={
+                    picked === group.key ||
+                    (picked === null && assunto !== undefined && group.subjects.includes(assunto))
+                  }
+                  onPress={
+                    tutor && active
+                      ? () => setPicked(picked === group.key ? "" : group.key)
+                      : undefined
+                  }
                 />
+                {picked === group.key && tutor && active ? (
+                  <Button
+                    size="sm"
+                    className="self-start"
+                    label={strings.reminders.registerDose}
+                    testID={`register-dose-${reminder.subject}`}
+                    onPress={() =>
+                      router.push(recordHref(id, reminder.record_kind, { dose: reminder.record_id }) as never)
+                    }
+                  />
+                ) : null}
                 {reminder.state === "no_date" && tutor && active ? (
                   <Button
                     size="sm"
