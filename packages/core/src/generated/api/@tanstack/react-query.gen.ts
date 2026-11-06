@@ -527,7 +527,10 @@ export const getCardQueryKey = (options: Options<GetCardData>) =>
 /**
  * Get Card
  *
- * The card to show at the clinic's counter: one row per disease, last and next dose.
+ * The card: a section per kind with a line per record, newest first.
+ *
+ * A section with no record is left out; only a current dose carries its
+ * "repeat on", its state and its days.
  */
 export const getCardOptions = (options: Options<GetCardData>) =>
   queryOptions<

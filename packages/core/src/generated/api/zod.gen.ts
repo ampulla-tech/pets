@@ -170,19 +170,26 @@ export const zBirthOut = z.object({
 });
 
 /**
- * CardRowOut
+ * CardItemOut
  */
-export const zCardRowOut = z.object({
-  label: z.string(),
-  last_date: z.iso.date(),
-  last_product: z.string(),
-  last_vet: z.string(),
-  next_on: z.iso.date().nullable(),
-  photos: z.array(zAttachmentOut),
+export const zCardItemOut = z.object({
+  can_edit: z.boolean(),
+  current: z.boolean(),
+  date: z.iso.date(),
+  detail: z.string(),
+  due_in_days: z.int().nullable(),
   record_id: z.uuid(),
-  record_kind: z.enum(["vaccine", "antiparasitic"]),
-  state: z.string(),
-  subject: z.string(),
+  repeat_on: z.iso.date().nullable(),
+  state: z.enum(["ok", "due_soon", "overdue", "no_date"]).nullable(),
+  title: z.string(),
+});
+
+/**
+ * CardSectionOut
+ */
+export const zCardSectionOut = z.object({
+  items: z.array(zCardItemOut),
+  kind: z.enum(["vaccine", "antiparasitic", "visit", "weight", "note"]),
 });
 
 /**
@@ -310,7 +317,7 @@ export const zAnimalOut = z.object({
  */
 export const zCardOut = z.object({
   animal: zAnimalOut,
-  rows: z.array(zCardRowOut),
+  sections: z.array(zCardSectionOut),
 });
 
 /**

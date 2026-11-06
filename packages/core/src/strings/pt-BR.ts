@@ -127,6 +127,10 @@ export const strings = {
     people: "Pessoas",
     addRecord: "Registrar",
     addByPhoto: "Adicionar por foto",
+    /** The Registrar sheet: the reading of the paper card first, for a tutor. */
+    readPhotos: "Ler fotos da carteirinha",
+    readPhotosHint: "Várias doses de uma vez. Você confere antes de salvar.",
+    byHand: "Ou um registro à mão",
     archive: "Arquivar",
     deleteAnimal: "Apagar o animal",
     deleteConfirm: (name: string) =>
@@ -239,18 +243,26 @@ export const strings = {
   },
   card: {
     title: "Carteirinha",
-    intro: "Mostre esta tela no balcão da clínica.",
-    against: "Contra",
-    lastDose: "Última dose",
-    nextDose: "Próxima",
+    /** A section per kind, like the pages of the paper card. */
+    sections: {
+      vaccine: "Vacinas",
+      antiparasitic: "Antiparasitários",
+      visit: "Consultas e exames",
+      weight: "Peso",
+      note: "Observações",
+    },
+    repeatOn: (date: string) => `Repetir em ${date}`,
+    repeatNoDate: "Repetir em: sem data",
     noDate: "sem data",
-    labelPhoto: "Foto da etiqueta",
-    empty: "Nenhuma vacina ou antiparasitário registrado.",
-    pdf: "Baixar PDF",
-    sharePdf: "Compartilhar PDF",
+    microchip: (number: string) => `Microchip ${number}`,
+    empty: "A carteirinha está vazia",
+    emptyHint: (ofAnimal: string) =>
+      `As vacinas, os vermífugos, as consultas e os pesos ${ofAnimal} aparecem aqui, um por um, como no papel.`,
+    pdf: "PDF",
+    pdfLabel: "Baixar o PDF da carteirinha",
+    sharePdf: "Compartilhar o PDF da carteirinha",
     downloading: "Baixando…",
     pdfFailed: "Não deu para baixar o PDF. Tente de novo.",
-    product: "Produto",
   },
   people: {
     title: "Pessoas",

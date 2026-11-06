@@ -428,60 +428,70 @@ export type BirthOut = {
 };
 
 /**
- * CardOut
+ * CardItemOut
  */
-export type CardOut = {
-  animal: AnimalOut;
+export type CardItemOut = {
   /**
-   * Rows
+   * Can Edit
    */
-  rows: Array<CardRowOut>;
-};
-
-/**
- * CardRowOut
- */
-export type CardRowOut = {
+  can_edit: boolean;
   /**
-   * Label
+   * Current
    */
-  label: string;
+  current: boolean;
   /**
-   * Last Date
+   * Date
    */
-  last_date: string;
+  date: string;
   /**
-   * Last Product
+   * Detail
    */
-  last_product: string;
+  detail: string;
   /**
-   * Last Vet
+   * Due In Days
    */
-  last_vet: string;
-  /**
-   * Next On
-   */
-  next_on: string | null;
-  /**
-   * Photos
-   */
-  photos: Array<AttachmentOut>;
+  due_in_days: number | null;
   /**
    * Record Id
    */
   record_id: string;
   /**
-   * Record Kind
+   * Repeat On
    */
-  record_kind: "vaccine" | "antiparasitic";
+  repeat_on: string | null;
   /**
    * State
    */
-  state: string;
+  state: "ok" | "due_soon" | "overdue" | "no_date" | null;
   /**
-   * Subject
+   * Title
    */
-  subject: string;
+  title: string;
+};
+
+/**
+ * CardOut
+ */
+export type CardOut = {
+  animal: AnimalOut;
+  /**
+   * Sections
+   */
+  sections: Array<CardSectionOut>;
+};
+
+/**
+ * CardSectionOut
+ */
+export type CardSectionOut = {
+  /**
+   * Items
+   */
+  items: Array<CardItemOut>;
+  /**
+   * Kind
+   */
+  kind: "vaccine" | "antiparasitic" | "visit" | "weight" | "note";
 };
 
 /**
