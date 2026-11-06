@@ -5,7 +5,7 @@ import {
   reminderTone,
   type ReminderGroup,
 } from "@pets/core/domain";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { Badge } from "@/components/ui/badge";
 import { Muted, Text } from "@/components/ui/text";
@@ -19,17 +19,24 @@ export function ReminderRow({
   group,
   brand,
   highlighted,
+  onPress,
 }: {
   group: ReminderGroup;
   brand?: string | null;
   highlighted?: boolean;
+  /** Tapping a reminder opens its actions; without it the row is inert. */
+  onPress?: () => void;
 }) {
   const reminder = group.first;
   const tone = reminderTone(reminder.state);
   const { title, detail } = groupTitle(group, brand);
   return (
-    <View
+    <Pressable
       testID={`reminder-${reminder.animal_name}-${reminder.subject}`}
+      onPress={onPress}
+      disabled={!onPress}
+      accessibilityRole={onPress ? "button" : undefined}
+      accessibilityState={onPress ? { expanded: !!highlighted } : undefined}
       className={cn(
         "flex-row items-center gap-3 rounded-lg border bg-card p-3",
         highlighted ? "border-primary" : "border-border",
@@ -41,6 +48,6 @@ export function ReminderRow({
         {reminder.due_on ? <Muted>{formatDate(reminder.due_on)}</Muted> : null}
       </View>
       <Badge text={reminderText(reminder)} tone={tone} />
-    </View>
+    </Pressable>
   );
 }

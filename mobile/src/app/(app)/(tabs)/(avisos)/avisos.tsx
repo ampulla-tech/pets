@@ -40,7 +40,8 @@ export default function NoticesScreen() {
 
   function open(notice: NoticeOut) {
     if (!notice.read) readOne.mutate({ path: { notice_id: notice.id } });
-    router.push(notice.url as never);
+    // Inside this tab's stack, so the animal's back arrow returns here.
+    router.push(notice.url.replace(/^\/animais\//, "/avisos/animal/") as never);
   }
 
   function onEnable() {

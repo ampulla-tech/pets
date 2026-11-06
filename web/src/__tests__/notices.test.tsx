@@ -1,3 +1,4 @@
+import { strings } from "@pets/core/strings";
 import { describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import type { NoticeOut } from "@pets/core/api/generated";
@@ -71,6 +72,22 @@ describe("the Avisos tab", () => {
     expect(router.state.location.search).toBe("?assunto=rabies");
     await waitFor(() => expect(api.to("POST /notices/:id/read")).toHaveLength(1));
     expect(api.to("POST /notices/:id/read")[0].path).toBe("/notices/n1/read");
+  });
+
+  it("brings the animal's back arrow to Avisos, where the notice was opened", async () => {
+    const a = animal({ id: "a", name: "Paçoca" });
+    mockApi({
+      ...routes([notice()]),
+      ...animalRoutes(a),
+      "POST /notices/:id/read": reply(204),
+    });
+    const { user, router } = renderApp("/avisos");
+    await user.click(
+      await screen.findByRole("button", { name: /Hoje é dia de vacinar/ }),
+    );
+    await screen.findByRole("heading", { name: "Paçoca" });
+    await user.click(screen.getByRole("link", { name: strings.app.back }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/avisos"));
   });
 
   it("marks every notice read from the ⋯ menu, only offered while one is unread", async () => {

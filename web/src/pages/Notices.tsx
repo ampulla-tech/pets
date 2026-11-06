@@ -44,7 +44,8 @@ export function Notices() {
 
   function open(notice: NoticeOut) {
     if (!notice.read) readOne.mutate({ path: { notice_id: notice.id } });
-    navigate(notice.url);
+    // The animal's back arrow returns here, where the person came from.
+    navigate(notice.url, { state: { back: "/avisos" } });
   }
 
   function onEnable() {

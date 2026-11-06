@@ -32,6 +32,7 @@ export async function renderApp(initialUrl: string) {
   return {
     pathname: () => result.getPathname(),
     params: () => result.getSearchParams(),
+    segments: () => result.getSegments(),
   };
 }
 

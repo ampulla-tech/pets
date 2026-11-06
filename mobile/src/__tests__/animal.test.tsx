@@ -39,6 +39,26 @@ describe("the animal's profile", () => {
     expect(app.params()).toMatchObject({ tipo: "vaccine", dose: "v1" });
   });
 
+  it("offers a new dose under any reminder tapped, and hides it on a second tap", async () => {
+    fakeApi(
+      animalRoutes(animal(), [vaccine(), vaccine({ id: "v2" })], [
+        reminder(),
+        reminder({ subject: "felv", subject_label: "FeLV", record_id: "v2" }),
+      ]),
+    );
+    const app = await renderApp(`/animais/${ANIMAL_ID}`);
+    const felv = await screen.findByTestId("reminder-Lacan-felv");
+    expect(screen.queryByTestId("register-dose-felv")).toBeNull();
+    await fireEvent.press(felv);
+    expect(screen.queryByTestId("register-dose-rabies")).toBeNull();
+    await fireEvent.press(felv);
+    expect(screen.queryByTestId("register-dose-felv")).toBeNull();
+    await fireEvent.press(felv);
+    await fireEvent.press(screen.getByTestId("register-dose-felv"));
+    expect(app.pathname()).toBe(`/animais/${ANIMAL_ID}/registro`);
+    expect(app.params()).toMatchObject({ tipo: "vaccine", dose: "v2" });
+  });
+
   it("shows the diseases of one dose as one reminder, named by the brand", async () => {
     const combined = vaccine({ id: "v3", brand: "Nobivac Feline 1-HCPCh+FeLV", diseases: ["calicivirus", "felv"] });
     fakeApi(

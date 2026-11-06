@@ -1,4 +1,5 @@
-import { fireEvent, screen, waitFor, within } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react-native";
+import { router } from "expo-router";
 
 import { fakeApi } from "@/test-utils/api";
 import { animal, ANIMAL_ID, animalRoutes, notice } from "@/test-utils/fixtures";
@@ -75,9 +76,24 @@ describe("the Avisos tab", () => {
     });
     const app = await renderApp("/avisos");
     await fireEvent.press(await screen.findByTestId("notice-n1"));
-    await waitFor(() => expect(app.pathname()).toBe(`/animais/${ANIMAL_ID}`));
+    await waitFor(() => expect(app.pathname()).toBe(`/avisos/animal/${ANIMAL_ID}`));
     expect(app.params()).toMatchObject({ assunto: "rabies" });
     await waitFor(() => expect(api.callsTo("POST /notices/n1/read")).toHaveLength(1));
+  });
+
+  it("keeps the animal opened from a notice in Avisos, so back returns to the list", async () => {
+    fakeApi({
+      ...animalRoutes(animal()),
+      ...routes([notice()]),
+      "POST /notices/n1/read": { status: 204 },
+    });
+    const app = await renderApp("/avisos");
+    await fireEvent.press(await screen.findByTestId("notice-n1"));
+    await waitFor(() => expect(app.pathname()).toBe(`/avisos/animal/${ANIMAL_ID}`));
+    expect(app.params()).toMatchObject({ assunto: "rabies" });
+    expect(await screen.findByTestId("animal-screen")).toBeTruthy();
+    await act(async () => router.back());
+    await waitFor(() => expect(app.pathname()).toBe("/avisos"));
   });
 
   it("does not mark again a notice already read", async () => {
@@ -87,7 +103,7 @@ describe("the Avisos tab", () => {
     });
     const app = await renderApp("/avisos");
     await fireEvent.press(await screen.findByTestId("notice-n1"));
-    await waitFor(() => expect(app.pathname()).toBe(`/animais/${ANIMAL_ID}`));
+    await waitFor(() => expect(app.pathname()).toBe(`/avisos/animal/${ANIMAL_ID}`));
     expect(api.calls.filter((c) => c.method === "POST")).toHaveLength(0);
   });
 

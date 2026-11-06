@@ -8,6 +8,7 @@ export default function NoticesLayout() {
   return (
     <Stack screenOptions={screenOptions}>
       <Stack.Screen name="avisos" options={{ title: strings.notices.title }} />
+      <Stack.Screen name="avisos/animal/[id]" options={{ title: "" }} />
     </Stack>
   );
 }

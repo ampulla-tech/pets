@@ -62,6 +62,31 @@ describe("animal profile", () => {
     expect(screen.getAllByRole("link", { name: "Registrar dose nova" })).toHaveLength(1);
   });
 
+  it("opens the shortcut of any reminder tapped, one at a time", async () => {
+    mockApi(
+      animalRoutes(lacan, records, [
+        reminder({ subject: "felv", subject_label: "FeLV", record_id: "v2" }),
+        reminder({ subject: "rabies", subject_label: "Raiva", state: "upcoming", days: 5 }),
+      ]),
+    );
+    const { user } = renderApp("/animais/a1");
+    const felv = (await screen.findByText("FeLV", { selector: "p" })).closest("li")!;
+    expect(screen.queryByRole("link", { name: "Registrar dose nova" })).toBeNull();
+
+    await user.click(within(felv).getByRole("button", { expanded: false }));
+    expect(
+      within(felv).getByRole("link", { name: "Registrar dose nova" }).getAttribute("href"),
+    ).toBe("/animais/a1/registrar/vacina?dose=v2");
+
+    const rabies = screen.getByText("Raiva", { selector: "p" }).closest("li")!;
+    await user.click(within(rabies).getByRole("button", { expanded: false }));
+    expect(screen.getAllByRole("link", { name: "Registrar dose nova" })).toHaveLength(1);
+    expect(within(rabies).getByRole("link", { name: "Registrar dose nova" })).toBeTruthy();
+
+    await user.click(within(rabies).getByRole("button", { expanded: true }));
+    expect(screen.queryByRole("link", { name: "Registrar dose nova" })).toBeNull();
+  });
+
   it("shows the diseases of one dose as one reminder, named by the brand", async () => {
     const combined = vaccine({ id: "v3", brand: "Nobivac Feline 1-HCPCh+FeLV" });
     mockApi(
