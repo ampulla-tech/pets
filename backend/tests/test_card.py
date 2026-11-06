@@ -4,7 +4,7 @@ from datetime import date
 
 import pytest
 
-from conftest import CAT, jpeg_file, make_animal
+from conftest import CAT, DOG, jpeg_file, make_animal, pdf_text
 
 FELINE = ["rhinotracheitis", "calicivirus", "panleukopenia", "chlamydiosis"]
 
@@ -93,3 +93,12 @@ def test_no_route_reads_an_animal_without_a_session(gata):
     anonymous = Api()
     assert anonymous.get(f"/animals/{gata['id']}/card.pdf").status_code == 401
     assert anonymous.get(f"/animals/{gata['id']}").status_code == 401
+
+
+def test_the_pdf_says_canino_and_a_blank_breed_is_srd(tutor):
+    thor = make_animal(tutor, {**DOG, "name": "Thor", "breed": ""})
+    text = pdf_text(tutor.get(f"/animals/{thor['id']}/card.pdf").content)
+    assert text[text.index("Espécie") + 1] == "Canino"
+    assert text[text.index("Raça") + 1] == "SRD (sem raça definida)"
+    # The stored breed stays blank: only what is shown changes.
+    assert tutor.get(f"/animals/{thor['id']}").json()["breed"] == ""

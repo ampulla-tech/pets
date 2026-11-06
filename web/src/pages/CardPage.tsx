@@ -6,6 +6,7 @@ import { apiFetch, cardPdfUrl } from "@pets/core/api";
 import type { AttachmentOut, CardRowOut } from "@pets/core/api/generated";
 import { getCardOptions } from "@pets/core/api/query";
 import {
+  breedText,
   formatAge,
   formatBirth,
   formatDate,
@@ -88,7 +89,7 @@ export function CardPage() {
               <p className="text-muted-foreground">
                 {[
                   SPECIES_LABEL[card.data.animal.species],
-                  card.data.animal.breed,
+                  breedText(card.data.animal.breed),
                   card.data.animal.sex ? SEX_LABEL[card.data.animal.sex] : "",
                 ]
                   .filter(Boolean)

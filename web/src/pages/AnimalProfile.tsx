@@ -22,6 +22,7 @@ import { listAnimalRemindersOptions } from "@pets/core/api/query";
 import {
   ARCHIVE_REASON_LABEL,
   badgeText,
+  breedText,
   formatAge,
   formatBirth,
   formatDate,
@@ -205,7 +206,7 @@ function Profile({ animal }: { animal: AnimalOut }) {
         <div className="min-w-0 flex-1">
           <p className="truncate text-2xl font-semibold tracking-tight">{animal.name}</p>
           <p className="text-sm text-muted-foreground">
-            {[SPECIES_LABEL[animal.species], animal.breed].filter(Boolean).join(" · ")}
+            {[SPECIES_LABEL[animal.species], breedText(animal.breed)].join(" · ")}
           </p>
           <p className="text-sm text-muted-foreground">
             {formatAge(animal.age) ?? formatBirth(animal.birth)}
@@ -289,7 +290,9 @@ function Profile({ animal }: { animal: AnimalOut }) {
                     ? group.key === picked
                     : subject !== null && group.subjects.includes(subject)
                 }
-                scrollTo={picked === null && subject !== null && group.subjects.includes(subject)}
+                scrollTo={
+                  picked === null && subject !== null && group.subjects.includes(subject)
+                }
                 onPick={() => setPicked(picked === group.key ? "" : group.key)}
                 writable={active && tutor}
               />
@@ -412,8 +415,7 @@ function ReminderRow({
   const { title, detail } = groupTitle(group, brand);
   const [node, setNode] = useState<HTMLLIElement | null>(null);
   useEffect(() => {
-    if (scrollTo && node)
-      node.scrollIntoView?.({ block: "center", behavior: "smooth" });
+    if (scrollTo && node) node.scrollIntoView?.({ block: "center", behavior: "smooth" });
   }, [scrollTo, node]);
   const tone = reminderTone(reminder.state);
   const doseKind: RecordKind = reminder.record_kind;

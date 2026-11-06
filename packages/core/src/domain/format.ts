@@ -141,7 +141,34 @@ export function reminderTone(state: ReminderOut["state"]): BadgeTone | "none" {
   return "none";
 }
 
-export const SPECIES_LABEL: Record<Species, string> = { dog: "Cão", cat: "Gato" };
+export const SPECIES_LABEL: Record<Species, string> = { dog: "Canino", cat: "Felino" };
+
+/** What a blank breed is shown as, and what the form's shortcut writes. */
+export const NO_BREED = "SRD";
+
+/** The breed as the screens show it: a blank one is "SRD" (sem raça definida). */
+export function breedText(breed: string | null | undefined): string {
+  return breed?.trim() || NO_BREED;
+}
+
+/**
+ * Who the animal is, in one line: "Canino · SRD · 5 anos". With `sex`, the
+ * card's line: "Canino · Dachshund · Macho · 3 anos". An unknown age or sex is
+ * left out.
+ */
+export function animalLine(
+  animal: Pick<AnimalOut, "species" | "breed" | "sex" | "age">,
+  { sex = false }: { sex?: boolean } = {},
+): string {
+  return [
+    SPECIES_LABEL[animal.species],
+    breedText(animal.breed),
+    sex && animal.sex ? SEX_LABEL[animal.sex] : null,
+    formatAge(animal.age),
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
 export const SEX_LABEL: Record<"male" | "female" | "", string> = {
   male: "Macho",
   female: "Fêmea",

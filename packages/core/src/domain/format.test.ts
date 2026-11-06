@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  animalLine,
   badgeText,
+  breedText,
   formatAge,
   formatBirth,
   formatDate,
@@ -97,5 +99,29 @@ describe("weights", () => {
     expect(parseKg("4,9")).toBe("4.9");
     expect(parseKg("0")).toBeNull();
     expect(formatKg("4.285")).toBe("4,285 kg");
+  });
+});
+
+describe("species and breed", () => {
+  const thor = {
+    species: "dog" as const,
+    breed: "",
+    sex: "male" as const,
+    age: { years: 5, months: 0, approximate: false },
+  };
+
+  it("say Canino and Felino, and a blank breed is SRD", () => {
+    expect(animalLine(thor)).toBe("Canino · SRD · 5 anos");
+    expect(animalLine({ ...thor, species: "cat", breed: "Siamês" }, { sex: true })).toBe(
+      "Felino · Siamês · Macho · 5 anos",
+    );
+    expect(breedText("  ")).toBe("SRD");
+    expect(breedText("Dachshund")).toBe("Dachshund");
+  });
+
+  it("leave out what is not known", () => {
+    expect(animalLine({ ...thor, sex: "", age: null }, { sex: true })).toBe(
+      "Canino · SRD",
+    );
   });
 });

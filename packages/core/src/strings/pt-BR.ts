@@ -99,6 +99,8 @@ export const strings = {
     photo: "Foto",
     changePhoto: "Trocar a foto",
     breed: "Raça",
+    /** The shortcut under the breed field; it writes NO_BREED ("SRD"). */
+    noBreed: "SRD (sem raça definida)",
     sex: "Sexo",
     neutered: "Castrado",
     yes: "Sim",

@@ -1,6 +1,7 @@
 import { getAnimalOptions, listAnimalRemindersOptions } from "@pets/core/api/query";
 import {
   badgeText,
+  breedText,
   formatAge,
   formatBirth,
   formatDate,
@@ -114,7 +115,7 @@ export default function AnimalScreen() {
           <AnimalAvatar animal={a} size={88} />
           <View className="flex-1 gap-1">
             <Text className="text-2xl font-bold">{a.name}</Text>
-            <Muted>{[SPECIES_LABEL[a.species], a.breed, SEX_LABEL[a.sex]].filter(Boolean).join(" · ")}</Muted>
+            <Muted>{[SPECIES_LABEL[a.species], breedText(a.breed), SEX_LABEL[a.sex]].filter(Boolean).join(" · ")}</Muted>
             {age ? <Muted>{`${strings.animal.age}: ${age}`}</Muted> : null}
             {badge && active ? <Badge text={badge.text} tone={badge.tone} /> : null}
           </View>

@@ -156,6 +156,20 @@ describe("registering an animal", () => {
     expect(photo.body).toBeInstanceOf(FormData);
   });
 
+  it("says Canino and Felino, and writes SRD in the breed from its shortcut", async () => {
+    const created = animal({ id: "new", name: "Nina", species: "cat", breed: "SRD" });
+    const api = fakeApi({ "POST /animals": { status: 201, body: created }, ...animalRoutes(created) });
+    const app = await renderApp("/animais/novo");
+    await fireEvent.press(await screen.findByText("Felino"));
+    expect(screen.getByText("Canino")).toBeTruthy();
+    await fireEvent.changeText(screen.getByTestId("animal-name"), "Nina");
+    await fireEvent.press(screen.getByTestId("no-breed"));
+    expect(screen.getByTestId("breed").props.value).toBe("SRD");
+    await fireEvent.press(screen.getByTestId("save-animal"));
+    await waitFor(() => expect(app.pathname()).toBe("/animais/new"));
+    expect(api.callsTo("POST /animals")[0].body).toMatchObject({ species: "cat", breed: "SRD" });
+  });
+
   it("checks a birth year has four digits", async () => {
     fakeApi({});
     await renderApp("/animais/novo");

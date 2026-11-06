@@ -70,8 +70,16 @@ def card_rows(animal: Animal, today: date | None = None) -> list[CardRow]:
 
 # ── PDF ─────────────────────────────────────────────────────────────────────
 
-SPECIES = {"dog": "Cão", "cat": "Gato"}
+SPECIES = {"dog": "Canino", "cat": "Felino"}
+# A blank breed is shown as "sem raça definida", the same as one typed "SRD".
+NO_BREED = "SRD (sem raça definida)"
 SEX = {"male": "Macho", "female": "Fêmea", "": "—"}
+
+
+def breed_text(breed: str) -> str:
+    """The breed in the PDF: blank or "SRD" reads "SRD (sem raça definida)"."""
+    breed = breed.strip()
+    return NO_BREED if breed.upper() in ("", "SRD") else breed
 
 
 def _br(day: date | None) -> str:
@@ -121,7 +129,7 @@ def card_pdf(animal: Animal, today: date | None = None) -> bytes:
     story = [Paragraph(f"Carteirinha de {animal.name}", styles["Title"])]
 
     profile = [
-        ["Espécie", SPECIES[animal.species], "Raça", animal.breed or "—"],
+        ["Espécie", SPECIES[animal.species], "Raça", breed_text(animal.breed)],
         [
             "Sexo",
             SEX.get(animal.sex, "—"),
