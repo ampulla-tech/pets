@@ -87,7 +87,7 @@ describe("the animal's profile", () => {
       ...animalRoutes(animal({ status: "archived", archived_reason: "died", archived_on: "2026-10-30" }), [vaccine()]),
       [`DELETE /animals/${ANIMAL_ID}`]: { status: 204 },
       "GET /animals": { body: [] },
-      "GET /reminders/upcoming": { body: [] },
+      "GET /notices/unread": { body: { unread: false } },
     });
     const alert = confirmAlerts();
     const app = await renderApp(`/animais/${ANIMAL_ID}`);

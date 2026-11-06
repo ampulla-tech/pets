@@ -19,7 +19,6 @@ export const strings = {
     genericError: "Algo deu errado. Tente de novo.",
     offline: "Sem conexão com o servidor.",
     optional: "opcional",
-    menu: "Menu",
     required: "Obrigatório.",
     notFound: "Não encontramos esta página.",
     goHome: "Ir para o início",
@@ -57,7 +56,6 @@ export const strings = {
     resendCode: "Mandar outro código",
     codeResent: "Mandamos outro código. Confira a caixa de entrada.",
     otherEmail: "Usar outro e-mail",
-    signedInAs: (email: string) => `Conectado como ${email}`,
   },
   home: {
     title: "Meus pets",
@@ -65,7 +63,6 @@ export const strings = {
     emptyHint: "Cadastre o primeiro para guardar as vacinas e receber os lembretes.",
     add: "Cadastrar animal",
     addShort: "Adicionar",
-    archived: "Arquivados",
   },
   /** The tab bar at the bottom of the app. */
   tabs: {

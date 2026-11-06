@@ -20,7 +20,7 @@ export function afterSignIn(invite?: string) {
   router.replace(invite ? `/convite/${invite}` : "/");
 }
 
-/** The animal's profile, optionally at one reminder's subject. */
-export function animalHref(id: string, subject?: string) {
-  return subject ? `/animais/${id}?assunto=${encodeURIComponent(subject)}` : `/animais/${id}`;
+/** The animal's profile. */
+export function animalHref(id: string) {
+  return `/animais/${id}`;
 }

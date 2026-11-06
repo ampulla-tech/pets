@@ -18,7 +18,7 @@ describe("signing in", () => {
         body: { status: 200, data: { user: { email: "ana@example.com" } }, meta: { session_token: "tok-9" } },
       },
       "GET /animals": { body: [] },
-      "GET /reminders/upcoming": { body: [] },
+      "GET /notices/unread": { body: { unread: false } },
     });
     await renderApp("/");
     expect(await screen.findByRole("heading", { name: strings.auth.signInTitle })).toBeTruthy();
@@ -67,7 +67,7 @@ describe("signing up", () => {
         body: { status: 200, data: { user: { email: "bia@example.com" } }, meta: { session_token: "tok-2" } },
       },
       "GET /animals": { body: [] },
-      "GET /reminders/upcoming": { body: [] },
+      "GET /notices/unread": { body: { unread: false } },
     });
     await renderApp("/cadastro");
     await fireEvent.changeText(await screen.findByTestId("email"), "bia");
@@ -145,7 +145,7 @@ describe("password reset by code", () => {
         body: { status: 200, data: { user: { email: "ana@example.com" } }, meta: { session_token: "tok-3" } },
       },
       "GET /animals": { body: [] },
-      "GET /reminders/upcoming": { body: [] },
+      "GET /notices/unread": { body: { unread: false } },
     });
     await renderApp("/recuperar");
     await fireEvent.changeText(await screen.findByTestId("reset-email"), "ana@example.com");
@@ -172,11 +172,11 @@ describe("signing out", () => {
     store.set("pets.expoPushToken", "ExponentPushToken[abc]");
     const api = fakeApi({
       "GET /animals": { body: [] },
-      "GET /reminders/upcoming": { body: [] },
+      "GET /notices/unread": { body: { unread: false } },
       "POST /push/expo/remove": { status: 204 },
       "DELETE /_allauth/app/v1/auth/session": { status: 401, body: { status: 401 } },
     });
-    await renderApp("/");
+    await renderApp("/perfil");
     await fireEvent.press(await screen.findByTestId("sign-out"));
     expect(await screen.findByTestId("sign-in")).toBeTruthy();
     expect(api.callsTo("POST /push/expo/remove")[0].body).toEqual({ token: "ExponentPushToken[abc]" });
@@ -191,7 +191,7 @@ it("a 401 on a kept session signs out", async () => {
   signedIn();
   fakeApi({
     "GET /animals": { status: 401, body: { detail: "Unauthorized" } },
-    "GET /reminders/upcoming": { status: 401, body: { detail: "Unauthorized" } },
+    "GET /notices/unread": { status: 401, body: { detail: "Unauthorized" } },
   });
   await renderApp("/");
   await waitFor(() => expect(screen.getByTestId("sign-in")).toBeTruthy());
