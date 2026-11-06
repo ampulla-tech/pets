@@ -32,3 +32,10 @@ all. Vaccination protocols change by animal and by clinic.
   fills it in.
 - Editing a dose's "repeat on" makes it a new reminder for the sending log
   (ADR-0004): its milestones are sent again for the new date.
+- The person registers the vaccine, not the diseases (decided 2026-11-06):
+  only the vet knows what a combined vaccine covers. So the screens group the
+  reminders one dose opened for one day into one line, named by the brand
+  (`groupReminders` and `groupTitle` in `packages/core/src/domain`). Its
+  "register a new dose" opens the form as a copy of that dose (`?dose=` with
+  the record's id): the same brand and diseases, the diseases folded, and
+  the lot, the vet and the dates left empty for the new bottle.

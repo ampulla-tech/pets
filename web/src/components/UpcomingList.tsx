@@ -1,29 +1,13 @@
 import { Link } from "react-router";
 import { ChevronRight } from "lucide-react";
-import { formatDate, reminderText, reminderTone } from "@pets/core/domain";
+import {
+  formatDate,
+  groupReminders,
+  reminderText,
+  reminderTone,
+} from "@pets/core/domain";
 import type { ReminderOut } from "@pets/core/api/generated";
 import { StatusBadge } from "./StatusBadge";
-
-interface Group {
-  key: string;
-  first: ReminderOut;
-  labels: string[];
-}
-
-/**
- * The reminders of one dose that fall on one day (a combined vaccine covers
- * several diseases) read as one line.
- */
-export function groupReminders(items: ReminderOut[]): Group[] {
-  const groups = new Map<string, Group>();
-  for (const item of items) {
-    const key = `${item.animal_id}|${item.record_id}|${item.due_on}|${item.state}`;
-    const group = groups.get(key);
-    if (group) group.labels.push(item.subject_label);
-    else groups.set(key, { key, first: item, labels: [item.subject_label] });
-  }
-  return [...groups.values()];
-}
 
 /** "Próximos": what is overdue and what falls due within 30 days, by date. */
 export function UpcomingList({ items }: { items: ReminderOut[] }) {

@@ -57,9 +57,44 @@ describe("animal profile", () => {
       within(item)
         .getByRole("link", { name: "Registrar dose nova" })
         .getAttribute("href"),
-    ).toBe("/animais/a1/registrar/vacina?assunto=rabies");
+    ).toBe("/animais/a1/registrar/vacina?dose=v1");
     // Only the pointed-at subject gets the shortcut.
     expect(screen.getAllByRole("link", { name: "Registrar dose nova" })).toHaveLength(1);
+  });
+
+  it("shows the diseases of one dose as one reminder, named by the brand", async () => {
+    const combined = vaccine({ id: "v3", brand: "Nobivac Feline 1-HCPCh+FeLV" });
+    mockApi(
+      animalRoutes(
+        lacan,
+        [...records, combined],
+        [
+          reminder({
+            subject: "rhinotracheitis",
+            subject_label: "Rinotraqueíte",
+            record_id: "v3",
+          }),
+          reminder({
+            subject: "calicivirus",
+            subject_label: "Calicivirose",
+            record_id: "v3",
+          }),
+          reminder({ subject: "felv", subject_label: "FeLV", record_id: "v3" }),
+        ],
+      ),
+    );
+    renderApp("/animais/a1?assunto=calicivirus");
+    const section = await screen.findByRole("region", { name: "Lembretes" });
+    const items = await within(section).findAllByRole("listitem");
+    expect(items).toHaveLength(1);
+    expect(items[0].textContent).toContain("Nobivac Feline 1-HCPCh+FeLV");
+    expect(items[0].textContent).toContain("Rinotraqueíte, Calicivirose, FeLV");
+    expect(items[0].getAttribute("aria-current")).toBe("true");
+    expect(
+      within(items[0])
+        .getByRole("link", { name: "Registrar dose nova" })
+        .getAttribute("href"),
+    ).toBe("/animais/a1/registrar/vacina?dose=v3");
   });
 
   it("asks for the date of a reminder with none, through the dose's edit form", async () => {

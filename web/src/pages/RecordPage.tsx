@@ -15,6 +15,8 @@ export function NewRecord() {
   const [params] = useSearchParams();
   const kind = kindFromSlug(tipo);
   const animal = useAnimal(id);
+  const records = useRecords(id);
+  const doseId = params.get("dose");
   // "Preencher à mão" after a failed reading: the reading's photos come along.
   const extractionId = params.get("leitura");
   const extraction = useQuery({
@@ -30,7 +32,11 @@ export function NewRecord() {
         <ErrorState message={strings.app.notFound} />
       </Page>
     );
-  if (animal.isPending || (extractionId && extraction.isPending))
+  if (
+    animal.isPending ||
+    (extractionId && extraction.isPending) ||
+    (doseId && records.isPending)
+  )
     return (
       <Page title={title} back={back}>
         <Loading />
@@ -48,6 +54,7 @@ export function NewRecord() {
         kind={kind}
         animal={animal.data}
         subject={params.get("assunto")}
+        previous={records.data?.find((r) => r.id === doseId && r.kind === kind)}
         attachments={extraction.data?.photos ?? []}
         fromPhoto={Boolean(extraction.data?.photos.length)}
       />

@@ -28,15 +28,23 @@ type Params = {
   tipo?: RecordKind;
   registro?: string;
   assunto?: string;
+  /** The dose this one repeats: the new one starts with its brand and diseases. */
+  dose?: string;
   anexos?: string;
   campo?: string;
 };
 
 type Values = Record<string, string>;
 
-function initialValues(record: AnyRecord | undefined): Values {
+function initialValues(record: AnyRecord | undefined, previous: AnyRecord | undefined): Values {
   const today = dayText(todayIso());
-  if (!record) return { date: today };
+  if (!record) {
+    // A repeat dose copies what names the vaccine; the lot, the vet and the
+    // dates are of the new bottle and the new visit.
+    if (previous?.kind === "vaccine") return { date: today, brand: previous.brand };
+    if (previous?.kind === "antiparasitic") return { date: today, product: previous.product, dose: previous.dose };
+    return { date: today };
+  }
   const base: Values = { date: dayText(record.date) };
   switch (record.kind) {
     case "vaccine":
@@ -75,8 +83,9 @@ export default function RecordScreen() {
   const records = useRecords(id);
   const editing = params.registro ?? null;
   const record = editing ? records.data?.find((r) => r.id === editing) : undefined;
+  const previous = !editing && params.dose ? records.data?.find((r) => r.id === params.dose) : undefined;
 
-  if (animal.isPending || (editing && records.isPending)) return <Loading />;
+  if (animal.isPending || ((editing || params.dose) && records.isPending)) return <Loading />;
   if (animal.isError) return <ErrorState message={strings.animal.notFound} />;
   if (editing && !record) return <ErrorState message={strings.records.notFound} />;
 
@@ -89,6 +98,7 @@ export default function RecordScreen() {
       tutor={animal.data.role === "tutor"}
       kind={kind}
       record={record}
+      previous={previous?.kind === kind ? previous : undefined}
       subject={params.assunto}
       presetAttachments={params.anexos ? params.anexos.split(",").filter(Boolean) : []}
       focus={params.campo}
@@ -102,6 +112,7 @@ function RecordForm({
   tutor,
   kind,
   record,
+  previous,
   subject,
   presetAttachments,
   focus,
@@ -111,20 +122,32 @@ function RecordForm({
   tutor: boolean;
   kind: RecordKind;
   record?: AnyRecord;
+  previous?: AnyRecord;
   subject?: string;
   presetAttachments: string[];
   focus?: string;
 }) {
   const queryClient = useQueryClient();
   const { diseasesOf, catalog } = useCatalog();
-  const [values, setValues] = useState<Values>(() => initialValues(record));
+  const [values, setValues] = useState<Values>(() => initialValues(record, previous));
   const [diseases, setDiseases] = useState<string[]>(
-    record?.kind === "vaccine" ? record.diseases : subject && kind === "vaccine" ? [subject] : [],
+    record?.kind === "vaccine"
+      ? record.diseases
+      : previous?.kind === "vaccine"
+        ? previous.diseases
+        : subject && kind === "vaccine"
+          ? [subject]
+          : [],
   );
+  // Copied from the last dose, the diseases stay folded: the person registers
+  // the vaccine, and opens the list only when the vet changed it.
+  const [pickDiseases, setPickDiseases] = useState(previous?.kind !== "vaccine");
   const [parasite, setParasite] = useState<"internal" | "external">(
     record?.kind === "antiparasitic"
       ? record.parasite
-      : subject === "external"
+      : previous?.kind === "antiparasitic"
+        ? previous.parasite
+        : subject === "external"
         ? "external"
         : "internal",
   );
@@ -285,17 +308,36 @@ function RecordForm({
       <Stack.Screen options={{ title }} />
       <Screen>
         {focus === "repeat_on" ? <Notice tone="soon">{strings.records.noRepeat}</Notice> : null}
+        {previous ? <Notice>{strings.records.fromLastDose}</Notice> : null}
         {date}
         {kind === "vaccine" ? (
           <>
             <Field label={strings.records.diseases} error={errors.diseases}>
               {catalog.isPending ? <Loading /> : null}
-              <MultiSelect
-                testID="diseases"
-                value={diseases}
-                onChange={setDiseases}
-                options={diseasesOf(species).map((d) => ({ value: d.code, label: d.label }))}
-              />
+              {pickDiseases ? (
+                <MultiSelect
+                  testID="diseases"
+                  value={diseases}
+                  onChange={setDiseases}
+                  options={diseasesOf(species).map((d) => ({ value: d.code, label: d.label }))}
+                />
+              ) : (
+                <View className="flex-row items-center gap-3 rounded-lg border border-border bg-card p-3">
+                  <Text testID="diseases-summary" className="flex-1">
+                    {diseasesOf(species)
+                      .filter((d) => diseases.includes(d.code))
+                      .map((d) => d.label)
+                      .join(", ")}
+                  </Text>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    label={strings.records.changeDiseases}
+                    testID="change-diseases"
+                    onPress={() => setPickDiseases(true)}
+                  />
+                </View>
+              )}
             </Field>
             {text("brand", strings.records.brand)}
             {text("lot", strings.records.lot)}

@@ -174,6 +174,8 @@ export const strings = {
     lotShort: (lot: string) => `Partida ${lot}`,
     weightAlso: (kg: string) => `Peso no dia: ${kg}`,
     fromPhoto: "Fotos da leitura anexadas.",
+    fromLastDose: "Copiado da dose anterior. Confira com a etiqueta do frasco.",
+    changeDiseases: "Alterar",
     notFound: "Registro não encontrado.",
   },
   reminders: {

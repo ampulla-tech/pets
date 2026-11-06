@@ -70,6 +70,29 @@ describe("the vaccine form", () => {
     expect(rabies.props.accessibilityState.checked).toBe(true);
   });
 
+  it("a repeat dose starts as a copy of the last one, diseases folded", async () => {
+    const last = vaccine({ id: "v7", brand: "Nobivac Feline", diseases: ["calicivirus", "felv"] });
+    const api = fakeApi({
+      ...animalRoutes(animal(), [last]),
+      [`POST /animals/${ANIMAL_ID}/vaccines`]: { status: 201, body: last },
+    });
+    await renderApp(url("tipo=vaccine&dose=v7"));
+    expect(await screen.findByText(strings.records.fromLastDose)).toBeTruthy();
+    expect(screen.getByTestId("diseases-summary").props.children).toBe("Calicivirose, FeLV");
+    expect(screen.queryByTestId("diseases")).toBeNull();
+    expect(screen.getByTestId("brand").props.value).toBe("Nobivac Feline");
+    expect(screen.getByTestId("lot").props.value).toBe("");
+    await fireEvent.press(screen.getByTestId("change-diseases"));
+    expect(screen.getByLabelText("FeLV").props.accessibilityState.checked).toBe(true);
+    await fireEvent.press(screen.getByTestId("save-record"));
+    await waitFor(() =>
+      expect(api.callsTo(`POST /animals/${ANIMAL_ID}/vaccines`)[0].body).toMatchObject({
+        brand: "Nobivac Feline",
+        diseases: ["calicivirus", "felv"],
+      }),
+    );
+  });
+
   it("filling by hand after a failed reading attaches the reading's photos", async () => {
     const api = fakeApi({
       ...animalRoutes(animal()),

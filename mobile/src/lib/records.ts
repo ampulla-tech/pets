@@ -83,8 +83,3 @@ export function deleteRecord(kind: RecordKind, animalId: string, recordId: strin
   const call = remove[kind] as unknown as Call;
   return call({ path: { animal_id: animalId, record_id: recordId }, throwOnError: true });
 }
-
-/** A reminder's subject is a disease (a vaccine) or a parasite kind (an antiparasitic). */
-export function kindOfSubject(subject: string): "vaccine" | "antiparasitic" {
-  return subject === "internal" || subject === "external" ? "antiparasitic" : "vaccine";
-}

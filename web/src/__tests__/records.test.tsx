@@ -86,6 +86,39 @@ describe("vaccine", () => {
     ).toBe(false);
   });
 
+  it("starts a new dose as a copy of the last one, diseases folded", async () => {
+    const last = vaccine({
+      id: "v7",
+      brand: "Vanguard Plus",
+      diseases: ["distemper", "parvovirus"],
+    });
+    const api = mockApi({
+      ...animalRoutes(dog, [last]),
+      "POST /animals/d1/vaccines": reply(201, last),
+    });
+    const { user } = renderApp("/animais/d1/registrar/vacina?dose=v7");
+    expect(await screen.findByText(/Copiado da dose anterior/)).toBeTruthy();
+    expect((screen.getByLabelText(/Marca/) as HTMLInputElement).value).toBe(
+      "Vanguard Plus",
+    );
+    expect(screen.getByText("Cinomose, Parvovirose")).toBeTruthy();
+    expect(screen.queryByRole("checkbox", { name: "Cinomose" })).toBeNull();
+    // The lot and the vet are of the new bottle and the new visit: left empty.
+    expect((screen.getByLabelText(/Partida/) as HTMLInputElement).value).toBe("");
+    expect((screen.getByLabelText(/^Veterinário/) as HTMLInputElement).value).toBe("");
+
+    await user.click(screen.getByRole("button", { name: "Alterar" }));
+    expect(
+      (screen.getByRole("checkbox", { name: "Cinomose" }) as HTMLInputElement).checked,
+    ).toBe(true);
+    await user.click(screen.getByRole("button", { name: "Salvar" }));
+    await waitFor(() => expect(api.to("POST /animals/d1/vaccines")).toHaveLength(1));
+    expect(api.to("POST /animals/d1/vaccines")[0].json).toMatchObject({
+      brand: "Vanguard Plus",
+      diseases: ["distemper", "parvovirus"],
+    });
+  });
+
   it("edits a vaccine and keeps an inferred repeat date inferred", async () => {
     const record = vaccine({ repeat_on_origin: "inferred" });
     const api = mockApi({

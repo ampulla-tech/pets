@@ -17,7 +17,7 @@ import {
   Trash2,
   Users,
 } from "lucide-react";
-import { archiveAnimal, deleteAnimal, type ReminderOut } from "@pets/core/api/generated";
+import { archiveAnimal, deleteAnimal } from "@pets/core/api/generated";
 import { listAnimalRemindersOptions } from "@pets/core/api/query";
 import {
   ARCHIVE_REASON_LABEL,
@@ -26,7 +26,10 @@ import {
   formatBirth,
   formatDate,
   formatKg,
+  groupReminders,
+  groupTitle,
   RECORD_KIND_LABEL,
+  type ReminderGroup,
   reminderText,
   reminderTone,
   SEX_LABEL,
@@ -133,7 +136,15 @@ function Profile({ animal }: { animal: AnimalOut }) {
     [records.data],
   );
 
-  const shown = (reminders.data ?? []).filter((r) => r.state !== "closed");
+  const shown = groupReminders(
+    (reminders.data ?? []).filter((r) => r.state !== "closed"),
+  );
+  const brandOf = (recordId: string) => {
+    const record = records.data?.find((r) => r.id === recordId);
+    if (record?.kind === "vaccine") return record.brand;
+    if (record?.kind === "antiparasitic") return record.product;
+    return null;
+  };
 
   async function onDelete() {
     setBusy(true);
@@ -263,11 +274,12 @@ function Profile({ animal }: { animal: AnimalOut }) {
           <EmptyText>{S.remindersEmpty}</EmptyText>
         ) : (
           <ul className="flex flex-col gap-2">
-            {shown.map((reminder) => (
+            {shown.map((group) => (
               <ReminderRow
-                key={reminder.subject}
-                reminder={reminder}
-                highlighted={reminder.subject === subject}
+                key={group.key}
+                group={group}
+                brand={brandOf(group.first.record_id)}
+                highlighted={subject !== null && group.subjects.includes(subject)}
                 writable={active && tutor}
               />
             ))}
@@ -367,15 +379,20 @@ function Fact({ label, value }: { label: string; value: string }) {
   );
 }
 
+/** The reminders one dose opened: one line, and one new dose closes them all. */
 function ReminderRow({
-  reminder,
+  group,
+  brand,
   highlighted,
   writable,
 }: {
-  reminder: ReminderOut;
+  group: ReminderGroup;
+  brand: string | null;
   highlighted: boolean;
   writable: boolean;
 }) {
+  const reminder = group.first;
+  const { title, detail } = groupTitle(group, brand);
   const [node, setNode] = useState<HTMLLIElement | null>(null);
   useEffect(() => {
     if (highlighted && node)
@@ -392,7 +409,8 @@ function ReminderRow({
     >
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="font-medium">{reminder.subject_label}</p>
+          <p className="font-medium">{title}</p>
+          {detail ? <p className="text-sm text-muted-foreground">{detail}</p> : null}
           <p className="text-xs text-muted-foreground">
             {reminder.due_on ? formatDate(reminder.due_on) : strings.card.noDate}
           </p>
@@ -413,7 +431,7 @@ function ReminderRow({
             to={newRecordPath(
               reminder.animal_id,
               doseKind,
-              `?assunto=${encodeURIComponent(reminder.subject)}`,
+              `?dose=${encodeURIComponent(reminder.record_id)}`,
             )}
           >
             <Plus />

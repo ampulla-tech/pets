@@ -34,8 +34,10 @@ export function AntiparasiticForm({
   animal,
   record,
   subject,
+  previous,
   attachments,
 }: RecordFormProps<AntiparasiticOut>) {
+  const last = previous?.kind === "antiparasitic" ? previous : undefined;
   const { save, failure } = useSaver(animal.id);
   const [files, setFiles] = useState<AttachmentOut[]>(
     record?.attachments ?? attachments ?? [],
@@ -44,9 +46,12 @@ export function AntiparasiticForm({
     resolver: zodResolver(schema),
     defaultValues: {
       date: record?.date ?? todayIso(),
-      parasite: record?.parasite ?? (subject === "external" ? "external" : "internal"),
-      product: record?.product ?? "",
-      dose: record?.dose ?? "",
+      parasite:
+        record?.parasite ??
+        last?.parasite ??
+        (subject === "external" ? "external" : "internal"),
+      product: record?.product ?? last?.product ?? "",
+      dose: record?.dose ?? last?.dose ?? "",
       repeatOn: record?.repeat_on ?? "",
       vetName: record?.vet_name ?? "",
       weight: kgText(record?.weight_kg),
