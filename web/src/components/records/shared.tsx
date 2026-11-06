@@ -21,6 +21,11 @@ export interface RecordFormProps<R extends RecordOut = RecordOut> {
   record?: R;
   /** A reminder's subject the new dose is for (`?assunto=`). */
   subject?: string | null;
+  /**
+   * The dose this one repeats (`?dose=`): the new one starts with its brand
+   * and diseases, since the next dose is nearly always the same vaccine.
+   */
+  previous?: RecordOut;
   /** Attachments the new record starts with (a reading's photos). */
   attachments?: import("@pets/core/api/generated").AttachmentOut[];
   fromPhoto?: boolean;

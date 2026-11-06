@@ -30,13 +30,27 @@ describe("the animal's profile", () => {
     expect(screen.getByTestId("weight-chart").props.accessibilityLabel).toContain("01/06/2026: 4,5 kg");
   });
 
-  it("opened at a subject, offers to register a new dose of it", async () => {
+  it("opened at a subject, offers to register a new dose of the vaccine behind it", async () => {
     fakeApi(animalRoutes(animal(), [vaccine()], [reminder()]));
     const app = await renderApp(`/animais/${ANIMAL_ID}?assunto=rabies`);
     expect(await screen.findByTestId("focus")).toBeTruthy();
     await fireEvent.press(screen.getByTestId("register-dose"));
     expect(app.pathname()).toBe(`/animais/${ANIMAL_ID}/registro`);
-    expect(app.params()).toMatchObject({ tipo: "vaccine", assunto: "rabies" });
+    expect(app.params()).toMatchObject({ tipo: "vaccine", dose: "v1" });
+  });
+
+  it("shows the diseases of one dose as one reminder, named by the brand", async () => {
+    const combined = vaccine({ id: "v3", brand: "Nobivac Feline 1-HCPCh+FeLV", diseases: ["calicivirus", "felv"] });
+    fakeApi(
+      animalRoutes(animal(), [combined], [
+        reminder({ subject: "calicivirus", subject_label: "Calicivirose", record_id: "v3" }),
+        reminder({ subject: "felv", subject_label: "FeLV", record_id: "v3" }),
+      ]),
+    );
+    await renderApp(`/animais/${ANIMAL_ID}`);
+    expect(await screen.findByText("Nobivac Feline 1-HCPCh+FeLV")).toBeTruthy();
+    expect(screen.getByText("Calicivirose, FeLV")).toBeTruthy();
+    expect(screen.queryByTestId("reminder-Lacan-felv")).toBeNull();
   });
 
   it("asks for the date of a dose with none, opening that record at its repeat-on", async () => {

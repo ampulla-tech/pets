@@ -1,4 +1,5 @@
 import { listAnimalsOptions, listUpcomingOptions } from "@pets/core/api/query";
+import { groupReminders } from "@pets/core/domain";
 import { strings } from "@pets/core/strings";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
@@ -43,12 +44,12 @@ export default function HomeScreen() {
         <>
           <Section title={strings.home.upcomingTitle}>
             {upcoming.data && upcoming.data.length > 0 ? (
-              upcoming.data.map((reminder) => (
+              groupReminders(upcoming.data).map((group) => (
                 <ReminderRow
-                  key={`${reminder.animal_id}-${reminder.subject}`}
-                  reminder={reminder}
+                  key={group.key}
+                  group={group}
                   showAnimal
-                  onPress={() => router.push(animalHref(reminder.animal_id, reminder.subject) as never)}
+                  onPress={() => router.push(animalHref(group.first.animal_id, group.first.subject) as never)}
                 />
               ))
             ) : upcoming.isPending ? null : (

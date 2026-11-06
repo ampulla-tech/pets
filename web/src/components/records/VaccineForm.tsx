@@ -13,6 +13,7 @@ import { strings } from "@pets/core/strings";
 import { AttachmentsField } from "@/components/AttachmentsField";
 import { Field } from "@/components/Field";
 import { Loading, Notice } from "@/components/Feedback";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { monthValue } from "@/lib/dates";
 import { useCatalog } from "@/lib/queries";
@@ -40,9 +41,14 @@ export function VaccineForm({
   animal,
   record,
   subject,
+  previous,
   attachments,
   fromPhoto,
 }: RecordFormProps<VaccineOut>) {
+  const last = previous?.kind === "vaccine" ? previous : undefined;
+  // Copied from the last dose, the diseases stay folded: the person registers
+  // the vaccine, and opens the list only when the vet changed it.
+  const [pickDiseases, setPickDiseases] = useState(!last);
   const catalog = useCatalog();
   const { save, failure } = useSaver(animal.id);
   const [files, setFiles] = useState<AttachmentOut[]>(
@@ -52,8 +58,8 @@ export function VaccineForm({
     resolver: zodResolver(schema),
     defaultValues: {
       date: record?.date ?? todayIso(),
-      diseases: record?.diseases ?? (subject ? [subject] : []),
-      brand: record?.brand ?? "",
+      diseases: record?.diseases ?? last?.diseases ?? (subject ? [subject] : []),
+      brand: record?.brand ?? last?.brand ?? "",
       lot: record?.lot ?? "",
       lotExpiry: record?.lot_expiry ? formatMonth(record.lot_expiry) : "",
       repeatOn: record?.repeat_on ?? "",
@@ -93,16 +99,35 @@ export function VaccineForm({
 
   if (catalog.isPending) return <Loading />;
   const diseases = catalog.data?.[animal.species] ?? [];
+  const chosen = form.watch("diseases");
+  const chosenLabels = diseases
+    .filter((d) => chosen.includes(d.code))
+    .map((d) => d.label)
+    .join(", ");
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
       {fromPhoto ? <Notice>{R.fromPhoto}</Notice> : null}
+      {last ? <Notice>{R.fromLastDose}</Notice> : null}
       <Field label={R.date} error={errors.date?.message}>
         {(control) => <Input {...control} type="date" {...form.register("date")} />}
       </Field>
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1.5 text-sm font-medium">{R.diseases}</legend>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {pickDiseases ? null : (
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-input bg-card px-3 py-2.5">
+            <p className="min-w-0 text-sm">{chosenLabels}</p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setPickDiseases(true)}
+            >
+              {R.changeDiseases}
+            </Button>
+          </div>
+        )}
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2" hidden={!pickDiseases}>
           {diseases.map((disease) => (
             <label
               key={disease.code}

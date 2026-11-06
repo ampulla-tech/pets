@@ -5,6 +5,8 @@ import {
   formatBirth,
   formatDate,
   formatKg,
+  groupReminders,
+  groupTitle,
   RECORD_KIND_LABEL,
   reminderText,
   SEX_LABEL,
@@ -29,7 +31,7 @@ import { Muted, Text } from "@/components/ui/text";
 import { confirmDeleteAnimal } from "@/lib/animal-actions";
 import { useCatalog } from "@/lib/catalog";
 import { refreshAnimal } from "@/lib/invalidate";
-import { deleteRecord, kindOfSubject, type RecordKind } from "@/lib/records";
+import { deleteRecord, type RecordKind } from "@/lib/records";
 import { colors } from "@/lib/theme";
 import { useRecords } from "@/lib/use-records";
 import { cn } from "@/lib/utils";
@@ -66,7 +68,15 @@ export default function AnimalScreen() {
   const shown = filter === "all" ? all : all.filter((r) => r.kind === filter);
   // A closed reminder is history (a later dose closed it); the list shows what is still open.
   const open = (reminders.data ?? []).filter((r) => r.state !== "closed");
-  const focus = assunto ? open.find((r) => r.subject === assunto) : undefined;
+  const groups = groupReminders(open);
+  const focus = assunto ? groups.find((g) => g.subjects.includes(assunto)) : undefined;
+  const brandOf = (recordId: string) => {
+    const record = all.find((r) => r.id === recordId);
+    if (record?.kind === "vaccine") return record.brand;
+    if (record?.kind === "antiparasitic") return record.product;
+    return null;
+  };
+  const focusName = focus ? groupTitle(focus, brandOf(focus.first.record_id)) : null;
   const kinds: RecordKind[] = tutor ? ["vaccine", "antiparasitic", "weight", "note", "visit"] : ["weight", "note"];
 
   const refresh = () => {
@@ -113,14 +123,15 @@ export default function AnimalScreen() {
 
         {focus ? (
           <Card className="gap-2 border-primary" testID="focus">
-            <Text className="font-semibold">{focus.subject_label}</Text>
-            <Muted>{reminderText(focus)}</Muted>
+            <Text className="font-semibold">{focusName?.title}</Text>
+            {focusName?.detail ? <Muted>{focusName.detail}</Muted> : null}
+            <Muted>{reminderText(focus.first)}</Muted>
             {tutor && active ? (
               <Button
                 label={strings.reminders.registerDose}
                 testID="register-dose"
                 onPress={() =>
-                  router.push(recordHref(id, kindOfSubject(focus.subject), { assunto: focus.subject }) as never)
+                  router.push(recordHref(id, focus.first.record_kind, { dose: focus.first.record_id }) as never)
                 }
               />
             ) : null}
@@ -166,9 +177,13 @@ export default function AnimalScreen() {
 
         <Section title={strings.animal.reminders}>
           {open.length > 0 ? (
-            open.map((reminder) => (
-              <View key={`${reminder.subject}-${reminder.record_id}`} className="gap-1">
-                <ReminderRow reminder={reminder} highlighted={reminder.subject === assunto} />
+            groups.map(({ first: reminder, ...group }) => (
+              <View key={group.key} className="gap-1">
+                <ReminderRow
+                  group={{ first: reminder, ...group }}
+                  brand={brandOf(reminder.record_id)}
+                  highlighted={assunto !== undefined && group.subjects.includes(assunto)}
+                />
                 {reminder.state === "no_date" && tutor && active ? (
                   <Button
                     size="sm"
