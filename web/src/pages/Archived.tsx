@@ -10,7 +10,7 @@ import { Page } from "@/components/Page";
 export function Archived() {
   const animals = useQuery(listAnimalsOptions({ query: { status: "archived" } }));
   return (
-    <Page title={strings.archive.listTitle} back="/">
+    <Page title={strings.archive.listTitle} back="/perfil">
       {animals.isPending ? (
         <Loading />
       ) : animals.isError ? (

@@ -21,7 +21,7 @@ const verifying = reply(401, {
 function emptyHome() {
   return {
     "GET /animals": [],
-    "GET /reminders/upcoming": [],
+    "GET /notices/unread": { unread: false },
     "GET /push/webpush/key": { public_key: "" },
   };
 }
@@ -209,8 +209,8 @@ describe("account", () => {
     });
     const { user, router } = renderApp("/");
     await screen.findByText("Nenhum animal ainda.");
-    await user.click(screen.getByRole("button", { name: "Menu" }));
-    await user.click(await screen.findByRole("menuitem", { name: "Sair da conta" }));
+    await user.click(screen.getByRole("link", { name: "Perfil" }));
+    await user.click(await screen.findByRole("button", { name: "Sair" }));
     await waitFor(() => expect(router.state.location.pathname).toBe("/entrar"));
     const ended = api.to(`DELETE ${ALLAUTH}/auth/session`)[0];
     expect(ended.credentials).toBe("include");

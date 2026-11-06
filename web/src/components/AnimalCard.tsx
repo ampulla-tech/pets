@@ -1,13 +1,17 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router";
+import { ChevronRight } from "lucide-react";
 import { badgeText, formatAge, SPECIES_LABEL } from "@pets/core/domain";
 import type { AnimalOut } from "@/lib/types";
 import { AnimalAvatar } from "./AnimalAvatar";
 import { StatusBadge } from "./StatusBadge";
 
-/** An animal on the home or the archived list: photo, name, age and badge. */
+/**
+ * An animal on the home or the archived list: photo, name, species and age,
+ * and under them the badge of what is due, only when something is.
+ */
 export function AnimalCard({ animal, aside }: { animal: AnimalOut; aside?: ReactNode }) {
-  const badge = badgeText(animal.badge);
+  const badge = animal.status === "active" ? badgeText(animal.badge) : null;
   const age = formatAge(animal.age);
   return (
     <Link
@@ -19,16 +23,21 @@ export function AnimalCard({ animal, aside }: { animal: AnimalOut; aside?: React
         species={animal.species}
         photoUrl={animal.photo_url}
       />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-base font-semibold">{animal.name}</p>
-        <p className="truncate text-sm text-muted-foreground">
+      <div className="flex min-w-0 flex-1 flex-col items-start">
+        <p className="max-w-full truncate text-base font-semibold">{animal.name}</p>
+        <p className="max-w-full truncate text-sm text-muted-foreground">
           {[SPECIES_LABEL[animal.species], age].filter(Boolean).join(" · ")}
         </p>
-        {aside ? <p className="truncate text-sm text-muted-foreground">{aside}</p> : null}
+        {aside ? (
+          <p className="max-w-full truncate text-sm text-muted-foreground">{aside}</p>
+        ) : null}
+        {badge ? (
+          <StatusBadge tone={badge.tone} className="mt-1.5">
+            {badge.text}
+          </StatusBadge>
+        ) : null}
       </div>
-      {badge && animal.status === "active" ? (
-        <StatusBadge tone={badge.tone}>{badge.text}</StatusBadge>
-      ) : null}
+      <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
     </Link>
   );
 }

@@ -44,7 +44,7 @@ export function animal(over: Partial<AnimalOut> = {}): AnimalOut {
     archived_reason: "",
     archived_on: null,
     role: "tutor",
-    badge: { state: "up_to_date", days: null },
+    badge: { state: "up_to_date", days: null, kind: null, others: 0 },
     last_weight: null,
     ...over,
   };

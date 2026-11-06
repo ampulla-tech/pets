@@ -1,60 +1,24 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate } from "react-router";
-import { Archive, LogOut, Menu, PawPrint, Plus } from "lucide-react";
-import { listAnimalsOptions, listUpcomingOptions } from "@pets/core/api/query";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router";
+import { PawPrint, Plus } from "lucide-react";
+import { listAnimalsOptions } from "@pets/core/api/query";
 import { strings } from "@pets/core/strings";
 import { AnimalCard } from "@/components/AnimalCard";
 import { ErrorState, Loading } from "@/components/Feedback";
-import { Page, Section } from "@/components/Page";
-import { PushControl } from "@/components/PushControl";
-import { UpcomingList } from "@/components/UpcomingList";
+import { Page } from "@/components/Page";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useSession } from "@/lib/session";
-import { signOut } from "@/lib/signOut";
 
+/** The Pets tab: "Meus pets", the add button, and only the animals' cards. */
 export function Home() {
   const animals = useQuery(listAnimalsOptions());
-  const upcoming = useQuery(listUpcomingOptions());
-  const account = useSession();
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
 
-  async function onSignOut() {
-    await signOut(queryClient);
-    navigate("/entrar", { replace: true });
-  }
-
-  const menu = (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label={strings.app.menu}>
-          <Menu className="size-5" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-52">
-        <DropdownMenuItem onSelect={() => navigate("/arquivados")}>
-          <Archive />
-          {strings.home.archived}
-        </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => void onSignOut()}>
-          <LogOut />
-          {strings.auth.signOut}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-
-  const title = (
-    <span className="flex items-center gap-2">
-      <PawPrint className="size-5 text-primary" aria-hidden />
-      {strings.app.name}
-    </span>
+  const add = (
+    <Button asChild variant="ghost" className="font-semibold text-primary">
+      <Link to="/animais/novo">
+        <Plus />
+        {strings.home.addShort}
+      </Link>
+    </Button>
   );
 
   let body;
@@ -80,52 +44,19 @@ export function Home() {
     );
   } else {
     body = (
-      <>
-        <Section title={strings.home.upcomingTitle} id="upcoming">
-          {upcoming.data?.length ? (
-            <UpcomingList items={upcoming.data} />
-          ) : upcoming.isPending ? null : (
-            <p className="text-sm text-muted-foreground">{strings.home.upcomingEmpty}</p>
-          )}
-        </Section>
-        <Section
-          title={strings.home.title}
-          id="animals"
-          action={
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/animais/novo">
-                <Plus />
-                {strings.home.add}
-              </Link>
-            </Button>
-          }
-        >
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {animals.data.map((animal) => (
-              <li key={animal.id}>
-                <AnimalCard animal={animal} />
-              </li>
-            ))}
-          </ul>
-        </Section>
-      </>
+      <ul className="grid gap-2.5 sm:grid-cols-2">
+        {animals.data.map((animal) => (
+          <li key={animal.id}>
+            <AnimalCard animal={animal} />
+          </li>
+        ))}
+      </ul>
     );
   }
 
   return (
-    <Page title={title} actions={menu}>
+    <Page title={strings.home.title} actions={add} className="gap-3">
       {body}
-      <Section title={strings.push.title} id="push">
-        <div className="rounded-2xl border bg-card p-4">
-          <PushControl />
-        </div>
-      </Section>
-      <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
-        <Link to="/arquivados" className="text-primary hover:underline">
-          {strings.home.archived}
-        </Link>
-        {account?.email ? <span>{strings.auth.signedInAs(account.email)}</span> : null}
-      </div>
     </Page>
   );
 }

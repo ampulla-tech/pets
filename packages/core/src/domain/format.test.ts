@@ -52,17 +52,31 @@ describe("dates", () => {
 
 describe("badges and reminders", () => {
   it("say the state of an animal at a glance", () => {
-    expect(badgeText({ state: "overdue", days: null })).toEqual({
-      text: "Atrasado",
-      tone: "late",
-    });
-    expect(badgeText({ state: "due_soon", days: 6 })).toEqual({
-      text: "Vence em 6 dias",
-      tone: "soon",
-    });
-    expect(badgeText({ state: "due_soon", days: 0 })?.text).toBe("Vence hoje");
-    expect(badgeText({ state: "up_to_date", days: null })?.text).toBe("Em dia");
-    expect(badgeText({ state: "none", days: null })).toBeNull();
+    expect(
+      badgeText({ state: "overdue", days: -7, kind: "internal", others: 1 }),
+    ).toEqual({ text: "Vermífugo atrasado · +1", tone: "late" });
+    expect(
+      badgeText({ state: "overdue", days: -2, kind: "vaccine", others: 0 })?.text,
+    ).toBe("Vacina atrasada");
+    expect(badgeText({ state: "due_soon", days: 0, kind: "vaccine", others: 0 })).toEqual(
+      {
+        text: "Vacina vence hoje",
+        tone: "soon",
+      },
+    );
+    expect(
+      badgeText({ state: "due_soon", days: 1, kind: "vaccine", others: 0 })?.text,
+    ).toBe("Vacina vence amanhã");
+    expect(
+      badgeText({ state: "due_soon", days: 6, kind: "external", others: 2 })?.text,
+    ).toBe("Antipulgas vence em 6 dias · +2");
+  });
+
+  it("say nothing for an animal that needs no care", () => {
+    expect(
+      badgeText({ state: "up_to_date", days: null, kind: null, others: 0 }),
+    ).toBeNull();
+    expect(badgeText({ state: "none", days: null, kind: null, others: 0 })).toBeNull();
   });
 
   it("say how far a reminder is", () => {

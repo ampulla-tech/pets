@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { mockApi, reply } from "./api";
 import { renderApp } from "./render";
-import { animal, animalRoutes, reminder } from "./fixtures";
+import { animal, animalRoutes } from "./fixtures";
 
 describe("animal", () => {
   it("registers an animal with a month-and-year birth, then sends its photo", async () => {
@@ -77,66 +77,37 @@ describe("animal", () => {
     expect(body.microchip).toBe("123");
   });
 
-  it("home lists the animals with age and badge, and Próximos on top", async () => {
+  it("home lists only the animals, each badge saying what is due and when", async () => {
     mockApi({
       "GET /animals": [
         animal({
           id: "b",
           species: "dog",
-          name: "Bug",
+          name: "Thor",
           age: { years: 0, months: 1, approximate: false },
-          badge: { state: "overdue", days: null },
+          badge: { state: "overdue", days: -7, kind: "internal", others: 1 },
         }),
-        animal({ id: "g", name: "GATA", badge: { state: "due_soon", days: 6 } }),
+        animal({
+          id: "g",
+          name: "Mel",
+          badge: { state: "due_soon", days: 6, kind: "external", others: 0 },
+        }),
+        animal({ id: "n", name: "Nina" }),
       ],
-      "GET /reminders/upcoming": [
-        reminder({
-          animal_id: "b",
-          animal_name: "Bug",
-          subject: "internal",
-          subject_label: "Verme interno",
-          state: "overdue",
-          days: -8,
-          due_on: "2026-10-23",
-          record_kind: "antiparasitic",
-          record_id: "p1",
-        }),
-        reminder({
-          animal_id: "b",
-          animal_name: "Bug",
-          subject: "distemper",
-          subject_label: "Cinomose",
-          state: "upcoming",
-          days: 6,
-          due_on: "2026-11-06",
-          record_id: "v9",
-        }),
-        reminder({
-          animal_id: "b",
-          animal_name: "Bug",
-          subject: "parvovirus",
-          subject_label: "Parvovirose",
-          state: "upcoming",
-          days: 6,
-          due_on: "2026-11-06",
-          record_id: "v9",
-        }),
-      ],
-      "GET /push/webpush/key": { public_key: "" },
+      "GET /notices/unread": { unread: false },
     });
     renderApp("/");
-    const upcoming = await screen.findByRole("region", { name: "Próximos" });
-    const links = await within(upcoming).findAllByRole("link");
-    expect(links).toHaveLength(2);
-    expect(links[0].textContent).toContain("Atrasado há 8 dias");
-    // One dose covering two diseases reads as one line.
-    expect(links[1].textContent).toContain("Cinomose, Parvovirose");
-    expect(links[1].getAttribute("href")).toBe("/animais/b?assunto=distemper");
-    const cards = within(
-      screen.getByRole("region", { name: "Seus animais" }),
-    ).getAllByRole("link", { name: /Bug|GATA/ });
+    expect(await screen.findByRole("heading", { name: "Meus pets" })).toBeTruthy();
+    expect(
+      (await screen.findByRole("link", { name: "Adicionar" })).getAttribute("href"),
+    ).toBe("/animais/novo");
+    const cards = await screen.findAllByRole("link", { name: /Thor|Mel|Nina/ });
     expect(cards[0].textContent).toContain("1 mês");
-    expect(cards[0].textContent).toContain("Atrasado");
-    expect(cards[1].textContent).toContain("Vence em 6 dias");
+    expect(cards[0].textContent).toContain("Vermífugo atrasado · +1");
+    expect(cards[1].textContent).toContain("Antipulgas vence em 6 dias");
+    // An animal in order has no badge at all.
+    expect(cards[2].textContent).not.toMatch(/vence|atrasad|Em dia/);
+    expect(screen.queryByText("Próximos")).toBeNull();
+    expect(screen.queryByText("Notificações")).toBeNull();
   });
 });

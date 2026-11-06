@@ -60,15 +60,39 @@ export const strings = {
     signedInAs: (email: string) => `Conectado como ${email}`,
   },
   home: {
-    title: "Seus animais",
+    title: "Meus pets",
     empty: "Nenhum animal ainda.",
     emptyHint: "Cadastre o primeiro para guardar as vacinas e receber os lembretes.",
     add: "Cadastrar animal",
-    upcomingTitle: "Próximos",
-    upcomingEmpty: "Nada vence nos próximos 30 dias.",
+    addShort: "Adicionar",
     archived: "Arquivados",
-    upcomingMore: (n: number) => `e mais ${n}`,
-    account: "Conta",
+  },
+  /** The tab bar at the bottom of the app. */
+  tabs: {
+    label: "Navegação",
+    pets: "Pets",
+    notices: "Avisos",
+    profile: "Perfil",
+    unread: "há avisos não lidos",
+  },
+  profile: {
+    title: "Perfil",
+    account: "Sua conta no Pets",
+    archived: "Arquivados",
+    signOut: "Sair",
+  },
+  /** The Avisos tab: the notices the app sent, kept. */
+  notices: {
+    title: "Avisos",
+    empty: "Nenhum aviso ainda",
+    emptyHint:
+      "Quando uma vacina ou um antiparasitário estiver perto de vencer, o aviso aparece aqui.",
+    today: "Hoje",
+    yesterday: "Ontem",
+    latest: (n: number) => `Mostrando os últimos ${n} avisos.`,
+    unread: "Não lido",
+    more: "Mais opções",
+    markAllRead: "Marcar todos como lidos",
   },
   animal: {
     newTitle: "Novo animal",
@@ -181,7 +205,6 @@ export const strings = {
   reminders: {
     setDate: "Informar a data",
     registerDose: "Registrar dose nova",
-    upcomingAt: (date: string) => `em ${date}`,
   },
   intake: {
     title: "Adicionar por foto",
@@ -286,17 +309,68 @@ export const strings = {
     readOnly: "Animal arquivado: só para consulta.",
     dateRequired: "Informe a data.",
   },
+  /** The notification on this device, inside the Avisos tab. */
   push: {
     enable: "Ativar notificações",
-    enabled: "Notificações ativadas neste aparelho.",
-    denied: "As notificações estão bloqueadas nas configurações.",
-    iosInstall:
-      "No iPhone, as notificações do site só funcionam com ele instalado: toque em Compartilhar e depois em Adicionar à Tela de Início, e abra o Pets por lá.",
-    off: "As notificações do site estão desligadas neste servidor. Os lembretes continuam chegando por e-mail.",
-    unsupported: "Este navegador não recebe notificações.",
+    notNow: "Agora não",
+    gotIt: "Entendi",
+    askTitle: "Receba os avisos também como notificação.",
+    askBody: "Eles aparecem na tela deste aparelho mesmo com o app fechado.",
     failed: "Não deu para ativar as notificações. Tente de novo.",
-    title: "Notificações",
-    hint: "Receba neste aparelho o aviso de vacina e antiparasitário perto de vencer.",
+    blockedTitle: "As notificações estão bloqueadas neste aparelho",
+    blockedBody:
+      "O aparelho não deixa o Pets pedir de novo. Para receber os avisos também na tela:",
+    stillHere: "Os avisos continuam aqui e no seu e-mail.",
+    installTitle: "Para receber notificações no iPhone, instale o Pets.",
+    installSheetTitle: "Para receber notificações no iPhone, instale o Pets",
+    installBody: "No Safari, o iPhone só entrega notificações de um site instalado.",
+    /**
+     * Numbered steps. Each step is a list of pieces; the odd ones are the names
+     * on the device's own screens, shown in bold. The unblock steps follow the
+     * vendors' help pages: Apple (support.apple.com/pt-br/120681 and the Safari
+     * guide), Google (Android help 9079661, Chrome help 3220216) and Microsoft
+     * (Edge site notifications).
+     */
+    installSteps: [
+      ["Toque em ", "Compartilhar", " na barra do Safari."],
+      ["Toque em ", "Adicionar à Tela de Início", "."],
+      ["Abra o ", "Pets", " pelo ícone na Tela de Início."],
+    ],
+    unblockSteps: {
+      ios: [
+        ["Abra os ", "Ajustes", " e toque em ", "Apps", "."],
+        ["Toque em ", "Pets", " e depois em ", "Notificações", "."],
+        ["Ligue ", "Permitir Notificações", "."],
+      ],
+      android: [
+        ["Abra as ", "Configurações", " e toque em ", "Notificações", "."],
+        ["Toque em ", "Notificações de apps", " e depois em ", "Pets", "."],
+        ["Ligue as ", "notificações", " do app."],
+      ],
+      chromeAndroid: [
+        ["Toque em ", "Informações da página", ", à esquerda do endereço."],
+        ["Toque em ", "Permissões", " e depois em ", "Notificações", "."],
+        ["Escolha ", "Permitir", "."],
+      ],
+      chrome: [
+        ["Clique em ", "Visualizar informações do site", ", à esquerda do endereço."],
+        ["Ative a opção ", "Notificações", "."],
+        ["", "Recarregue", " a página."],
+      ],
+      edge: [
+        ["Clique em ", "Exibir informações", ", à esquerda do endereço."],
+        ["Em ", "Permissões para este site", ", procure Notificações."],
+        ["Escolha ", "Permitir", " e recarregue a página."],
+      ],
+      safariMac: [
+        ["No menu Safari, escolha ", "Ajustes", " e clique em ", "Sites", "."],
+        ["Clique em ", "Notificações", ", na lista à esquerda."],
+        ["No menu ao lado deste site, escolha ", "Permitir", "."],
+      ],
+      other: [
+        ["", "Libere as notificações deste site", " nas configurações do navegador."],
+      ],
+    },
   },
   /** Text only the native app shows (the camera, Files, the history filter). */
   native: {
