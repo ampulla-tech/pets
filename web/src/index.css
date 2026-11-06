@@ -44,6 +44,22 @@ input[type="radio"] {
   accent-color: var(--primary);
 }
 
+/*
+ * iOS Safari draws a date field with its native appearance, which carries its
+ * own minimum width and height and ignores `width: 100%`: the field spills out
+ * of its card. Dropping the appearance makes it size like any other input; the
+ * value is pinned left because WebKit centres it once the appearance is gone.
+ */
+input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+  min-height: 1.5em;
+}
+
 /* The reminder a link pointed at (?assunto=) glows once, then stays marked. */
 @keyframes subject-glow {
   from {
