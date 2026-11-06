@@ -21,13 +21,58 @@ beforeEach(() => {
 });
 
 describe("the animal's profile", () => {
-  it("shows the last weight with its day and the weight chart", async () => {
+  it("shows the current weight, its change since the weighing before, and its curve", async () => {
     fakeApi(
       animalRoutes(animal(), [weight("w2", "2026-10-12", "4.900"), weight("w1", "2026-06-01", "4.500")]),
     );
     await renderApp(`/animais/${ANIMAL_ID}`);
-    expect(await screen.findByText("4,9 kg em 12/10/2026")).toBeTruthy();
-    expect(screen.getByTestId("weight-chart").props.accessibilityLabel).toContain("01/06/2026: 4,5 kg");
+    expect(await screen.findByTestId("current-weight")).toHaveTextContent("4,9 kg");
+    expect(screen.getByText("+0,4 kg em 4 meses")).toBeTruthy();
+    expect(screen.queryByText(/12\/10\/2026/)).toBeNull();
+    expect(screen.getByTestId("weight-curve").props.accessibilityLabel).toContain("01/06/2026: 4,5 kg");
+  });
+
+  it("shows one weighing as the number alone", async () => {
+    fakeApi(animalRoutes(animal(), [weight("w2", "2026-10-12", "4.900")]));
+    await renderApp(`/animais/${ANIMAL_ID}`);
+    expect(await screen.findByTestId("current-weight")).toHaveTextContent("4,9 kg");
+    expect(screen.queryByTestId("weight-curve")).toBeNull();
+    expect(screen.queryByText(/ kg em /)).toBeNull();
+  });
+
+  it("leads a tutor with nothing recorded to read the paper card, and a guest to the weight", async () => {
+    fakeApi(animalRoutes(animal({ sex: "female", name: "Nina" }), []));
+    const app = await renderApp(`/animais/${ANIMAL_ID}`);
+    expect(await screen.findByText(strings.animal.nothingYet)).toBeTruthy();
+    expect(screen.getByText(/Tem a carteirinha de papel da Nina\?/)).toBeTruthy();
+    expect(screen.queryByText(strings.animal.reminders)).toBeNull();
+    await fireEvent.press(screen.getByTestId("nothing-yet-action"));
+    expect(app.pathname()).toBe(`/animais/${ANIMAL_ID}/foto`);
+  });
+
+  it("leads a guest with nothing recorded to the weight", async () => {
+    fakeApi(animalRoutes(animal({ role: "guest" }), []));
+    const app = await renderApp(`/animais/${ANIMAL_ID}`);
+    expect(await screen.findByText(strings.animal.nothingYetGuest)).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("nothing-yet-action"));
+    expect(app.params()).toMatchObject({ tipo: "weight" });
+  });
+
+  it("gives each empty section the button that fills it, to whoever can use it", async () => {
+    fakeApi(animalRoutes(animal(), [weight("w2", "2026-10-12", "4.900")]));
+    const app = await renderApp(`/animais/${ANIMAL_ID}`);
+    expect(await screen.findByTestId("reminders-empty")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("hint-vaccine"));
+    expect(app.params()).toMatchObject({ tipo: "vaccine" });
+  });
+
+  it("offers a guest the weight's button and not the vaccine's", async () => {
+    fakeApi(animalRoutes(animal({ role: "guest", last_weight: null }), [vaccine({ can_edit: false })]));
+    await renderApp(`/animais/${ANIMAL_ID}`);
+    expect(await screen.findByTestId("weight-empty")).toBeTruthy();
+    expect(screen.getByTestId("hint-weight")).toBeTruthy();
+    expect(screen.getByTestId("reminders-empty")).toBeTruthy();
+    expect(screen.queryByTestId("hint-vaccine")).toBeNull();
   });
 
   it("opened at a subject, offers to register a new dose of the vaccine behind it", async () => {

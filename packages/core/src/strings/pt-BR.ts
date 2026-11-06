@@ -116,7 +116,7 @@ export const strings = {
     birthUnknown: "Desconhecido",
     adoptedOn: "Adoção",
     age: "Idade",
-    lastWeight: "Último peso",
+    lastWeight: "Peso atual",
     noWeight: "Nenhum peso registrado.",
     weightChart: "Peso no tempo",
     reminders: "Lembretes",
@@ -146,9 +146,15 @@ export const strings = {
     photoFailed: "O animal foi salvo, mas a foto não subiu. Tente trocar a foto de novo.",
     profile: "Perfil",
     registerWeight: "Registrar peso",
+    registerVaccine: "Registrar vacina",
+    /** An animal with nothing recorded: one block, with the first step as its button. */
+    nothingYet: "Nada registrado ainda",
+    nothingYetTutor: (ofAnimal: string) =>
+      `Tem a carteirinha de papel ${ofAnimal}? Tire fotos dela: o Pets lê as vacinas e os vermífugos, e os lembretes aparecem aqui.`,
+    nothingYetGuest:
+      "Quando um tutor registrar as vacinas, elas aparecem aqui. Você já pode anotar o peso.",
     more: "Mais ações",
     guestNotice: "Você é convidado: vê tudo e registra peso e observação.",
-    lastWeightOn: (kg: string, date: string) => `${kg} em ${date}`,
     notFound: "Animal não encontrado.",
     speciesLocked: "A espécie não muda depois que há vacina registrada.",
   },

@@ -1,13 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Archive,
+  Camera,
   ChevronRight,
   IdCard,
   MoreVertical,
   Pencil,
   Plus,
+  Scale,
+  Syringe,
   Trash2,
   Users,
 } from "lucide-react";
@@ -18,9 +21,9 @@ import {
   ARCHIVE_REASON_LABEL,
   formatBirth,
   formatDate,
-  formatKg,
   groupReminders,
   groupTitle,
+  ofAnimal,
   type ReminderGroup,
   reminderText,
   reminderTone,
@@ -31,11 +34,12 @@ import { strings } from "@pets/core/strings";
 import { AnimalAvatar } from "@/components/AnimalAvatar";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { ChoiceGroup, Field } from "@/components/Field";
-import { EmptyText, ErrorState, Loading, Notice } from "@/components/Feedback";
+import { ErrorState, Loading, Notice } from "@/components/Feedback";
 import { Page, Section } from "@/components/Page";
 import { RegisterSheet } from "@/components/RegisterSheet";
 import { StatusBadge } from "@/components/StatusBadge";
-import { WeightChart } from "@/components/WeightChart";
+import { WeightCard } from "@/components/WeightCard";
+import { DashedBox } from "@/components/DashedBox";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -225,49 +229,67 @@ function Profile({ animal }: { animal: AnimalOut }) {
         </Button>
       </div>
 
-      <Section title={S.reminders} id="reminders">
-        {reminders.isPending ? null : shown.length === 0 ? (
-          <EmptyText>{S.remindersEmpty}</EmptyText>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {shown.map((group) => (
-              <ReminderRow
-                key={group.key}
-                group={group}
-                brand={brandOf(group.first.record_id)}
-                highlighted={
-                  picked !== null
-                    ? group.key === picked
-                    : subject !== null && group.subjects.includes(subject)
+      {records.isPending ? null : (records.data ?? []).length === 0 ? (
+        <NothingYet animal={animal} />
+      ) : (
+        <>
+          <Section title={S.reminders} id="reminders">
+            {reminders.isPending ? null : shown.length === 0 ? (
+              <DashedBox
+                action={
+                  active && tutor ? (
+                    <HintButton to={newRecordPath(animal.id, "vaccine")} icon={Syringe}>
+                      {S.registerVaccine}
+                    </HintButton>
+                  ) : null
                 }
-                scrollTo={
-                  picked === null && subject !== null && group.subjects.includes(subject)
-                }
-                onPick={() => setPicked(picked === group.key ? "" : group.key)}
-                writable={active && tutor}
-              />
-            ))}
-          </ul>
-        )}
-      </Section>
+              >
+                {S.remindersEmpty}
+              </DashedBox>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {shown.map((group) => (
+                  <ReminderRow
+                    key={group.key}
+                    group={group}
+                    brand={brandOf(group.first.record_id)}
+                    highlighted={
+                      picked !== null
+                        ? group.key === picked
+                        : subject !== null && group.subjects.includes(subject)
+                    }
+                    scrollTo={
+                      picked === null &&
+                      subject !== null &&
+                      group.subjects.includes(subject)
+                    }
+                    onPick={() => setPicked(picked === group.key ? "" : group.key)}
+                    writable={active && tutor}
+                  />
+                ))}
+              </ul>
+            )}
+          </Section>
 
-      <Section title={S.lastWeight} id="weight">
-        {animal.last_weight ? (
-          <div className="flex flex-col gap-3">
-            <div className="flex items-baseline justify-between rounded-2xl border bg-card px-4 py-3">
-              <span className="text-2xl font-semibold">
-                {formatKg(animal.last_weight.kg)}
-              </span>
-              <span className="text-sm text-muted-foreground">
-                {formatDate(animal.last_weight.date)}
-              </span>
-            </div>
-            <WeightChart points={weights} />
-          </div>
-        ) : (
-          <EmptyText>{S.noWeight}</EmptyText>
-        )}
-      </Section>
+          <Section title={S.lastWeight} id="weight">
+            {animal.last_weight ? (
+              <WeightCard kg={animal.last_weight.kg} weighings={weights} />
+            ) : (
+              <DashedBox
+                action={
+                  active ? (
+                    <HintButton to={newRecordPath(animal.id, "weight")} icon={Plus}>
+                      {S.registerWeight}
+                    </HintButton>
+                  ) : null
+                }
+              >
+                {S.noWeight}
+              </DashedBox>
+            )}
+          </Section>
+        </>
+      )}
 
       <Section title={S.profile} id="profile">
         <dl className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-2xl border bg-card p-4 text-sm">
@@ -308,6 +330,62 @@ function Profile({ animal }: { animal: AnimalOut }) {
         onConfirm={() => void onDelete()}
       />
     </Page>
+  );
+}
+
+/** The button of an empty section, centred below its text. */
+function HintButton({
+  to,
+  icon: Icon,
+  children,
+}: {
+  to: string;
+  icon: typeof Plus;
+  children: ReactNode;
+}) {
+  return (
+    <Link
+      to={to}
+      className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-2.5 py-1.5 text-sm font-semibold whitespace-nowrap text-primary hover:bg-accent/80"
+    >
+      <Icon className="size-4" aria-hidden />
+      {children}
+    </Link>
+  );
+}
+
+/**
+ * An animal with nothing recorded: one block in the place of the reminders and
+ * the weight, with the first step its viewer can take as the button.
+ */
+function NothingYet({ animal }: { animal: AnimalOut }) {
+  const tutor = isTutor(animal);
+  const active = canWrite(animal);
+  return (
+    <div className="flex flex-col items-center gap-2 px-5 py-6 text-center">
+      <span className="mb-1 flex size-16 items-center justify-center rounded-full bg-accent text-primary">
+        <IdCard className="size-7" aria-hidden />
+      </span>
+      <p className="font-semibold">{S.nothingYet}</p>
+      <p className="text-sm text-muted-foreground">
+        {tutor ? S.nothingYetTutor(ofAnimal(animal)) : S.nothingYetGuest}
+      </p>
+      {active ? (
+        <Button asChild size="xl" className="mt-2">
+          {tutor ? (
+            <Link to={`/animais/${animal.id}/foto`}>
+              <Camera />
+              {S.readPhotos}
+            </Link>
+          ) : (
+            <Link to={newRecordPath(animal.id, "weight")}>
+              <Scale />
+              {S.registerWeight}
+            </Link>
+          )}
+        </Button>
+      ) : null}
+    </div>
   );
 }
 

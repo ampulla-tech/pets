@@ -4,23 +4,24 @@ import {
   animalLine,
   formatBirth,
   formatDate,
-  formatKg,
   groupReminders,
   groupTitle,
+  ofAnimal,
   reminderText,
   SEX_LABEL,
 } from "@pets/core/domain";
 import { strings } from "@pets/core/strings";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { Archive, Ellipsis, IdCard, Pencil, Plus, Trash2, Users } from "lucide-react-native";
-import { useState } from "react";
+import { Archive, Camera, Ellipsis, IdCard, Pencil, Plus, Scale, Syringe, Trash2, Users } from "lucide-react-native";
+import { useState, type ReactNode } from "react";
 import { Pressable, RefreshControl, View } from "react-native";
 
 import { AnimalAvatar } from "@/components/AnimalAvatar";
+import { DashedBox } from "@/components/DashedBox";
 import { newRecordHref, RegisterSheet } from "@/components/RegisterSheet";
 import { ReminderRow } from "@/components/ReminderRow";
-import { WeightChart } from "@/components/WeightChart";
+import { WeightCard } from "@/components/WeightCard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ErrorState, Loading, Notice, Screen, Section } from "@/components/ui/screen";
@@ -153,65 +154,96 @@ export default function AnimalScreen() {
           </Card>
         ) : null}
 
-        <Section caps title={strings.animal.reminders}>
-          {open.length > 0 ? (
-            groups.map(({ first: reminder, ...group }) => (
-              <View key={group.key} className="gap-1">
-                <ReminderRow
-                  group={{ first: reminder, ...group }}
-                  brand={brandOf(reminder.record_id)}
-                  highlighted={
-                    picked === group.key ||
-                    (picked === null && assunto !== undefined && group.subjects.includes(assunto))
+        {records.isPending ? null : all.length === 0 ? (
+          <NothingYet animal={a} />
+        ) : (
+          <>
+            <Section caps title={strings.animal.reminders}>
+              {open.length > 0 ? (
+                groups.map(({ first: reminder, ...group }) => (
+                  <View key={group.key} className="gap-1">
+                    <ReminderRow
+                      group={{ first: reminder, ...group }}
+                      brand={brandOf(reminder.record_id)}
+                      highlighted={
+                        picked === group.key ||
+                        (picked === null && assunto !== undefined && group.subjects.includes(assunto))
+                      }
+                      onPress={
+                        tutor && active
+                          ? () => setPicked(picked === group.key ? "" : group.key)
+                          : undefined
+                      }
+                    />
+                    {picked === group.key && tutor && active ? (
+                      <Button
+                        size="sm"
+                        className="self-start"
+                        label={strings.reminders.registerDose}
+                        testID={`register-dose-${reminder.subject}`}
+                        onPress={() =>
+                          router.push(newRecordHref(id, reminder.record_kind, { dose: reminder.record_id }) as never)
+                        }
+                      />
+                    ) : null}
+                    {reminder.state === "no_date" && tutor && active ? (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="self-start"
+                        label={strings.reminders.setDate}
+                        testID={`set-date-${reminder.subject}`}
+                        onPress={() =>
+                          router.push(
+                            newRecordHref(id, reminder.record_kind, { registro: reminder.record_id, campo: "repeat_on" }) as never,
+                          )
+                        }
+                      />
+                    ) : null}
+                  </View>
+                ))
+              ) : (
+                <DashedBox
+                  testID="reminders-empty"
+                  action={
+                    tutor && active ? (
+                      <HintButton
+                        label={strings.animal.registerVaccine}
+                        testID="hint-vaccine"
+                        icon={<Syringe color={colors.primary} size={16} />}
+                        onPress={() => router.push(newRecordHref(id, "vaccine") as never)}
+                      />
+                    ) : null
                   }
-                  onPress={
-                    tutor && active
-                      ? () => setPicked(picked === group.key ? "" : group.key)
-                      : undefined
-                  }
-                />
-                {picked === group.key && tutor && active ? (
-                  <Button
-                    size="sm"
-                    className="self-start"
-                    label={strings.reminders.registerDose}
-                    testID={`register-dose-${reminder.subject}`}
-                    onPress={() =>
-                      router.push(newRecordHref(id, reminder.record_kind, { dose: reminder.record_id }) as never)
-                    }
-                  />
-                ) : null}
-                {reminder.state === "no_date" && tutor && active ? (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="self-start"
-                    label={strings.reminders.setDate}
-                    testID={`set-date-${reminder.subject}`}
-                    onPress={() =>
-                      router.push(
-                        newRecordHref(id, reminder.record_kind, { registro: reminder.record_id, campo: "repeat_on" }) as never,
-                      )
-                    }
-                  />
-                ) : null}
-              </View>
-            ))
-          ) : (
-            <Muted>{strings.animal.remindersEmpty}</Muted>
-          )}
-        </Section>
+                >
+                  {strings.animal.remindersEmpty}
+                </DashedBox>
+              )}
+            </Section>
 
-        <Section caps title={strings.animal.lastWeight}>
-          {a.last_weight ? (
-            <Text testID="last-weight" className="text-lg font-semibold">
-              {strings.animal.lastWeightOn(formatKg(a.last_weight.kg), formatDate(a.last_weight.date))}
-            </Text>
-          ) : (
-            <Muted>{strings.animal.noWeight}</Muted>
-          )}
-          {weights.length > 0 ? <WeightChart points={weights} /> : null}
-        </Section>
+            <Section caps title={strings.animal.lastWeight}>
+              {a.last_weight ? (
+                <WeightCard kg={a.last_weight.kg} weighings={weights} />
+              ) : (
+                <DashedBox
+                  testID="weight-empty"
+                  action={
+                    active ? (
+                      <HintButton
+                        label={strings.animal.registerWeight}
+                        testID="hint-weight"
+                        icon={<Plus color={colors.primary} size={16} />}
+                        onPress={() => router.push(newRecordHref(id, "weight") as never)}
+                      />
+                    ) : null
+                  }
+                >
+                  {strings.animal.noWeight}
+                </DashedBox>
+              )}
+            </Section>
+          </>
+        )}
 
         <Section caps title={strings.animal.profile}>
           <Facts animal={a} />
@@ -265,6 +297,56 @@ function HeaderTitle({ animal }: { animal: AnimalOut }) {
         <Text className="text-base font-semibold leading-tight">{animal.name}</Text>
         <Muted className="text-xs leading-tight">{animalLine(animal)}</Muted>
       </View>
+    </View>
+  );
+}
+
+/** The button of an empty section, centred below its text. */
+function HintButton({ label, icon, onPress, testID }: { label: string; icon: ReactNode; onPress: () => void; testID: string }) {
+  return (
+    <Pressable
+      role="button"
+      testID={testID}
+      onPress={onPress}
+      className="flex-row items-center gap-1.5 rounded-lg bg-accent px-2.5 py-1.5 active:opacity-70"
+    >
+      {icon}
+      <Text className="text-sm font-semibold text-primary">{label}</Text>
+    </Pressable>
+  );
+}
+
+/**
+ * An animal with nothing recorded: one block in the place of the reminders and
+ * the weight, with the first step its viewer can take as the button.
+ */
+function NothingYet({ animal }: { animal: AnimalOut }) {
+  const S = strings.animal;
+  const tutor = animal.role === "tutor";
+  return (
+    <View testID="nothing-yet" className="items-center gap-2 px-5 py-6">
+      <View className="mb-1 h-16 w-16 items-center justify-center rounded-full bg-accent">
+        <IdCard color={colors.primary} size={28} />
+      </View>
+      <Text className="font-semibold">{S.nothingYet}</Text>
+      <Muted className="text-center">{tutor ? S.nothingYetTutor(ofAnimal(animal)) : S.nothingYetGuest}</Muted>
+      {animal.status === "active" ? (
+        <Button
+          className="mt-2"
+          label={tutor ? S.readPhotos : S.registerWeight}
+          testID="nothing-yet-action"
+          icon={
+            tutor ? (
+              <Camera color={colors["primary-foreground"]} size={18} />
+            ) : (
+              <Scale color={colors["primary-foreground"]} size={18} />
+            )
+          }
+          onPress={() =>
+            router.push((tutor ? `/animais/${animal.id}/foto` : newRecordHref(animal.id, "weight")) as never)
+          }
+        />
+      ) : null}
     </View>
   );
 }

@@ -12,15 +12,69 @@ const records = [
 ];
 
 describe("animal profile", () => {
-  it("shows the last weight with its day and the weight over time", async () => {
+  it("shows the current weight, its change since the weighing before, and its curve", async () => {
     mockApi(animalRoutes(lacan, records));
     renderApp("/animais/a1");
-    const weightSection = await screen.findByRole("region", { name: "Último peso" });
-    expect(within(weightSection).getByText("4,9 kg")).toBeTruthy();
-    expect(within(weightSection).getByText("02/08/2026")).toBeTruthy();
+    const weightSection = await screen.findByRole("region", { name: "Peso atual" });
+    expect(weightSection.textContent).toContain("4,9kg");
+    expect(within(weightSection).getByText("+0,8 kg em 2 meses")).toBeTruthy();
+    // No day under the weight: the card's lines carry the days.
+    expect(within(weightSection).queryByText("02/08/2026")).toBeNull();
+    expect(within(weightSection).getByRole("img").getAttribute("aria-label")).toBe(
+      "Peso no tempo: 18/05/2026: 4,1 kg; 02/08/2026: 4,9 kg",
+    );
+  });
+
+  it("shows one weighing as the number alone, with no change and no curve", async () => {
+    mockApi(animalRoutes(lacan, [weight("w2", "2026-08-02", "4.900")]));
+    renderApp("/animais/a1");
+    const weightSection = await screen.findByRole("region", { name: "Peso atual" });
+    expect(weightSection.textContent).toBe("Peso atual4,9kg");
+    expect(within(weightSection).queryByRole("img")).toBeNull();
+  });
+
+  it("leads a tutor with nothing recorded to read the paper card", async () => {
+    mockApi(animalRoutes(animal({ sex: "female", name: "Nina" }), []));
+    renderApp("/animais/a1");
+    expect(await screen.findByText("Nada registrado ainda")).toBeTruthy();
+    expect(screen.getByText(/Tem a carteirinha de papel da Nina\?/)).toBeTruthy();
     expect(
-      (await within(weightSection).findByRole("img")).getAttribute("aria-label"),
-    ).toBe("Peso no tempo: 18/05/2026: 4,1 kg; 02/08/2026: 4,9 kg");
+      screen.getByRole("link", { name: "Ler fotos da carteirinha" }).getAttribute("href"),
+    ).toBe("/animais/a1/foto");
+    expect(screen.queryByRole("region", { name: "Lembretes" })).toBeNull();
+    expect(screen.queryByRole("region", { name: "Peso atual" })).toBeNull();
+  });
+
+  it("leads a guest with nothing recorded to the weight", async () => {
+    mockApi(animalRoutes(animal({ role: "guest" }), []));
+    renderApp("/animais/a1");
+    expect(await screen.findByText(/Você já pode anotar o peso/)).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: "Registrar peso" }).getAttribute("href"),
+    ).toBe("/animais/a1/registrar/peso");
+  });
+
+  it("gives each empty section the button that fills it, to whoever can use it", async () => {
+    mockApi(animalRoutes(lacan, [weight("w2", "2026-08-02", "4.900")]));
+    renderApp("/animais/a1");
+    const reminders = await screen.findByRole("region", { name: "Lembretes" });
+    expect(
+      (
+        await within(reminders).findByRole("link", { name: "Registrar vacina" })
+      ).getAttribute("href"),
+    ).toBe("/animais/a1/registrar/vacina");
+  });
+
+  it("offers a guest the weight's button and not the vaccine's", async () => {
+    mockApi(animalRoutes(animal({ role: "guest" }), [vaccine()]));
+    renderApp("/animais/a1");
+    const weightSection = await screen.findByRole("region", { name: "Peso atual" });
+    expect(within(weightSection).getByText("Nenhum peso registrado.")).toBeTruthy();
+    expect(
+      within(weightSection).getByRole("link", { name: "Registrar peso" }),
+    ).toBeTruthy();
+    const reminders = screen.getByRole("region", { name: "Lembretes" });
+    expect(within(reminders).queryByRole("link")).toBeNull();
   });
 
   it("names the animal once, in the header, with who it is, and has no history", async () => {
