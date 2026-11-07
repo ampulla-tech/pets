@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { mockApi, reply } from "./api";
 import { renderApp } from "./render";
 import { access, animal, animalRoutes, reminder, vaccine, weight } from "./fixtures";
@@ -115,6 +115,26 @@ describe("animal profile", () => {
     ]);
     expect(links[0].textContent).toContain("Várias doses de uma vez.");
     expect(within(sheet).getByText("Ou um registro à mão")).toBeTruthy();
+  });
+
+  it("closes the Registrar when its handle is dragged down, not when dragged up", async () => {
+    mockApi(animalRoutes(lacan, records));
+    const { user } = renderApp("/animais/a1");
+    await user.click(await screen.findByRole("button", { name: "Registrar" }));
+    const sheet = await screen.findByRole("dialog", { name: "Registrar" });
+    const handle = within(sheet).getByTestId("sheet-handle");
+
+    fireEvent.pointerDown(handle, { clientY: 400 });
+    fireEvent.pointerMove(handle, { clientY: 340 });
+    fireEvent.pointerUp(handle, { clientY: 340 });
+    expect(screen.getByRole("dialog", { name: "Registrar" })).toBeTruthy();
+
+    fireEvent.pointerDown(handle, { clientY: 400 });
+    fireEvent.pointerMove(handle, { clientY: 600 });
+    fireEvent.pointerUp(handle, { clientY: 600 });
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: "Registrar" })).toBeNull(),
+    );
   });
 
   it("opens at the reminder's subject with a shortcut to register a new dose", async () => {
