@@ -13,6 +13,7 @@ import { strings } from "@pets/core/strings";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Notice } from "@/components/Feedback";
 import { Button } from "@/components/ui/button";
+import { useBack } from "@/lib/back";
 import { refreshAll } from "@/lib/queries";
 import type { AnimalOut, RecordKind, RecordOut } from "@/lib/types";
 
@@ -42,6 +43,7 @@ const DELETE = {
 /** Save, and on success go back to the animal with everything re-read. */
 export function useSaver(animalId: string) {
   const navigate = useNavigate();
+  const back = useBack(animalId);
   const queryClient = useQueryClient();
   const [failure, setFailure] = useState<string | null>(null);
   async function save(write: () => Promise<unknown>) {
@@ -53,7 +55,7 @@ export function useSaver(animalId: string) {
       return;
     }
     await refreshAll(queryClient);
-    navigate(`/animais/${animalId}`, { replace: true });
+    navigate(back, { replace: true });
   }
   return { save, failure };
 }
@@ -73,6 +75,7 @@ export function FormFoot({
   submitting: boolean;
 }) {
   const navigate = useNavigate();
+  const back = useBack(animalId);
   const queryClient = useQueryClient();
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -87,7 +90,7 @@ export function FormFoot({
         throwOnError: true,
       });
       await refreshAll(queryClient);
-      navigate(`/animais/${animalId}`, { replace: true });
+      navigate(back, { replace: true });
     } catch {
       setBusy(false);
       setConfirming(false);

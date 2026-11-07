@@ -13,7 +13,7 @@ describe("animal", () => {
       ...animalRoutes(created),
     });
     const { user, router } = renderApp("/animais/novo");
-    await user.click(screen.getByRole("radio", { name: "Cão" }));
+    await user.click(screen.getByRole("radio", { name: "Canino" }));
     await user.type(screen.getByLabelText("Nome"), "Bug");
     await user.type(screen.getByLabelText(/Raça/), "Dachshund");
     await user.click(screen.getByRole("radio", { name: "Macho" }));
@@ -42,6 +42,25 @@ describe("animal", () => {
     });
     const upload = api.to("POST /animals/:id/photo")[0];
     expect((upload.form?.get("file") as File).name).toBe("bug.jpg");
+  });
+
+  it("writes SRD in the breed from its shortcut", async () => {
+    const created = animal({ id: "n2", species: "cat", name: "Nina", breed: "SRD" });
+    const api = mockApi({
+      "POST /animals": reply(201, created),
+      ...animalRoutes(created),
+    });
+    const { user, router } = renderApp("/animais/novo");
+    await user.click(screen.getByRole("radio", { name: "Felino" }));
+    await user.type(screen.getByLabelText("Nome"), "Nina");
+    await user.click(screen.getByRole("button", { name: "SRD (sem raça definida)" }));
+    expect((screen.getByLabelText(/Raça/) as HTMLInputElement).value).toBe("SRD");
+    await user.click(screen.getByRole("button", { name: "Salvar" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/animais/n2"));
+    expect(api.to("POST /animals")[0].json).toMatchObject({
+      species: "cat",
+      breed: "SRD",
+    });
   });
 
   it("asks for the year when the birth is year only", async () => {

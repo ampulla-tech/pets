@@ -99,6 +99,8 @@ export const strings = {
     photo: "Foto",
     changePhoto: "Trocar a foto",
     breed: "Raça",
+    /** The shortcut under the breed field; it writes NO_BREED ("SRD"). */
+    noBreed: "SRD (sem raça definida)",
     sex: "Sexo",
     neutered: "Castrado",
     yes: "Sim",
@@ -114,17 +116,20 @@ export const strings = {
     birthUnknown: "Desconhecido",
     adoptedOn: "Adoção",
     age: "Idade",
-    lastWeight: "Último peso",
+    lastWeight: "Peso atual",
     noWeight: "Nenhum peso registrado.",
     weightChart: "Peso no tempo",
-    history: "Histórico",
-    historyEmpty: "Nada registrado ainda.",
     reminders: "Lembretes",
     remindersEmpty: "Nenhuma vacina ou antiparasitário com data de repetir.",
     card: "Carteirinha",
     people: "Pessoas",
+    /** What a guest sees in the place of Pessoas: the animal's tutors. */
+    tutors: "Tutores",
     addRecord: "Registrar",
-    addByPhoto: "Adicionar por foto",
+    /** The Registrar sheet: the reading of the paper card first, for a tutor. */
+    readPhotos: "Ler fotos da carteirinha",
+    readPhotosHint: "Várias doses de uma vez. Você confere antes de salvar.",
+    byHand: "Ou um registro à mão",
     archive: "Arquivar",
     deleteAnimal: "Apagar o animal",
     deleteConfirm: (name: string) =>
@@ -141,11 +146,15 @@ export const strings = {
     photoFailed: "O animal foi salvo, mas a foto não subiu. Tente trocar a foto de novo.",
     profile: "Perfil",
     registerWeight: "Registrar peso",
-    registerNote: "Registrar observação",
-    whatToRecord: "O que registrar?",
+    registerVaccine: "Registrar vacina",
+    /** An animal with nothing recorded: one block, with the first step as its button. */
+    nothingYet: "Nada registrado ainda",
+    nothingYetTutor: (ofAnimal: string) =>
+      `Tem a carteirinha de papel ${ofAnimal}? Tire fotos dela: o Pets lê as vacinas e os vermífugos, e os lembretes aparecem aqui.`,
+    nothingYetGuest:
+      "Quando um tutor registrar as vacinas, elas aparecem aqui. Você já pode anotar o peso.",
     more: "Mais ações",
     guestNotice: "Você é convidado: vê tudo e registra peso e observação.",
-    lastWeightOn: (kg: string, date: string) => `${kg} em ${date}`,
     notFound: "Animal não encontrado.",
     speciesLocked: "A espécie não muda depois que há vacina registrada.",
   },
@@ -178,7 +187,6 @@ export const strings = {
     addAttachment: "Anexar foto ou PDF",
     photo: "Foto",
     deleteConfirm: "Apagar este registro?",
-    by: (email: string) => `por ${email}`,
     newTitle: (kind: string) => `Registrar ${kind.toLowerCase()}`,
     editTitle: (kind: string) => `Editar ${kind.toLowerCase()}`,
     dateRequired: "Informe a data.",
@@ -190,10 +198,6 @@ export const strings = {
     uploading: "Enviando…",
     uploadFailed: "O envio do arquivo falhou. Tente de novo.",
     removeAttachment: (name: string) => `Tirar ${name}`,
-    against: (labels: string) => `Contra ${labels}`,
-    repeatOnShort: (date: string) => `Repetir em ${date}`,
-    lotShort: (lot: string) => `Partida ${lot}`,
-    weightAlso: (kg: string) => `Peso no dia: ${kg}`,
     fromPhoto: "Fotos da leitura anexadas.",
     fromLastDose: "Copiado da dose anterior. Confira com a etiqueta do frasco.",
     changeDiseases: "Alterar",
@@ -237,18 +241,26 @@ export const strings = {
   },
   card: {
     title: "Carteirinha",
-    intro: "Mostre esta tela no balcão da clínica.",
-    against: "Contra",
-    lastDose: "Última dose",
-    nextDose: "Próxima",
+    /** A section per kind, like the pages of the paper card. */
+    sections: {
+      vaccine: "Vacinas",
+      antiparasitic: "Antiparasitários",
+      visit: "Consultas e exames",
+      weight: "Peso",
+      note: "Observações",
+    },
+    repeatOn: (date: string) => `Repetir em ${date}`,
+    repeatNoDate: "Repetir em: sem data",
     noDate: "sem data",
-    labelPhoto: "Foto da etiqueta",
-    empty: "Nenhuma vacina ou antiparasitário registrado.",
-    pdf: "Baixar PDF",
-    sharePdf: "Compartilhar PDF",
+    microchip: (number: string) => `Microchip ${number}`,
+    empty: "A carteirinha está vazia",
+    emptyHint: (ofAnimal: string) =>
+      `As vacinas, os vermífugos, as consultas e os pesos ${ofAnimal} aparecem aqui, um por um, como no papel.`,
+    pdf: "PDF",
+    pdfLabel: "Baixar o PDF da carteirinha",
+    sharePdf: "Compartilhar o PDF da carteirinha",
     downloading: "Baixando…",
     pdfFailed: "Não deu para baixar o PDF. Tente de novo.",
-    product: "Produto",
   },
   people: {
     title: "Pessoas",
@@ -279,6 +291,10 @@ export const strings = {
       `Sair de ${name}? Você deixa de ver o histórico dele.`,
     shareTitle: (name: string) => `Convite para cuidar de ${name}`,
     deleteInstead: "Apagar o animal",
+    /** The Tutores sheet a guest opens from the animal's profile. */
+    tutorsTitle: (ofAnimal: string) => `Tutores ${ofAnimal}`,
+    tutorsHint: "Recebem os lembretes e podem mudar tudo.",
+    accessUntil: (date: string) => `Seu acesso vai até ${date}.`,
   },
   invite: {
     title: "Convite",
@@ -369,13 +385,12 @@ export const strings = {
       ],
     },
   },
-  /** Text only the native app shows (the camera, Files, the history filter). */
+  /** Text only the native app shows (the camera, Files). */
   native: {
     cameraDenied: "Sem acesso à câmera. Libere o acesso do Pets nos Ajustes do aparelho.",
     cameraUnavailable:
       "A câmera não está disponível neste aparelho. Escolha uma foto da galeria.",
     attachPdf: "Anexar PDF",
-    allRecords: "Tudo",
   },
 } as const;
 

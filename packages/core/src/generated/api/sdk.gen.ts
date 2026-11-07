@@ -236,6 +236,9 @@ export const updateAnimal = <ThrowOnError extends boolean = false>(
  * List Accesses
  *
  * Who has access to the animal, and with which role.
+ *
+ * A guest is told only the tutors and their own access: the other guests are
+ * none of their business.
  */
 export const listAccesses = <ThrowOnError extends boolean = false>(
   options: Options<ListAccessesData, ThrowOnError>,
@@ -393,7 +396,10 @@ export const uploadAttachments = <ThrowOnError extends boolean = false>(
 /**
  * Get Card
  *
- * The card to show at the clinic's counter: one row per disease, last and next dose.
+ * The card: a section per kind with a line per record, newest first.
+ *
+ * A section with no record is left out; only a current dose carries its
+ * "repeat on", its state and its days.
  */
 export const getCard = <ThrowOnError extends boolean = false>(
   options: Options<GetCardData, ThrowOnError>,

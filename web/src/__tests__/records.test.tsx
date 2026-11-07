@@ -225,7 +225,7 @@ describe("antiparasitic, weight, note, visit", () => {
     });
   });
 
-  it("saves a visit with a photo and a PDF, and the history opens them", async () => {
+  it("saves a visit with a photo and a PDF, and its record opens them", async () => {
     let n = 0;
     const files = [
       attachment("p1", "receita.jpg", "image/jpeg"),
@@ -258,7 +258,7 @@ describe("antiparasitic, weight, note, visit", () => {
         return reply(201, visit);
       },
     });
-    const { user } = renderApp("/animais/a1/registrar/consulta");
+    const { user, router } = renderApp("/animais/a1/registrar/consulta");
     await user.type(await screen.findByLabelText(/Clínica/), "Clínica Centro");
     await user.type(screen.getByLabelText(/Motivo/), "Vômito");
     await user.upload(
@@ -272,9 +272,7 @@ describe("antiparasitic, weight, note, visit", () => {
     );
     await screen.findByText("exame.pdf");
     await user.click(screen.getByRole("button", { name: "Salvar" }));
-    const item = await screen.findByRole("article", {
-      name: /Consulta ou exame · Clínica Centro/,
-    });
+    await waitFor(() => expect(router.state.location.pathname).toBe("/animais/a1"));
     expect(api.to("POST /animals/a1/visits")[0].json).toMatchObject({
       clinic: "Clínica Centro",
       reason: "Vômito",
@@ -285,7 +283,9 @@ describe("antiparasitic, weight, note, visit", () => {
     expect(upload.credentials).toBe("include");
     expect(upload.headers.get("X-CSRFToken")).toBe("csrf-1");
     expect(upload.form?.get("files")).toBeTruthy();
-    const links = within(item).getAllByRole("link", { name: /receita.jpg|exame.pdf/ });
+    await router.navigate("/animais/a1/registros/c1");
+    await screen.findByDisplayValue("Clínica Centro");
+    const links = await screen.findAllByRole("link", { name: /receita.jpg|exame.pdf/ });
     expect(links.map((l) => l.getAttribute("href"))).toEqual([
       files[0].url,
       files[1].url,

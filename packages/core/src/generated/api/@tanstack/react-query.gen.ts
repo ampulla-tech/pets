@@ -330,6 +330,9 @@ export const listAccessesQueryKey = (options: Options<ListAccessesData>) =>
  * List Accesses
  *
  * Who has access to the animal, and with which role.
+ *
+ * A guest is told only the tutors and their own access: the other guests are
+ * none of their business.
  */
 export const listAccessesOptions = (options: Options<ListAccessesData>) =>
   queryOptions<
@@ -527,7 +530,10 @@ export const getCardQueryKey = (options: Options<GetCardData>) =>
 /**
  * Get Card
  *
- * The card to show at the clinic's counter: one row per disease, last and next dose.
+ * The card: a section per kind with a line per record, newest first.
+ *
+ * A section with no record is left out; only a current dose carries its
+ * "repeat on", its state and its days.
  */
 export const getCardOptions = (options: Options<GetCardData>) =>
   queryOptions<

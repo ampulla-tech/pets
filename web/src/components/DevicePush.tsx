@@ -7,7 +7,7 @@ import { strings } from "@pets/core/strings";
 import { Notice } from "@/components/Feedback";
 import { Steps } from "@/components/Steps";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { BottomSheet } from "@/components/BottomSheet";
 import {
   devicePush,
   dismissPush,
@@ -127,30 +127,22 @@ export function PushSheet({
 }) {
   const blocked = kind === "blocked";
   return (
-    <Dialog open={kind !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent
-        showCloseButton={false}
-        className="top-auto bottom-0 left-0 w-full max-w-none translate-x-0 translate-y-0 gap-3 rounded-t-2xl rounded-b-none border-x-0 border-b-0 px-5 pt-3 pb-[calc(1.75rem+env(safe-area-inset-bottom))] sm:left-1/2 sm:max-w-xl sm:-translate-x-1/2"
-      >
-        <span
-          aria-hidden
-          className="h-1.5 w-10 justify-self-center rounded-full bg-border"
-        />
-        <DialogTitle className="text-base">
-          {blocked ? P.blockedTitle : P.installSheetTitle}
-        </DialogTitle>
-        <p className="text-sm text-muted-foreground">
-          {blocked ? P.blockedBody : P.installBody}
-        </p>
-        <Steps
-          steps={blocked ? unblockSteps(unblockPlatform()) : P.installSteps}
-          share={!blocked}
-        />
-        <p className="text-sm text-muted-foreground">{P.stillHere}</p>
-        <Button size="xl" onClick={onClose}>
-          {P.gotIt}
-        </Button>
-      </DialogContent>
-    </Dialog>
+    <BottomSheet
+      open={kind !== null}
+      onClose={onClose}
+      title={blocked ? P.blockedTitle : P.installSheetTitle}
+    >
+      <p className="text-sm text-muted-foreground">
+        {blocked ? P.blockedBody : P.installBody}
+      </p>
+      <Steps
+        steps={blocked ? unblockSteps(unblockPlatform()) : P.installSteps}
+        share={!blocked}
+      />
+      <p className="text-sm text-muted-foreground">{P.stillHere}</p>
+      <Button size="xl" onClick={onClose}>
+        {P.gotIt}
+      </Button>
+    </BottomSheet>
   );
 }

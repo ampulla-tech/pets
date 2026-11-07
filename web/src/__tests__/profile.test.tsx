@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { mockApi, reply } from "./api";
 import { renderApp } from "./render";
-import { animal, animalRoutes, reminder, vaccine, weight } from "./fixtures";
+import { access, animal, animalRoutes, reminder, vaccine, weight } from "./fixtures";
 
 const lacan = animal({ last_weight: { kg: "4.900", date: "2026-08-02" } });
 const records = [
@@ -12,29 +12,129 @@ const records = [
 ];
 
 describe("animal profile", () => {
-  it("shows the last weight with its day and the weight over time", async () => {
+  it("shows the current weight, its change since the weighing before, and its curve", async () => {
     mockApi(animalRoutes(lacan, records));
     renderApp("/animais/a1");
-    const weightSection = await screen.findByRole("region", { name: "Último peso" });
-    expect(within(weightSection).getByText("4,9 kg")).toBeTruthy();
-    expect(within(weightSection).getByText("02/08/2026")).toBeTruthy();
-    expect(
-      (await within(weightSection).findByRole("img")).getAttribute("aria-label"),
-    ).toBe("Peso no tempo: 18/05/2026: 4,1 kg; 02/08/2026: 4,9 kg");
+    const weightSection = await screen.findByRole("region", { name: "Peso atual" });
+    expect(weightSection.textContent).toContain("4,9kg");
+    expect(within(weightSection).getByText("+0,8 kg em 2 meses")).toBeTruthy();
+    // No day under the weight: the card's lines carry the days.
+    expect(within(weightSection).queryByText("02/08/2026")).toBeNull();
+    expect(within(weightSection).getByRole("img").getAttribute("aria-label")).toBe(
+      "Peso no tempo: 18/05/2026: 4,1 kg; 02/08/2026: 4,9 kg",
+    );
   });
 
-  it("lists the history with what each record says", async () => {
-    mockApi(animalRoutes(lacan, records));
+  it("shows one weighing as the number alone, with no change and no curve", async () => {
+    mockApi(animalRoutes(lacan, [weight("w2", "2026-08-02", "4.900")]));
     renderApp("/animais/a1");
-    const history = await screen.findByRole("region", { name: "Histórico" });
-    const items = await within(history).findAllByRole("article");
-    expect(items.map((i) => i.getAttribute("aria-label"))).toEqual([
-      "Peso · 4,9 kg 02/08/2026",
-      "Vacina · Bioraiva Pet 06/06/2026",
-      "Peso · 4,1 kg 18/05/2026",
+    const weightSection = await screen.findByRole("region", { name: "Peso atual" });
+    expect(weightSection.textContent).toBe("Peso atual4,9kg");
+    expect(within(weightSection).queryByRole("img")).toBeNull();
+  });
+
+  it("leads a tutor with nothing recorded to read the paper card", async () => {
+    mockApi(animalRoutes(animal({ sex: "female", name: "Nina" }), []));
+    renderApp("/animais/a1");
+    expect(await screen.findByText("Nada registrado ainda")).toBeTruthy();
+    expect(screen.getByText(/Tem a carteirinha de papel da Nina\?/)).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: "Ler fotos da carteirinha" }).getAttribute("href"),
+    ).toBe("/animais/a1/foto");
+    expect(screen.queryByRole("region", { name: "Lembretes" })).toBeNull();
+    expect(screen.queryByRole("region", { name: "Peso atual" })).toBeNull();
+  });
+
+  it("leads a guest with nothing recorded to the weight", async () => {
+    mockApi(animalRoutes(animal({ role: "guest" }), []));
+    renderApp("/animais/a1");
+    expect(await screen.findByText(/Você já pode anotar o peso/)).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: "Registrar peso" }).getAttribute("href"),
+    ).toBe("/animais/a1/registrar/peso");
+  });
+
+  it("gives each empty section the button that fills it, to whoever can use it", async () => {
+    mockApi(animalRoutes(lacan, [weight("w2", "2026-08-02", "4.900")]));
+    renderApp("/animais/a1");
+    const reminders = await screen.findByRole("region", { name: "Lembretes" });
+    expect(
+      (
+        await within(reminders).findByRole("link", { name: "Registrar vacina" })
+      ).getAttribute("href"),
+    ).toBe("/animais/a1/registrar/vacina");
+  });
+
+  it("offers a guest the weight's button and not the vaccine's", async () => {
+    mockApi(animalRoutes(animal({ role: "guest" }), [vaccine()]));
+    renderApp("/animais/a1");
+    const weightSection = await screen.findByRole("region", { name: "Peso atual" });
+    expect(within(weightSection).getByText("Nenhum peso registrado.")).toBeTruthy();
+    expect(
+      within(weightSection).getByRole("link", { name: "Registrar peso" }),
+    ).toBeTruthy();
+    const reminders = screen.getByRole("region", { name: "Lembretes" });
+    expect(within(reminders).queryByRole("link")).toBeNull();
+  });
+
+  it("names the animal once, in the header, with who it is, and has no history", async () => {
+    mockApi(
+      animalRoutes(
+        animal({
+          species: "dog",
+          breed: "",
+          age: { years: 5, months: 0, approximate: false },
+        }),
+        records,
+      ),
+    );
+    renderApp("/animais/a1");
+    const heading = await screen.findByRole("heading", { name: /Lacan/ });
+    expect(heading.textContent).toBe("LLacanCanino · SRD · 5 anos");
+    expect(screen.getAllByText("Lacan")).toHaveLength(1);
+    expect(screen.queryByRole("region", { name: "Histórico" })).toBeNull();
+    expect(screen.queryByRole("article")).toBeNull();
+    expect(screen.getByRole("link", { name: "Carteirinha" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Pessoas" })).toBeTruthy();
+  });
+
+  it("offers the tutor one Registrar: the photos of the card first, then each kind", async () => {
+    mockApi(animalRoutes(lacan, records));
+    const { user } = renderApp("/animais/a1");
+    expect(screen.queryByRole("link", { name: "Adicionar por foto" })).toBeNull();
+    await user.click(await screen.findByRole("button", { name: "Registrar" }));
+    const sheet = await screen.findByRole("dialog", { name: "Registrar" });
+    const links = within(sheet).getAllByRole("link");
+    expect(links.map((l) => l.getAttribute("href"))).toEqual([
+      "/animais/a1/foto",
+      "/animais/a1/registrar/vacina",
+      "/animais/a1/registrar/antiparasitario",
+      "/animais/a1/registrar/peso",
+      "/animais/a1/registrar/observacao",
+      "/animais/a1/registrar/consulta",
     ]);
-    expect(items[1].textContent).toContain("Contra Raiva");
-    expect(items[1].textContent).toContain("Repetir em 06/06/2027");
+    expect(links[0].textContent).toContain("Várias doses de uma vez.");
+    expect(within(sheet).getByText("Ou um registro à mão")).toBeTruthy();
+  });
+
+  it("closes the Registrar when its handle is dragged down, not when dragged up", async () => {
+    mockApi(animalRoutes(lacan, records));
+    const { user } = renderApp("/animais/a1");
+    await user.click(await screen.findByRole("button", { name: "Registrar" }));
+    const sheet = await screen.findByRole("dialog", { name: "Registrar" });
+    const handle = within(sheet).getByTestId("sheet-handle");
+
+    fireEvent.pointerDown(handle, { clientY: 400 });
+    fireEvent.pointerMove(handle, { clientY: 340 });
+    fireEvent.pointerUp(handle, { clientY: 340 });
+    expect(screen.getByRole("dialog", { name: "Registrar" })).toBeTruthy();
+
+    fireEvent.pointerDown(handle, { clientY: 400 });
+    fireEvent.pointerMove(handle, { clientY: 600 });
+    fireEvent.pointerUp(handle, { clientY: 600 });
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: "Registrar" })).toBeNull(),
+    );
   });
 
   it("opens at the reminder's subject with a shortcut to register a new dose", async () => {
@@ -66,7 +166,12 @@ describe("animal profile", () => {
     mockApi(
       animalRoutes(lacan, records, [
         reminder({ subject: "felv", subject_label: "FeLV", record_id: "v2" }),
-        reminder({ subject: "rabies", subject_label: "Raiva", state: "upcoming", days: 5 }),
+        reminder({
+          subject: "rabies",
+          subject_label: "Raiva",
+          state: "upcoming",
+          days: 5,
+        }),
       ]),
     );
     const { user } = renderApp("/animais/a1");
@@ -75,13 +180,17 @@ describe("animal profile", () => {
 
     await user.click(within(felv).getByRole("button", { expanded: false }));
     expect(
-      within(felv).getByRole("link", { name: "Registrar dose nova" }).getAttribute("href"),
+      within(felv)
+        .getByRole("link", { name: "Registrar dose nova" })
+        .getAttribute("href"),
     ).toBe("/animais/a1/registrar/vacina?dose=v2");
 
     const rabies = screen.getByText("Raiva", { selector: "p" }).closest("li")!;
     await user.click(within(rabies).getByRole("button", { expanded: false }));
     expect(screen.getAllByRole("link", { name: "Registrar dose nova" })).toHaveLength(1);
-    expect(within(rabies).getByRole("link", { name: "Registrar dose nova" })).toBeTruthy();
+    expect(
+      within(rabies).getByRole("link", { name: "Registrar dose nova" }),
+    ).toBeTruthy();
 
     await user.click(within(rabies).getByRole("button", { expanded: true }));
     expect(screen.queryByRole("link", { name: "Registrar dose nova" })).toBeNull();
@@ -134,23 +243,56 @@ describe("animal profile", () => {
     expect(screen.getByText("Sem data: informe quando repetir")).toBeTruthy();
   });
 
-  it("shows a guest only weight and note, and no edit of others' records", async () => {
-    const guestView = animal({ role: "guest" });
-    mockApi(
-      animalRoutes(guestView, [
-        vaccine({ can_edit: false }),
-        { ...weight("w1", "2026-05-18", "4.1"), can_edit: true },
-      ]),
-    );
-    renderApp("/animais/a1");
-    expect(await screen.findByRole("link", { name: "Registrar peso" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Registrar observação" })).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Registrar" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Adicionar por foto" })).toBeNull();
+  it("shows a guest Registrar with weight and note only, and Tutores", async () => {
+    mockApi(animalRoutes(animal({ role: "guest" }), records));
+    const { user } = renderApp("/animais/a1");
+    expect(await screen.findByRole("button", { name: "Tutores" })).toBeTruthy();
+    expect(screen.queryByRole("link", { name: "Pessoas" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Mais ações" })).toBeNull();
-    await screen.findAllByRole("article");
-    expect(screen.queryByRole("link", { name: /Editar: Vacina/ })).toBeNull();
-    expect(screen.getByRole("link", { name: /Editar: Peso/ })).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Registrar" }));
+    const sheet = await screen.findByRole("dialog", { name: "Registrar" });
+    expect(
+      within(sheet)
+        .getAllByRole("link")
+        .map((l) => l.textContent),
+    ).toEqual(["Peso", "Observação"]);
+  });
+
+  it("opens a guest's Tutores sheet: the tutors, the access end, and leaving", async () => {
+    const api = mockApi({
+      ...animalRoutes(animal({ role: "guest", name: "Paçoca", sex: "female" }), records),
+      "GET /animals/a1/accesses": [
+        access({ id: 1, email: "ana@example.com", is_me: false }),
+        access({ id: 2, email: "carlos@example.com", is_me: false }),
+        access({
+          id: 3,
+          email: "bruno@example.com",
+          role: "guest",
+          ends_on: "2026-11-30",
+        }),
+      ],
+      "DELETE /animals/a1/accesses/3": reply(204),
+      "GET /animals": [],
+      "GET /notices/unread": { unread: false },
+      "GET /push/webpush/key": { public_key: "" },
+    });
+    const { user, router } = renderApp("/animais/a1");
+    await user.click(await screen.findByRole("button", { name: "Tutores" }));
+    const sheet = await screen.findByRole("dialog", { name: "Tutores da Paçoca" });
+    expect(
+      within(sheet).getByText("Recebem os lembretes e podem mudar tudo."),
+    ).toBeTruthy();
+    expect(
+      within(sheet)
+        .getAllByRole("listitem")
+        .map((li) => li.textContent),
+    ).toEqual(["Aana@example.com", "Ccarlos@example.com"]);
+    expect(within(sheet).getByText("Seu acesso vai até 30/11/2026.")).toBeTruthy();
+    await user.click(within(sheet).getByRole("button", { name: "Sair deste animal" }));
+    const confirm = await screen.findByRole("alertdialog");
+    await user.click(within(confirm).getByRole("button", { name: "Sair deste animal" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/"));
+    expect(api.to("DELETE /animals/a1/accesses/3")).toHaveLength(1);
   });
 
   it("archives with a reason and a day", async () => {
@@ -189,8 +331,6 @@ describe("animal profile", () => {
     const { user, router } = renderApp("/animais/a1");
     expect(await screen.findByText(/Doado em 01\/10\/2026/)).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Registrar" })).toBeNull();
-    await screen.findAllByRole("article");
-    expect(screen.queryByRole("link", { name: /Editar:/ })).toBeNull();
     await user.click(screen.getByRole("button", { name: "Mais ações" }));
     await user.click(await screen.findByRole("menuitem", { name: "Apagar o animal" }));
     const confirm = await screen.findByRole("alertdialog");

@@ -856,46 +856,42 @@
         "title": "BirthOut",
         "type": "object"
       },
-      "CardOut": {
+      "CardItemOut": {
         "properties": {
-          "animal": {
-            "$ref": "#/components/schemas/AnimalOut"
+          "can_edit": {
+            "title": "Can Edit",
+            "type": "boolean"
           },
-          "rows": {
-            "items": {
-              "$ref": "#/components/schemas/CardRowOut"
-            },
-            "title": "Rows",
-            "type": "array"
-          }
-        },
-        "required": [
-          "animal",
-          "rows"
-        ],
-        "title": "CardOut",
-        "type": "object"
-      },
-      "CardRowOut": {
-        "properties": {
-          "label": {
-            "title": "Label",
-            "type": "string"
+          "current": {
+            "title": "Current",
+            "type": "boolean"
           },
-          "last_date": {
+          "date": {
             "format": "date",
-            "title": "Last Date",
+            "title": "Date",
             "type": "string"
           },
-          "last_product": {
-            "title": "Last Product",
+          "detail": {
+            "title": "Detail",
             "type": "string"
           },
-          "last_vet": {
-            "title": "Last Vet",
+          "due_in_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due In Days"
+          },
+          "record_id": {
+            "format": "uuid",
+            "title": "Record Id",
             "type": "string"
           },
-          "next_on": {
+          "repeat_on": {
             "anyOf": [
               {
                 "format": "date",
@@ -905,50 +901,90 @@
                 "type": "null"
               }
             ],
-            "title": "Next On"
-          },
-          "photos": {
-            "items": {
-              "$ref": "#/components/schemas/AttachmentOut"
-            },
-            "title": "Photos",
-            "type": "array"
-          },
-          "record_id": {
-            "format": "uuid",
-            "title": "Record Id",
-            "type": "string"
-          },
-          "record_kind": {
-            "enum": [
-              "vaccine",
-              "antiparasitic"
-            ],
-            "title": "Record Kind",
-            "type": "string"
+            "title": "Repeat On"
           },
           "state": {
-            "title": "State",
-            "type": "string"
+            "anyOf": [
+              {
+                "enum": [
+                  "ok",
+                  "due_soon",
+                  "overdue",
+                  "no_date"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State"
           },
-          "subject": {
-            "title": "Subject",
+          "title": {
+            "title": "Title",
             "type": "string"
           }
         },
         "required": [
-          "subject",
-          "label",
-          "last_date",
-          "last_product",
-          "last_vet",
-          "next_on",
-          "state",
-          "record_kind",
           "record_id",
-          "photos"
+          "date",
+          "title",
+          "detail",
+          "current",
+          "repeat_on",
+          "state",
+          "due_in_days",
+          "can_edit"
         ],
-        "title": "CardRowOut",
+        "title": "CardItemOut",
+        "type": "object"
+      },
+      "CardOut": {
+        "properties": {
+          "animal": {
+            "$ref": "#/components/schemas/AnimalOut"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/CardSectionOut"
+            },
+            "title": "Sections",
+            "type": "array"
+          }
+        },
+        "required": [
+          "animal",
+          "sections"
+        ],
+        "title": "CardOut",
+        "type": "object"
+      },
+      "CardSectionOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CardItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "kind": {
+            "enum": [
+              "vaccine",
+              "antiparasitic",
+              "visit",
+              "weight",
+              "note"
+            ],
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "items"
+        ],
+        "title": "CardSectionOut",
         "type": "object"
       },
       "CatalogEntry": {
@@ -2690,7 +2726,7 @@
     },
     "/animals/{animal_id}/accesses": {
       "get": {
-        "description": "Who has access to the animal, and with which role.",
+        "description": "Who has access to the animal, and with which role.\n\nA guest is told only the tutors and their own access: the other guests are\nnone of their business.",
         "operationId": "list_accesses",
         "parameters": [
           {
@@ -3066,7 +3102,7 @@
     },
     "/animals/{animal_id}/card": {
       "get": {
-        "description": "The card to show at the clinic's counter: one row per disease, last and next dose.",
+        "description": "The card: a section per kind with a line per record, newest first.\n\nA section with no record is left out; only a current dose carries its\n\"repeat on\", its state and its days.",
         "operationId": "get_card",
         "parameters": [
           {

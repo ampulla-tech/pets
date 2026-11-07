@@ -7,6 +7,7 @@ import { ErrorState, Loading } from "@/components/Feedback";
 import { Page } from "@/components/Page";
 import { RecordForm } from "@/components/records/RecordForm";
 import { useAnimal, useRecords } from "@/lib/queries";
+import { useBack } from "@/lib/back";
 import { kindFromSlug } from "@/lib/types";
 
 /** `/animais/:id/registrar/:tipo`: a new record of one kind. */
@@ -23,7 +24,7 @@ export function NewRecord() {
     ...getExtractionOptions({ path: { extraction_id: extractionId ?? "" } }),
     enabled: Boolean(extractionId),
   });
-  const back = `/animais/${id}`;
+  const back = useBack(id);
   const title = kind ? strings.records.newTitle(RECORD_KIND_LABEL[kind]) : "";
 
   if (!kind)
@@ -67,7 +68,7 @@ export function EditRecord() {
   const { id = "", recordId } = useParams();
   const animal = useAnimal(id);
   const records = useRecords(id);
-  const back = `/animais/${id}`;
+  const back = useBack(id);
   const record = records.data?.find((r) => r.id === recordId);
   const title = record?.kind
     ? strings.records.editTitle(RECORD_KIND_LABEL[record.kind])

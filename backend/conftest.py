@@ -188,3 +188,27 @@ def today(monkeypatch):
         return day
 
     return set_day
+
+
+def pdf_text(content: bytes) -> list[str]:
+    """The text a PDF made by reportlab draws, one string per text run."""
+    import base64
+    import zlib
+
+    runs = []
+    for match in re.finditer(rb"stream\r?\n(.*?)endstream", content, re.S):
+        raw = match.group(1).strip()
+        if raw.endswith(b"~>"):
+            raw = base64.a85decode(raw[:-2])
+        try:
+            raw = zlib.decompress(raw)
+        except zlib.error:
+            continue
+        for literal in re.findall(rb"\(((?:\\.|[^\\)])*)\)\s*Tj", raw, re.S):
+            text = re.sub(
+                rb"\\([0-7]{1,3}|.)",
+                lambda m: bytes([int(m.group(1), 8)]) if m.group(1).isdigit() else m.group(1),
+                literal,
+            )
+            runs.append(text.decode("cp1252"))
+    return runs

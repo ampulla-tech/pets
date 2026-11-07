@@ -1,7 +1,7 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 import { fakeApi } from "@/test-utils/api";
-import { animal, ANIMAL_ID, animalRoutes } from "@/test-utils/fixtures";
+import { animal, ANIMAL_ID, animalRoutes, vaccine } from "@/test-utils/fixtures";
 import { renderApp, signedIn } from "@/test-utils/render";
 import { strings } from "@pets/core/strings";
 
@@ -10,40 +10,79 @@ const sharing = jest.requireMock("expo-sharing") as Record<string, jest.Mock>;
 
 beforeEach(() => signedIn());
 
-const ROW = {
-  subject: "rabies",
-  label: "Raiva",
-  last_date: "2025-11-06",
-  last_product: "Quantum",
-  last_vet: "Dra. Paula",
-  next_on: "2026-11-06",
-  state: "scheduled",
-  record_kind: "vaccine",
-  record_id: "v1",
-  photos: [{ id: "f1", name: "etiqueta.jpg", content_type: "image/jpeg", url: "http://x/e.jpg" }],
+function item(over: Record<string, unknown> = {}) {
+  return {
+    record_id: "v1",
+    date: "2025-11-06",
+    title: "Vanguard Plus",
+    detail: "",
+    current: false,
+    repeat_on: null,
+    state: null,
+    due_in_days: null,
+    can_edit: true,
+    ...over,
+  };
+}
+
+const PACOCA = animal({ name: "Paçoca", species: "dog", breed: "", sex: "male" });
+const CARD = {
+  animal: PACOCA,
+  sections: [
+    {
+      kind: "vaccine",
+      items: [
+        item({ current: true, repeat_on: "2026-11-06", state: "due_soon", due_in_days: 0, detail: "Partida 123A · Dra. Lima" }),
+        item({ record_id: "v0", date: "2024-11-06" }),
+      ],
+    },
+    {
+      kind: "antiparasitic",
+      items: [item({ record_id: "p1", title: "Drontal Plus", date: "2026-08-01", current: true, repeat_on: "2026-11-01", state: "overdue", due_in_days: -5 })],
+    },
+    { kind: "note", items: [item({ record_id: "n1", title: "Coçando.", detail: "bruno@example.com", can_edit: false })] },
+  ],
 };
 
 describe("the card", () => {
-  it("shows one row per subject with the last dose and the next, the label photo a tap away", async () => {
+  it("lists every dose by section, and only the current one says when to repeat", async () => {
+    fakeApi({ ...animalRoutes(PACOCA), [`GET /animals/${ANIMAL_ID}/card`]: { body: CARD } });
+    await renderApp(`/animais/${ANIMAL_ID}/carteirinha`);
+    expect(await screen.findByText(/^Canino · SRD · Macho/)).toBeTruthy();
+    expect(screen.getByText("Vacinas")).toBeTruthy();
+    expect(screen.getByText("Repetir em 06/11/2026")).toBeTruthy();
+    expect(screen.getByText("Vence hoje")).toBeTruthy();
+    expect(screen.getByText("Atrasado")).toBeTruthy();
+    expect(screen.getAllByText(/Repetir em/)).toHaveLength(2);
+    expect(screen.queryByText("Peso")).toBeNull();
+  });
+
+  it("opens a record from its line, above the card", async () => {
+    fakeApi({ ...animalRoutes(PACOCA, [vaccine()]), [`GET /animals/${ANIMAL_ID}/card`]: { body: CARD } });
+    const app = await renderApp(`/animais/${ANIMAL_ID}/carteirinha`);
+    // A line the viewer cannot edit is only read.
+    expect((await screen.findByTestId("card-item-n1")).props.accessibilityState?.disabled).toBe(true);
+    await fireEvent.press(screen.getByTestId("card-item-v1"));
+    expect(app.pathname()).toBe(`/animais/${ANIMAL_ID}/registro`);
+    expect(app.params()).toMatchObject({ tipo: "vaccine", registro: "v1" });
+  });
+
+  it("empty, offers Registrar and no PDF", async () => {
     fakeApi({
-      ...animalRoutes(animal({ name: "GATA" })),
-      [`GET /animals/${ANIMAL_ID}/card`]: {
-        body: { animal: animal({ name: "GATA" }), rows: [ROW, { ...ROW, subject: "felv", label: "FeLV", next_on: null, state: "no_date", photos: [] }] },
-      },
+      ...animalRoutes(PACOCA),
+      [`GET /animals/${ANIMAL_ID}/card`]: { body: { animal: { ...PACOCA, sex: "female", name: "Nina" }, sections: [] } },
     });
     await renderApp(`/animais/${ANIMAL_ID}/carteirinha`);
-    expect(await screen.findByText("Raiva")).toBeTruthy();
-    expect(screen.getAllByText("Última dose: 06/11/2025 · Quantum")).toHaveLength(2);
-    expect(screen.getByText("Próxima: sem data")).toBeTruthy();
-    expect(screen.queryByTestId("label-photo-felv")).toBeNull();
-    await fireEvent.press(screen.getByTestId("label-photo-rabies"));
-    expect(screen.getByTestId("photo-viewer")).toBeTruthy();
+    expect(await screen.findByText(strings.card.empty)).toBeTruthy();
+    expect(screen.queryByTestId("share-pdf")).toBeNull();
+    await fireEvent.press(screen.getByTestId("card-register"));
+    expect(screen.getByTestId("register-photos")).toBeTruthy();
   });
 
   it("downloads the PDF with the session into the cache and opens the share sheet on it", async () => {
     fakeApi({
       ...animalRoutes(animal({ name: "GATA" })),
-      [`GET /animals/${ANIMAL_ID}/card`]: { body: { animal: animal({ name: "GATA" }), rows: [] } },
+      [`GET /animals/${ANIMAL_ID}/card`]: { body: { ...CARD, animal: animal({ name: "GATA" }) } },
     });
     await renderApp(`/animais/${ANIMAL_ID}/carteirinha`);
     await fireEvent.press(await screen.findByTestId("share-pdf"));

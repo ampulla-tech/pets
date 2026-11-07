@@ -86,6 +86,23 @@ def test_the_tutor_sees_who_has_access(tutor, other):
     ]
 
 
+def test_a_guest_sees_the_tutors_and_themselves_but_not_the_other_guests(tutor, other):
+    dog = make_animal(tutor)
+    second_tutor, second_guest = signup("tutor2@example.com"), signup("guest2@example.com")
+    second_tutor.post(f"/invites/{invite(tutor, dog['id'])['token']}/accept")
+    other.post(f"/invites/{invite(tutor, dog['id'], 'guest', ends='2099-11-30')['token']}/accept")
+    second_guest.post(f"/invites/{invite(tutor, dog['id'], 'guest')['token']}/accept")
+
+    people = other.get(f"/animals/{dog['id']}/accesses").json()
+    assert [(p["email"], p["role"], p["ends_on"], p["is_me"]) for p in people] == [
+        ("tutor2@example.com", "tutor", None, False),
+        ("tutor@example.com", "tutor", None, False),
+        ("other@example.com", "guest", "2099-11-30", True),
+    ]
+    # A tutor still sees everyone.
+    assert len(tutor.get(f"/animals/{dog['id']}/accesses").json()) == 4
+
+
 def test_a_tutor_removes_someone(tutor, other):
     dog = make_animal(tutor)
     other.post(f"/invites/{invite(tutor, dog['id'], 'guest')['token']}/accept")

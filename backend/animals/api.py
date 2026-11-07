@@ -6,7 +6,7 @@ from typing import Literal
 from uuid import UUID
 
 from django.conf import settings
-from django.db import transaction
+from django.db import models, transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -16,9 +16,9 @@ from ninja.errors import HttpError
 
 from accounts.auth import caller, signed_in_or_anonymous
 from animals import attachments as storage
-from animals.access import access_to, as_tutor, readable
+from animals.access import access_to, as_tutor
 from animals.age import age_of
-from animals.card import card_pdf, card_rows
+from animals.card import card_pdf, card_sections
 from animals.diseases import DISEASES, PARASITES, codes_for
 from animals.errors import ApiError
 from animals.models import (
@@ -508,9 +508,15 @@ def list_records(request, animal_id: UUID):
 
 @router.get("/animals/{animal_id}/accesses", response=list[AccessOut], tags=["people"])
 def list_accesses(request, animal_id: UUID):
-    """Who has access to the animal, and with which role."""
-    animal = readable(request.auth, animal_id)
-    accesses = Access.objects.valid().filter(animal=animal).select_related("user")
+    """Who has access to the animal, and with which role.
+
+    A guest is told only the tutors and their own access: the other guests are
+    none of their business.
+    """
+    mine = access_to(request.auth, animal_id)
+    accesses = Access.objects.valid().filter(animal=mine.animal).select_related("user")
+    if mine.role == Role.GUEST:
+        accesses = accesses.filter(models.Q(role=Role.TUTOR) | models.Q(id=mine.id))
     order = {Role.TUTOR: 0, Role.GUEST: 1}
     return sorted(
         (
@@ -668,44 +674,69 @@ def accept_invite(request, token: str):
 # ── The card ────────────────────────────────────────────────────────────────
 
 
-class CardRowOut(Schema):
-    subject: str
-    label: str
-    last_date: date
-    last_product: str
-    last_vet: str
-    next_on: date | None
-    state: str
-    record_kind: Literal["vaccine", "antiparasitic"]
+class CardItemOut(Schema):
     record_id: UUID
-    photos: list[AttachmentOut]
+    date: date
+    title: str
+    detail: str
+    # The current dose (a reminder of it not yet closed) says when to repeat
+    # it; an old dose and any other record have these null.
+    current: bool
+    repeat_on: date | None
+    state: Literal["ok", "due_soon", "overdue", "no_date"] | None
+    due_in_days: int | None
+    # Whether the caller can open the record to edit it.
+    can_edit: bool
+
+
+class CardSectionOut(Schema):
+    kind: Literal["vaccine", "antiparasitic", "visit", "weight", "note"]
+    items: list[CardItemOut]
 
 
 class CardOut(Schema):
     animal: AnimalOut
-    rows: list[CardRowOut]
+    sections: list[CardSectionOut]
 
 
 @router.get("/animals/{animal_id}/card", response=CardOut, tags=["card"])
 def get_card(request, animal_id: UUID):
-    """The card to show at the clinic's counter: one row per disease, last and next dose."""
+    """The card: a section per kind with a line per record, newest first.
+
+    A section with no record is left out; only a current dose carries its
+    "repeat on", its state and its days.
+    """
     access = access_to(request.auth, animal_id)
-    rows = card_rows(access.animal)
+    animal = access.animal
+    active = animal.status == AnimalStatus.ACTIVE
     return {
-        "animal": animal_out(request, access.animal, access.role),
-        "rows": [
+        "animal": animal_out(request, animal, access.role),
+        "sections": [
             {
-                **{k: v for k, v in row.__dict__.items() if k != "photos"},
-                "photos": [attachment_out(request, p) for p in row.photos],
+                "kind": section.kind,
+                "items": [
+                    {
+                        "record_id": item.record.id,
+                        "date": item.record.date,
+                        "title": item.title,
+                        "detail": item.detail,
+                        "current": item.current,
+                        "repeat_on": item.repeat_on,
+                        "state": item.state,
+                        "due_in_days": item.due_in_days,
+                        "can_edit": active and _can_edit(item.record, access),
+                    }
+                    for item in section.items
+                ],
             }
-            for row in rows
+            for section in card_sections(animal)
         ],
     }
 
 
 @router.get("/animals/{animal_id}/card.pdf", include_in_schema=False)
 def get_card_pdf(request, animal_id: UUID):
-    """The card as a PDF, with the label photos, for whoever has access."""
+    """The card as a PDF, without the notes and without photos, for whoever has access."""
     animal = access_to(request.auth, animal_id).animal
     response = HttpResponse(card_pdf(animal), content_type="application/pdf")
     filename = slugify(animal.name) or "animal"

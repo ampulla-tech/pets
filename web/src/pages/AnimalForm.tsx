@@ -12,7 +12,7 @@ import {
   updateAnimal,
   type AnimalIn,
 } from "@pets/core/api/generated";
-import { SPECIES_LABEL } from "@pets/core/domain";
+import { NO_BREED, SPECIES_LABEL } from "@pets/core/domain";
 import { strings } from "@pets/core/strings";
 import { AnimalAvatar } from "@/components/AnimalAvatar";
 import { ChoiceGroup, Field } from "@/components/Field";
@@ -237,9 +237,18 @@ function AnimalFormBody({ animal }: { animal?: AnimalOut }) {
             <Input {...control} autoComplete="off" {...form.register("name")} />
           )}
         </Field>
-        <Field label={S.breed} optional>
-          {(control) => <Input {...control} {...form.register("breed")} />}
-        </Field>
+        <div className="flex flex-col gap-2">
+          <Field label={S.breed} optional>
+            {(control) => <Input {...control} {...form.register("breed")} />}
+          </Field>
+          <button
+            type="button"
+            onClick={() => form.setValue("breed", NO_BREED, { shouldDirty: true })}
+            className="self-start rounded-full border bg-card px-3 py-1.5 text-sm hover:bg-muted"
+          >
+            {S.noBreed}
+          </button>
+        </div>
         <Controller
           control={form.control}
           name="sex"

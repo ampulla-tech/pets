@@ -85,7 +85,7 @@ describe("the Avisos tab", () => {
     await user.click(
       await screen.findByRole("button", { name: /Hoje é dia de vacinar/ }),
     );
-    await screen.findByRole("heading", { name: "Paçoca" });
+    await screen.findByRole("heading", { name: /^Paçoca/ });
     await user.click(screen.getByRole("link", { name: strings.app.back }));
     await waitFor(() => expect(router.state.location.pathname).toBe("/avisos"));
   });

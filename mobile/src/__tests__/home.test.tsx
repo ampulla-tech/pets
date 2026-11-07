@@ -36,7 +36,7 @@ describe("the Pets tab", () => {
     expect(await screen.findByText("Vermífugo atrasado · +1")).toBeTruthy();
     expect(screen.getByText("Antipulgas vence em 6 dias")).toBeTruthy();
     expect(screen.queryByText("Em dia")).toBeNull();
-    expect(screen.getAllByText("Gato · cerca de 5 anos").length).toBe(2);
+    expect(screen.getAllByText("Felino · cerca de 5 anos").length).toBe(2);
     // Nothing else on the home: no "next up", no notification card, no footer.
     expect(screen.queryByTestId("push-banner")).toBeNull();
     expect(screen.queryByTestId("sign-out")).toBeNull();

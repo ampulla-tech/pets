@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { Alert } from "react-native";
 
 import { fakeApi } from "@/test-utils/api";
-import { animal, ANIMAL_ID, animalRoutes, antiparasitic, reminder, vaccine, weight } from "@/test-utils/fixtures";
+import { access, animal, ANIMAL_ID, animalRoutes, antiparasitic, reminder, vaccine, weight } from "@/test-utils/fixtures";
 import { renderApp, signedIn } from "@/test-utils/render";
 import { strings } from "@pets/core/strings";
 
@@ -21,13 +21,58 @@ beforeEach(() => {
 });
 
 describe("the animal's profile", () => {
-  it("shows the last weight with its day and the weight chart", async () => {
+  it("shows the current weight, its change since the weighing before, and its curve", async () => {
     fakeApi(
       animalRoutes(animal(), [weight("w2", "2026-10-12", "4.900"), weight("w1", "2026-06-01", "4.500")]),
     );
     await renderApp(`/animais/${ANIMAL_ID}`);
-    expect(await screen.findByText("4,9 kg em 12/10/2026")).toBeTruthy();
-    expect(screen.getByTestId("weight-chart").props.accessibilityLabel).toContain("01/06/2026: 4,5 kg");
+    expect(await screen.findByTestId("current-weight")).toHaveTextContent("4,9 kg");
+    expect(screen.getByText("+0,4 kg em 4 meses")).toBeTruthy();
+    expect(screen.queryByText(/12\/10\/2026/)).toBeNull();
+    expect(screen.getByTestId("weight-curve").props.accessibilityLabel).toContain("01/06/2026: 4,5 kg");
+  });
+
+  it("shows one weighing as the number alone", async () => {
+    fakeApi(animalRoutes(animal(), [weight("w2", "2026-10-12", "4.900")]));
+    await renderApp(`/animais/${ANIMAL_ID}`);
+    expect(await screen.findByTestId("current-weight")).toHaveTextContent("4,9 kg");
+    expect(screen.queryByTestId("weight-curve")).toBeNull();
+    expect(screen.queryByText(/ kg em /)).toBeNull();
+  });
+
+  it("leads a tutor with nothing recorded to read the paper card, and a guest to the weight", async () => {
+    fakeApi(animalRoutes(animal({ sex: "female", name: "Nina" }), []));
+    const app = await renderApp(`/animais/${ANIMAL_ID}`);
+    expect(await screen.findByText(strings.animal.nothingYet)).toBeTruthy();
+    expect(screen.getByText(/Tem a carteirinha de papel da Nina\?/)).toBeTruthy();
+    expect(screen.queryByText(strings.animal.reminders)).toBeNull();
+    await fireEvent.press(screen.getByTestId("nothing-yet-action"));
+    expect(app.pathname()).toBe(`/animais/${ANIMAL_ID}/foto`);
+  });
+
+  it("leads a guest with nothing recorded to the weight", async () => {
+    fakeApi(animalRoutes(animal({ role: "guest" }), []));
+    const app = await renderApp(`/animais/${ANIMAL_ID}`);
+    expect(await screen.findByText(strings.animal.nothingYetGuest)).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("nothing-yet-action"));
+    expect(app.params()).toMatchObject({ tipo: "weight" });
+  });
+
+  it("gives each empty section the button that fills it, to whoever can use it", async () => {
+    fakeApi(animalRoutes(animal(), [weight("w2", "2026-10-12", "4.900")]));
+    const app = await renderApp(`/animais/${ANIMAL_ID}`);
+    expect(await screen.findByTestId("reminders-empty")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("hint-vaccine"));
+    expect(app.params()).toMatchObject({ tipo: "vaccine" });
+  });
+
+  it("offers a guest the weight's button and not the vaccine's", async () => {
+    fakeApi(animalRoutes(animal({ role: "guest", last_weight: null }), [vaccine({ can_edit: false })]));
+    await renderApp(`/animais/${ANIMAL_ID}`);
+    expect(await screen.findByTestId("weight-empty")).toBeTruthy();
+    expect(screen.getByTestId("hint-weight")).toBeTruthy();
+    expect(screen.getByTestId("reminders-empty")).toBeTruthy();
+    expect(screen.queryByTestId("hint-vaccine")).toBeNull();
   });
 
   it("opened at a subject, offers to register a new dose of the vaccine behind it", async () => {
@@ -81,25 +126,67 @@ describe("the animal's profile", () => {
     expect(app.params()).toMatchObject({ registro: "v1", campo: "repeat_on" });
   });
 
-  it("filters the history by kind", async () => {
-    fakeApi(animalRoutes(animal(), [antiparasitic(), vaccine()]));
+  it("names the animal in the header with who it is, and has no history", async () => {
+    fakeApi(animalRoutes(animal({ species: "dog", breed: "" }), [antiparasitic(), vaccine()]));
     await renderApp(`/animais/${ANIMAL_ID}`);
-    expect(await screen.findByText("Verme interno · Drontal")).toBeTruthy();
-    expect(screen.getByText("Vacina · Quantum Raiva")).toBeTruthy();
-    await fireEvent.press(screen.getByTestId("filter-antiparasitic"));
+    const header = await screen.findByTestId("animal-header");
+    expect(header).toHaveTextContent(/^LLacanCanino · SRD/);
     expect(screen.queryByText("Vacina · Quantum Raiva")).toBeNull();
-    expect(screen.getByText("Verme interno · Drontal")).toBeTruthy();
+    expect(screen.queryByTestId("filter-antiparasitic")).toBeNull();
+    expect(screen.getByTestId("facts")).toHaveTextContent(/Microchip/);
   });
 
-  it("hides from a guest everything but weight and note", async () => {
+  it("offers the tutor one Registrar: the photos of the card first, then each kind", async () => {
+    fakeApi(animalRoutes(animal()));
+    const app = await renderApp(`/animais/${ANIMAL_ID}`);
+    expect(screen.queryByTestId("add-by-photo")).toBeNull();
+    await fireEvent.press(await screen.findByTestId("register"));
+    expect(screen.getByText(strings.animal.readPhotosHint)).toBeTruthy();
+    for (const kind of ["vaccine", "antiparasitic", "weight", "note", "visit"]) {
+      expect(screen.getByTestId(`register-${kind}`)).toBeTruthy();
+    }
+    await fireEvent.press(screen.getByTestId("register-photos"));
+    expect(app.pathname()).toBe(`/animais/${ANIMAL_ID}/foto`);
+  });
+
+  it("gives a guest Registrar with weight and note only, and Tutores instead of Pessoas", async () => {
     fakeApi(animalRoutes(animal({ role: "guest" }), [vaccine({ can_edit: false })]));
     await renderApp(`/animais/${ANIMAL_ID}`);
     expect(await screen.findByText(strings.animal.guestNotice)).toBeTruthy();
-    expect(screen.getByTestId("add-weight")).toBeTruthy();
-    expect(screen.getByTestId("add-note")).toBeTruthy();
-    for (const id of ["add-vaccine", "add-antiparasitic", "add-visit", "add-by-photo", "edit-animal", "archive-animal", "delete-animal", "edit-v1"]) {
+    expect(screen.getByText(strings.animal.tutors)).toBeTruthy();
+    expect(screen.queryByText(strings.animal.people)).toBeNull();
+    expect(screen.queryByTestId("animal-more")).toBeNull();
+    await fireEvent.press(screen.getByTestId("register"));
+    expect(screen.getByTestId("register-weight")).toBeTruthy();
+    expect(screen.getByTestId("register-note")).toBeTruthy();
+    for (const id of ["register-photos", "register-vaccine", "register-antiparasitic", "register-visit"]) {
       expect(screen.queryByTestId(id)).toBeNull();
     }
+  });
+
+  it("opens a guest's Tutores sheet: the tutors, the access end, and leaving", async () => {
+    const api = fakeApi({
+      ...animalRoutes(animal({ role: "guest", name: "Paçoca", sex: "female" }), [vaccine({ can_edit: false })]),
+      [`GET /animals/${ANIMAL_ID}/accesses`]: {
+        body: [
+          access({ id: 1, email: "ana@example.com", is_me: false }),
+          access({ id: 3, email: "bruno@example.com", role: "guest", ends_on: "2026-11-30", is_me: true }),
+        ],
+      },
+      [`DELETE /animals/${ANIMAL_ID}/accesses/3`]: { status: 204 },
+      "GET /animals": { body: [] },
+      "GET /notices/unread": { body: { unread: false } },
+    });
+    confirmAlerts();
+    const app = await renderApp(`/animais/${ANIMAL_ID}`);
+    await fireEvent.press(await screen.findByTestId("open-people"));
+    expect(await screen.findByText("Tutores da Paçoca")).toBeTruthy();
+    expect(await screen.findByTestId("tutor-ana@example.com")).toBeTruthy();
+    expect(screen.queryByTestId("tutor-bruno@example.com")).toBeNull();
+    expect(screen.getByText("Seu acesso vai até 30/11/2026.")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("tutors-leave"));
+    await waitFor(() => expect(api.callsTo(`DELETE /animals/${ANIMAL_ID}/accesses/3`)).toHaveLength(1));
+    await waitFor(() => expect(app.pathname()).toBe("/"));
   });
 
   it("an archived animal is read-only, and a tutor can still delete it for good", async () => {
@@ -112,8 +199,9 @@ describe("the animal's profile", () => {
     const alert = confirmAlerts();
     const app = await renderApp(`/animais/${ANIMAL_ID}`);
     expect(await screen.findByText(strings.archive.readOnly)).toBeTruthy();
-    expect(screen.queryByTestId("add-vaccine")).toBeNull();
-    expect(screen.queryByTestId("edit-v1")).toBeNull();
+    expect(screen.queryByTestId("register")).toBeNull();
+    await fireEvent.press(screen.getByTestId("animal-more"));
+    expect(screen.queryByTestId("edit-animal")).toBeNull();
     await fireEvent.press(screen.getByTestId("delete-animal"));
     expect(alert.mock.calls[0][1]).toBe(strings.animal.deleteConfirm("Lacan"));
     await waitFor(() => expect(api.callsTo(`DELETE /animals/${ANIMAL_ID}`)).toHaveLength(1));
@@ -154,6 +242,20 @@ describe("registering an animal", () => {
     const photo = api.callsTo("POST /animals/new/photo")[0];
     expect(photo.headers["x-session-token"]).toBe("token-1");
     expect(photo.body).toBeInstanceOf(FormData);
+  });
+
+  it("says Canino and Felino, and writes SRD in the breed from its shortcut", async () => {
+    const created = animal({ id: "new", name: "Nina", species: "cat", breed: "SRD" });
+    const api = fakeApi({ "POST /animals": { status: 201, body: created }, ...animalRoutes(created) });
+    const app = await renderApp("/animais/novo");
+    await fireEvent.press(await screen.findByText("Felino"));
+    expect(screen.getByText("Canino")).toBeTruthy();
+    await fireEvent.changeText(screen.getByTestId("animal-name"), "Nina");
+    await fireEvent.press(screen.getByTestId("no-breed"));
+    expect(screen.getByTestId("breed").props.value).toBe("SRD");
+    await fireEvent.press(screen.getByTestId("save-animal"));
+    await waitFor(() => expect(app.pathname()).toBe("/animais/new"));
+    expect(api.callsTo("POST /animals")[0].body).toMatchObject({ species: "cat", breed: "SRD" });
   });
 
   it("checks a birth year has four digits", async () => {

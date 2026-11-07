@@ -5,14 +5,9 @@
  */
 
 import { authHeaders, cardPdfUrl } from "@pets/core/api";
-import type { AttachmentOut } from "@pets/core/api/generated";
 import { Directory, File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import * as WebBrowser from "expo-web-browser";
-
-export function isPdf(attachment: Pick<AttachmentOut, "content_type" | "name">) {
-  return attachment.content_type === "application/pdf" || /\.pdf$/i.test(attachment.name);
-}
 
 /** A PDF opens in the in-app browser; a photo opens in the app's own viewer. */
 export async function openInBrowser(url: string) {

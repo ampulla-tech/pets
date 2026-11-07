@@ -9,12 +9,12 @@ import { strings } from "@pets/core/strings";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router, Stack } from "expo-router";
 import { Bell, CheckCheck, Ellipsis } from "lucide-react-native";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { Pressable, RefreshControl, View } from "react-native";
 
 import { BlockedSteps, PushBanner, useDevicePush } from "@/components/DevicePush";
 import { ErrorState, Loading, Notice, Screen } from "@/components/ui/screen";
-import { Sheet } from "@/components/ui/sheet";
+import { MenuItem, Sheet } from "@/components/ui/sheet";
 import { Muted, Text } from "@/components/ui/text";
 import { colors } from "@/lib/theme";
 import { cn } from "@/lib/utils";
@@ -166,30 +166,6 @@ export default function NoticesScreen() {
         )}
       </Sheet>
     </>
-  );
-}
-
-function MenuItem({
-  label,
-  icon,
-  onPress,
-  testID,
-}: {
-  label: string;
-  icon: ReactNode;
-  onPress: () => void;
-  testID: string;
-}) {
-  return (
-    <Pressable
-      role="menuitem"
-      testID={testID}
-      onPress={onPress}
-      className="min-h-12 flex-row items-center gap-3 rounded-lg px-1 active:bg-muted"
-    >
-      {icon}
-      <Text>{label}</Text>
-    </Pressable>
   );
 }
 

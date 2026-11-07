@@ -13,7 +13,7 @@ carries it in the code. On-screen text is pt-BR; identifiers are English.
 | Arquivar | `archive`, `archived_reason`, `archived_on` | Taking an animal off the home screen with a reason (`died`, `rehomed`, `other`) and a day. Its history stays readable; its reminders are suspended. |
 | Acesso | `Access` | A person's access to an animal, with a role. Every active animal has at least one tutor. |
 | Tutor | `Role.TUTOR` | The role that can do everything to an animal, and the only one that receives reminders. |
-| Convidado | `Role.GUEST` | The role that reads everything and writes only weights and notes. Its access may have a last day (`ends_on`), after which it no longer holds. |
+| Convidado | `Role.GUEST` | The role that reads everything and writes only weights and notes. Its access may have a last day (`ends_on`), after which it no longer holds. Of the animal's accesses it is told only the tutors and its own. |
 | Convite | `Invite` | A single-use link, valid for 3 days, that grants a role on one animal (and, for a guest, an access end). |
 | Registro | record (`Record`) | One thing that happened to an animal on a day: a vaccine, an antiparasitic, a weight, a note or a visit. It keeps its author, its last edit and its attachments. |
 | Vacina | `Vaccine` | A record of a vaccine: brand, lot, lot expiry, the diseases it covers (one or more), "repeat on", vet and CRMV. |
@@ -31,8 +31,9 @@ carries it in the code. On-screen text is pt-BR; identifiers are English.
 | Notificação | push | A notice shown outside the app, by push, on one device (`expo` on a phone, `webpush` in a browser). Switched on per device. |
 | Envio | `Delivery` | One notice delivered on one channel: (notice, channel), unique. A channel that failed has none, and the next run delivers the same notice again. |
 | Canal | `Channel` | How a notice reaches a tutor: `email` (always), `expo` (each phone), `webpush` (each browser). |
-| Selo | badge | What an animal card says needs care: the kind of the most urgent dose (`vaccine`, `internal`, `external`), when it falls due (`due_soon`, within 30 days, with the days) or that it is late (`overdue`), and how many other doses are due in the same window (" · +1"). An animal `up_to_date` or with no records (`none`) shows no badge. |
+| Selo | badge | What an animal card says needs care: the kind of the most urgent dose (`vaccine`, `internal`, `external`), when it falls due (`due_soon`, within 30 days, with the days) or that it is late (`overdue`), and how many other doses are due in the same window (" · +1"). An animal `up_to_date` or with no records (`none`) shows no badge. Shown on the home card, not on the animal's profile, whose reminders say the same. |
 | Leitura / extração | `Extraction` | One reading of a card's photos by the model, with its state (`processing`, `ready`, `failed`) and its proposals. |
 | Registro proposto | proposal | One line the reading found, each field `{value, read}`; `pending` until the tutor confirms it (it becomes a record) or discards it. |
 | Gabarito | answer key | The confirmed transcription of the evaluation cards the benchmark scores the models against. Kept out of the repository. |
-| Carteirinha | card | The screen and the PDF for the vet: per subject, the last dose and the next one, with the label photo. |
+| Carteirinha | card (`animals/card.py`) | The screen and the PDF with everything recorded of the animal, like the paper card: a section per kind (vaccines, antiparasitics, visits and exams, weights, notes), a line per record, the newest first; a section with no record is left out. A vaccine is named by its brand (by its diseases when it has none). The PDF leaves out the notes and the photos. |
+| Dose vigente | current dose (`current`) | A dose of a vaccine or an antiparasitic with a reminder not yet closed. The only one the card shows "repeat on" for, with the badge's rule for its state (`due_soon` within 30 days, `overdue`, `no_date` with no "repeat on"). A dose a later one replaced (its reminder closed) is an old dose, shown in grey without its "repeat on". |

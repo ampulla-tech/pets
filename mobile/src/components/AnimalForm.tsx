@@ -1,8 +1,9 @@
 import type { AnimalIn, AnimalOut } from "@pets/core/api/generated";
+import { NO_BREED, SPECIES_LABEL } from "@pets/core/domain";
 import { strings } from "@pets/core/strings";
 import { Image } from "expo-image";
 import { useState } from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { FilePicker } from "@/components/FilePicker";
 import { Button } from "@/components/ui/button";
@@ -117,8 +118,8 @@ export function AnimalForm({
           onChange={setSpecies}
           disabled={speciesLocked}
           options={[
-            { value: "dog", label: "Cão" },
-            { value: "cat", label: "Gato" },
+            { value: "dog", label: SPECIES_LABEL.dog },
+            { value: "cat", label: SPECIES_LABEL.cat },
           ]}
         />
       </Field>
@@ -133,6 +134,14 @@ export function AnimalForm({
       </Field>
       <Field label={strings.animal.breed} optional>
         <Input testID="breed" value={breed} onChangeText={setBreed} />
+        <Pressable
+          role="button"
+          testID="no-breed"
+          onPress={() => setBreed(NO_BREED)}
+          className="self-start rounded-full border border-border bg-card px-3 py-1.5 active:opacity-70"
+        >
+          <Text className="text-sm">{strings.animal.noBreed}</Text>
+        </Pressable>
       </Field>
       <Field label={strings.animal.sex} optional>
         <Segmented

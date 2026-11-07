@@ -1,18 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Archive,
   Camera,
   ChevronRight,
-  ClipboardList,
   IdCard,
   MoreVertical,
-  NotebookPen,
   Pencil,
   Plus,
   Scale,
-  ShieldPlus,
   Syringe,
   Trash2,
   Users,
@@ -20,31 +17,30 @@ import {
 import { archiveAnimal, deleteAnimal } from "@pets/core/api/generated";
 import { listAnimalRemindersOptions } from "@pets/core/api/query";
 import {
+  animalLine,
   ARCHIVE_REASON_LABEL,
-  badgeText,
-  formatAge,
   formatBirth,
   formatDate,
-  formatKg,
   groupReminders,
   groupTitle,
-  RECORD_KIND_LABEL,
+  ofAnimal,
   type ReminderGroup,
   reminderText,
   reminderTone,
   SEX_LABEL,
-  SPECIES_LABEL,
   todayIso,
 } from "@pets/core/domain";
 import { strings } from "@pets/core/strings";
 import { AnimalAvatar } from "@/components/AnimalAvatar";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { ChoiceGroup, Field } from "@/components/Field";
-import { EmptyText, ErrorState, Loading, Notice } from "@/components/Feedback";
+import { ErrorState, Loading, Notice } from "@/components/Feedback";
 import { Page, Section } from "@/components/Page";
-import { RecordItem } from "@/components/RecordItem";
+import { RegisterSheet } from "@/components/RegisterSheet";
+import { TutorsSheet } from "@/components/TutorsSheet";
 import { StatusBadge } from "@/components/StatusBadge";
-import { WeightChart } from "@/components/WeightChart";
+import { WeightCard } from "@/components/WeightCard";
+import { DashedBox } from "@/components/DashedBox";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -60,14 +56,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import {
-  canWrite,
-  isTutor,
-  refreshAll,
-  useAnimal,
-  useCatalog,
-  useRecords,
-} from "@/lib/queries";
+import { canWrite, isTutor, refreshAll, useAnimal, useRecords } from "@/lib/queries";
 import {
   editRecordPath,
   newRecordPath,
@@ -77,7 +66,8 @@ import {
 
 const S = strings.animal;
 // The action grid's buttons wrap a long label instead of overflowing a phone.
-const ACTION = "h-auto min-h-11 whitespace-normal py-2 text-center leading-tight";
+const ACTION =
+  "h-auto min-h-12 whitespace-normal rounded-2xl bg-card py-2 text-center font-semibold leading-tight";
 
 export function AnimalProfile() {
   const { id = "" } = useParams();
@@ -104,34 +94,22 @@ function Profile({ animal }: { animal: AnimalOut }) {
   const reminders = useQuery(
     listAnimalRemindersOptions({ path: { animal_id: animal.id } }),
   );
-  const catalog = useCatalog();
   const [params] = useSearchParams();
   const location = useLocation();
   const subject = params.get("assunto");
   // The reminder the person tapped; until then, the one a notice pointed at.
   const [picked, setPicked] = useState<string | null>(null);
-  const [recordPicker, setRecordPicker] = useState(false);
+  const [registering, setRegistering] = useState(false);
+  const [tutorsOpen, setTutorsOpen] = useState(false);
   const [archiving, setArchiving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const tutor = isTutor(animal);
   const active = canWrite(animal);
-  const badge = badgeText(animal.badge);
   // A screen that opened the animal can say where back leads (Avisos does).
   const from = (location.state as { back?: string } | null)?.back;
   const back = from ?? (active ? "/" : "/arquivados");
-
-  const labels = useMemo(() => {
-    const map: Record<string, string> = {};
-    for (const entry of [
-      ...(catalog.data?.dog ?? []),
-      ...(catalog.data?.cat ?? []),
-      ...(catalog.data?.parasites ?? []),
-    ])
-      map[entry.code] = entry.label;
-    return map;
-  }, [catalog.data]);
 
   const weights = useMemo(
     () =>
@@ -194,30 +172,29 @@ function Profile({ animal }: { animal: AnimalOut }) {
   ) : null;
 
   return (
-    <Page title={animal.name} back={back} actions={menu}>
-      <div className="flex items-center gap-4">
-        <AnimalAvatar
-          name={animal.name}
-          species={animal.species}
-          photoUrl={animal.photo_url}
-          className="size-20 rounded-3xl"
-        />
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-2xl font-semibold tracking-tight">{animal.name}</p>
-          <p className="text-sm text-muted-foreground">
-            {[SPECIES_LABEL[animal.species], animal.breed].filter(Boolean).join(" · ")}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {formatAge(animal.age) ?? formatBirth(animal.birth)}
-          </p>
-          {badge && active ? (
-            <StatusBadge tone={badge.tone} className="mt-1.5">
-              {badge.text}
-            </StatusBadge>
-          ) : null}
-        </div>
-      </div>
-
+    <Page
+      title={
+        <span className="flex min-w-0 items-center gap-2.5">
+          <AnimalAvatar
+            name={animal.name}
+            species={animal.species}
+            photoUrl={animal.photo_url}
+            initial
+            className="size-9 rounded-xl text-[0.95rem]"
+          />
+          <span className="flex min-w-0 flex-col">
+            <span className="truncate text-base leading-tight font-semibold">
+              {animal.name}
+            </span>
+            <span className="truncate text-xs leading-tight font-normal tracking-normal text-muted-foreground">
+              {animalLine(animal)}
+            </span>
+          </span>
+        </span>
+      }
+      back={back}
+      actions={menu}
+    >
       {!active ? (
         <Notice tone="warn">
           {animal.archived_reason
@@ -230,35 +207,15 @@ function Profile({ animal }: { animal: AnimalOut }) {
       ) : null}
 
       <div className="grid grid-cols-2 gap-2">
-        {active && tutor ? (
-          <>
-            <Button size="xl" className={ACTION} onClick={() => setRecordPicker(true)}>
-              <Plus />
-              {S.addRecord}
-            </Button>
-            <Button asChild size="xl" variant="secondary" className={ACTION}>
-              <Link to={`/animais/${animal.id}/foto`}>
-                <Camera />
-                {S.addByPhoto}
-              </Link>
-            </Button>
-          </>
-        ) : null}
-        {active && !tutor ? (
-          <>
-            <Button asChild size="xl" className={ACTION}>
-              <Link to={newRecordPath(animal.id, "weight")}>
-                <Scale />
-                {S.registerWeight}
-              </Link>
-            </Button>
-            <Button asChild size="xl" variant="secondary" className={ACTION}>
-              <Link to={newRecordPath(animal.id, "note")}>
-                <NotebookPen />
-                {S.registerNote}
-              </Link>
-            </Button>
-          </>
+        {active ? (
+          <Button
+            size="xl"
+            className="col-span-2 h-12 rounded-2xl text-[0.95rem] font-semibold"
+            onClick={() => setRegistering(true)}
+          >
+            <Plus />
+            {S.addRecord}
+          </Button>
         ) : null}
         <Button asChild size="xl" variant="outline" className={ACTION}>
           <Link to={`/animais/${animal.id}/carteirinha`}>
@@ -266,55 +223,87 @@ function Profile({ animal }: { animal: AnimalOut }) {
             {S.card}
           </Link>
         </Button>
-        <Button asChild size="xl" variant="outline" className={ACTION}>
-          <Link to={`/animais/${animal.id}/pessoas`}>
+        {tutor ? (
+          <Button asChild size="xl" variant="outline" className={ACTION}>
+            <Link to={`/animais/${animal.id}/pessoas`}>
+              <Users />
+              {S.people}
+            </Link>
+          </Button>
+        ) : (
+          <Button
+            size="xl"
+            variant="outline"
+            className={ACTION}
+            onClick={() => setTutorsOpen(true)}
+          >
             <Users />
-            {S.people}
-          </Link>
-        </Button>
+            {S.tutors}
+          </Button>
+        )}
       </div>
 
-      <Section title={S.reminders} id="reminders">
-        {reminders.isPending ? null : shown.length === 0 ? (
-          <EmptyText>{S.remindersEmpty}</EmptyText>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {shown.map((group) => (
-              <ReminderRow
-                key={group.key}
-                group={group}
-                brand={brandOf(group.first.record_id)}
-                highlighted={
-                  picked !== null
-                    ? group.key === picked
-                    : subject !== null && group.subjects.includes(subject)
+      {records.isPending ? null : (records.data ?? []).length === 0 ? (
+        <NothingYet animal={animal} />
+      ) : (
+        <>
+          <Section title={S.reminders} id="reminders">
+            {reminders.isPending ? null : shown.length === 0 ? (
+              <DashedBox
+                action={
+                  active && tutor ? (
+                    <HintButton to={newRecordPath(animal.id, "vaccine")} icon={Syringe}>
+                      {S.registerVaccine}
+                    </HintButton>
+                  ) : null
                 }
-                scrollTo={picked === null && subject !== null && group.subjects.includes(subject)}
-                onPick={() => setPicked(picked === group.key ? "" : group.key)}
-                writable={active && tutor}
-              />
-            ))}
-          </ul>
-        )}
-      </Section>
+              >
+                {S.remindersEmpty}
+              </DashedBox>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {shown.map((group) => (
+                  <ReminderRow
+                    key={group.key}
+                    group={group}
+                    brand={brandOf(group.first.record_id)}
+                    highlighted={
+                      picked !== null
+                        ? group.key === picked
+                        : subject !== null && group.subjects.includes(subject)
+                    }
+                    scrollTo={
+                      picked === null &&
+                      subject !== null &&
+                      group.subjects.includes(subject)
+                    }
+                    onPick={() => setPicked(picked === group.key ? "" : group.key)}
+                    writable={active && tutor}
+                  />
+                ))}
+              </ul>
+            )}
+          </Section>
 
-      <Section title={S.lastWeight} id="weight">
-        {animal.last_weight ? (
-          <div className="flex flex-col gap-3">
-            <div className="flex items-baseline justify-between rounded-2xl border bg-card px-4 py-3">
-              <span className="text-2xl font-semibold">
-                {formatKg(animal.last_weight.kg)}
-              </span>
-              <span className="text-sm text-muted-foreground">
-                {formatDate(animal.last_weight.date)}
-              </span>
-            </div>
-            <WeightChart points={weights} />
-          </div>
-        ) : (
-          <EmptyText>{S.noWeight}</EmptyText>
-        )}
-      </Section>
+          <Section title={S.lastWeight} id="weight">
+            {animal.last_weight ? (
+              <WeightCard kg={animal.last_weight.kg} weighings={weights} />
+            ) : (
+              <DashedBox
+                action={
+                  active ? (
+                    <HintButton to={newRecordPath(animal.id, "weight")} icon={Plus}>
+                      {S.registerWeight}
+                    </HintButton>
+                  ) : null
+                }
+              >
+                {S.noWeight}
+              </DashedBox>
+            )}
+          </Section>
+        </>
+      )}
 
       <Section title={S.profile} id="profile">
         <dl className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-2xl border bg-card p-4 text-sm">
@@ -336,33 +325,17 @@ function Profile({ animal }: { animal: AnimalOut }) {
         </dl>
       </Section>
 
-      <Section title={S.history} id="history">
-        {records.isPending ? (
-          <Loading />
-        ) : records.isError ? (
-          <ErrorState onRetry={() => void records.refetch()} />
-        ) : records.data.length === 0 ? (
-          <EmptyText>{S.historyEmpty}</EmptyText>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {records.data.map((record) => (
-              <li key={record.id}>
-                <RecordItem
-                  animalId={animal.id}
-                  record={record}
-                  labels={labels}
-                  editable={active && record.can_edit}
-                />
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
-
-      <RecordPicker
-        animalId={animal.id}
-        open={recordPicker}
-        onOpenChange={setRecordPicker}
+      {!tutor ? (
+        <TutorsSheet
+          animal={animal}
+          open={tutorsOpen}
+          onClose={() => setTutorsOpen(false)}
+        />
+      ) : null}
+      <RegisterSheet
+        animal={animal}
+        open={registering}
+        onClose={() => setRegistering(false)}
       />
       {archiving ? (
         <ArchiveDialog animal={animal} onClose={() => setArchiving(false)} />
@@ -378,6 +351,62 @@ function Profile({ animal }: { animal: AnimalOut }) {
         onConfirm={() => void onDelete()}
       />
     </Page>
+  );
+}
+
+/** The button of an empty section, centred below its text. */
+function HintButton({
+  to,
+  icon: Icon,
+  children,
+}: {
+  to: string;
+  icon: typeof Plus;
+  children: ReactNode;
+}) {
+  return (
+    <Link
+      to={to}
+      className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-2.5 py-1.5 text-sm font-semibold whitespace-nowrap text-primary hover:bg-accent/80"
+    >
+      <Icon className="size-4" aria-hidden />
+      {children}
+    </Link>
+  );
+}
+
+/**
+ * An animal with nothing recorded: one block in the place of the reminders and
+ * the weight, with the first step its viewer can take as the button.
+ */
+function NothingYet({ animal }: { animal: AnimalOut }) {
+  const tutor = isTutor(animal);
+  const active = canWrite(animal);
+  return (
+    <div className="flex flex-col items-center gap-2 px-5 py-6 text-center">
+      <span className="mb-1 flex size-16 items-center justify-center rounded-full bg-accent text-primary">
+        <IdCard className="size-7" aria-hidden />
+      </span>
+      <p className="font-semibold">{S.nothingYet}</p>
+      <p className="text-sm text-muted-foreground">
+        {tutor ? S.nothingYetTutor(ofAnimal(animal)) : S.nothingYetGuest}
+      </p>
+      {active ? (
+        <Button asChild size="xl" className="mt-2">
+          {tutor ? (
+            <Link to={`/animais/${animal.id}/foto`}>
+              <Camera />
+              {S.readPhotos}
+            </Link>
+          ) : (
+            <Link to={newRecordPath(animal.id, "weight")}>
+              <Scale />
+              {S.registerWeight}
+            </Link>
+          )}
+        </Button>
+      ) : null}
+    </div>
   );
 }
 
@@ -412,8 +441,7 @@ function ReminderRow({
   const { title, detail } = groupTitle(group, brand);
   const [node, setNode] = useState<HTMLLIElement | null>(null);
   useEffect(() => {
-    if (scrollTo && node)
-      node.scrollIntoView?.({ block: "center", behavior: "smooth" });
+    if (scrollTo && node) node.scrollIntoView?.({ block: "center", behavior: "smooth" });
   }, [scrollTo, node]);
   const tone = reminderTone(reminder.state);
   const doseKind: RecordKind = reminder.record_kind;
@@ -463,55 +491,6 @@ function ReminderRow({
         </Button>
       ) : null}
     </li>
-  );
-}
-
-const KIND_ICON = {
-  vaccine: Syringe,
-  antiparasitic: ShieldPlus,
-  weight: Scale,
-  note: NotebookPen,
-  visit: ClipboardList,
-} as const;
-
-function RecordPicker({
-  animalId,
-  open,
-  onOpenChange,
-}: {
-  animalId: string;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  const kinds: RecordKind[] = ["vaccine", "antiparasitic", "weight", "note", "visit"];
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent closeLabel={strings.app.close}>
-        <DialogHeader>
-          <DialogTitle>{S.whatToRecord}</DialogTitle>
-        </DialogHeader>
-        <ul className="flex flex-col gap-2">
-          {kinds.map((kind) => {
-            const Icon = KIND_ICON[kind];
-            return (
-              <li key={kind}>
-                <Link
-                  to={newRecordPath(animalId, kind)}
-                  className="flex items-center gap-3 rounded-xl border bg-card px-4 py-3 font-medium hover:bg-muted"
-                >
-                  <Icon className="size-5 text-primary" aria-hidden />
-                  {RECORD_KIND_LABEL[kind]}
-                  <ChevronRight
-                    className="ml-auto size-4 text-muted-foreground"
-                    aria-hidden
-                  />
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </DialogContent>
-    </Dialog>
   );
 }
 
