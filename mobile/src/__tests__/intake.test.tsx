@@ -112,7 +112,16 @@ describe("photo intake", () => {
     expect(screen.getByText(strings.records.repeatInferred)).toBeTruthy();
     expect(api.callsTo("POST /extractions/ex1/proposals/0/confirm")).toHaveLength(0);
 
+    // What was not read and is required stops the line until it is typed.
+    await fireEvent.press(screen.getByTestId("confirm-1"));
+    expect(screen.getByText(strings.records.lotRequired)).toBeTruthy();
+    expect(screen.getByText(strings.records.crmvRequired)).toBeTruthy();
+    expect(api.callsTo("POST /extractions/ex1/proposals/0/confirm")).toHaveLength(0);
+
     await fireEvent.changeText(screen.getByTestId("lot-1"), "L77");
+    await fireEvent.changeText(screen.getByTestId("lot-expiry-1"), "082027");
+    await fireEvent.changeText(screen.getByTestId("vet-1"), "Dra. Ana");
+    await fireEvent.changeText(screen.getByTestId("crmv-1"), "SP-9");
     await fireEvent.press(screen.getByTestId("confirm-1"));
     await waitFor(() => expect(api.callsTo("POST /extractions/ex1/proposals/0/confirm")).toHaveLength(1));
     expect(api.callsTo("POST /extractions/ex1/proposals/0/confirm")[0].body).toEqual({
@@ -122,11 +131,11 @@ describe("photo intake", () => {
         diseases: ["rabies"],
         brand: "Quantum",
         lot: "L77",
-        lot_expiry: "",
+        lot_expiry: "2027-08",
         repeat_on: "2026-11-06",
         repeat_on_origin: "inferred",
-        vet_name: "",
-        vet_crmv: "",
+        vet_name: "Dra. Ana",
+        vet_crmv: "SP-9",
       },
     });
 

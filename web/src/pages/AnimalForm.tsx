@@ -222,6 +222,7 @@ function AnimalFormBody({ animal }: { animal?: AnimalOut }) {
           render={({ field }) => (
             <ChoiceGroup
               label={S.species}
+              required
               name="species"
               value={field.value}
               onChange={field.onChange}
@@ -232,13 +233,13 @@ function AnimalFormBody({ animal }: { animal?: AnimalOut }) {
             />
           )}
         />
-        <Field label={S.name} error={errors.name?.message}>
+        <Field label={S.name} required error={errors.name?.message}>
           {(control) => (
             <Input {...control} autoComplete="off" {...form.register("name")} />
           )}
         </Field>
         <div className="flex flex-col gap-2">
-          <Field label={S.breed} optional>
+          <Field label={S.breed}>
             {(control) => <Input {...control} {...form.register("breed")} />}
           </Field>
           <button
@@ -283,10 +284,10 @@ function AnimalFormBody({ animal }: { animal?: AnimalOut }) {
             />
           )}
         />
-        <Field label={S.coat} optional>
+        <Field label={S.coat}>
           {(control) => <Input {...control} {...form.register("coat")} />}
         </Field>
-        <Field label={S.microchip} optional>
+        <Field label={S.microchip}>
           {(control) => (
             <Input {...control} inputMode="numeric" {...form.register("microchip")} />
           )}
@@ -299,6 +300,7 @@ function AnimalFormBody({ animal }: { animal?: AnimalOut }) {
             render={({ field }) => (
               <ChoiceGroup
                 label={S.birth}
+                required
                 name="birthPrecision"
                 value={field.value}
                 onChange={(next) => {
@@ -316,13 +318,13 @@ function AnimalFormBody({ animal }: { animal?: AnimalOut }) {
             )}
           />
           {precision === "exact" ? (
-            <Field label={S.birthExact} error={errors.birthValue?.message}>
+            <Field label={S.birthExact} required error={errors.birthValue?.message}>
               {(control) => (
                 <Input {...control} type="date" {...form.register("birthValue")} />
               )}
             </Field>
           ) : precision === "month" ? (
-            <Field label={S.birthMonth} error={errors.birthValue?.message}>
+            <Field label={S.birthMonth} required error={errors.birthValue?.message}>
               {(control) => (
                 <Input
                   {...control}
@@ -333,7 +335,7 @@ function AnimalFormBody({ animal }: { animal?: AnimalOut }) {
               )}
             </Field>
           ) : precision === "year" ? (
-            <Field label={S.birthYear} error={errors.birthValue?.message}>
+            <Field label={S.birthYear} required error={errors.birthValue?.message}>
               {(control) => (
                 <Input
                   {...control}
@@ -347,7 +349,7 @@ function AnimalFormBody({ animal }: { animal?: AnimalOut }) {
           ) : null}
         </div>
 
-        <Field label={S.adoptedOn} optional>
+        <Field label={S.adoptedOn}>
           {(control) => (
             <Input {...control} type="date" {...form.register("adoptedOn")} />
           )}

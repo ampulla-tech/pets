@@ -113,12 +113,58 @@ describe("vaccine", () => {
     expect(
       (screen.getByRole("checkbox", { name: "Cinomose" }) as HTMLInputElement).checked,
     ).toBe(true);
+    // And they are asked for before the dose is saved.
+    await user.click(screen.getByRole("button", { name: "Salvar" }));
+    expect(await screen.findByText("Informe a partida.")).toBeTruthy();
+    expect(api.to("POST /animals/d1/vaccines")).toHaveLength(0);
+    await user.type(screen.getByLabelText("Partida"), "B12");
+    fireEvent.change(screen.getByLabelText("Vencimento do lote"), {
+      target: { value: "2027-11" },
+    });
+    await user.type(screen.getByLabelText("Veterinário"), "Dra. Ana");
+    await user.type(screen.getByLabelText("CRMV"), "CRMV-SC 1");
     await user.click(screen.getByRole("button", { name: "Salvar" }));
     await waitFor(() => expect(api.to("POST /animals/d1/vaccines")).toHaveLength(1));
     expect(api.to("POST /animals/d1/vaccines")[0].json).toMatchObject({
       brand: "Vanguard Plus",
       diseases: ["distemper", "parvovirus"],
+      lot: "B12",
+      lot_expiry: "2027-11",
     });
+  });
+
+  it("does not save without the label and the stamp, and says what each one lacks", async () => {
+    const api = mockApi(animalRoutes(cat));
+    const { user } = renderApp("/animais/a1/registrar/vacina?assunto=rabies");
+    await screen.findByRole("group", { name: "Contra o quê" });
+    await user.type(screen.getByLabelText("Partida"), "   ");
+    await user.click(screen.getByRole("button", { name: "Salvar" }));
+    for (const [label, message] of [
+      ["Marca / produto", "Informe a marca."],
+      ["Partida", "Informe a partida."],
+      ["Vencimento do lote", "Informe o vencimento."],
+      ["Veterinário", "Informe o veterinário."],
+      ["CRMV", "Informe o CRMV."],
+    ]) {
+      const control = screen.getByLabelText(label);
+      expect(control.getAttribute("aria-invalid")).toBe("true");
+      const described = control.getAttribute("aria-describedby")!;
+      expect(document.getElementById(described)!.textContent).toBe(message);
+    }
+    expect(api.to("POST /animals/a1/vaccines")).toHaveLength(0);
+  });
+
+  it("asks an old dose saved without them to be completed on edit", async () => {
+    const record = vaccine({ brand: "", lot: "", lot_expiry: "", vet_name: "", vet_crmv: "" });
+    const api = mockApi({
+      ...animalRoutes(cat, [record]),
+      "PUT /animals/a1/vaccines/v1": record,
+    });
+    const { user } = renderApp("/animais/a1/registros/v1");
+    await user.click(await screen.findByRole("button", { name: "Salvar" }));
+    expect(await screen.findByText("Informe a marca.")).toBeTruthy();
+    expect(screen.getByText("Informe o CRMV.")).toBeTruthy();
+    expect(api.to("PUT /animals/a1/vaccines/v1")).toHaveLength(0);
   });
 
   it("edits a vaccine and keeps an inferred repeat date inferred", async () => {
@@ -145,7 +191,7 @@ describe("vaccine", () => {
     });
   });
 
-  it("edits a vaccine and empties its lot expiry", async () => {
+  it("edits a vaccine and cannot empty its lot expiry", async () => {
     const record = vaccine();
     const api = mockApi({
       ...animalRoutes(cat, [record]),
@@ -155,8 +201,8 @@ describe("vaccine", () => {
     const expiry = (await screen.findByLabelText(/Vencimento do lote/)) as HTMLInputElement;
     fireEvent.change(expiry, { target: { value: "" } });
     await user.click(screen.getByRole("button", { name: "Salvar" }));
-    await waitFor(() => expect(api.to("PUT /animals/a1/vaccines/v1")).toHaveLength(1));
-    expect(api.to("PUT /animals/a1/vaccines/v1")[0].json).toMatchObject({ lot_expiry: "" });
+    expect(await screen.findByText("Informe o vencimento.")).toBeTruthy();
+    expect(api.to("PUT /animals/a1/vaccines/v1")).toHaveLength(0);
   });
 
   it("deletes a vaccine after confirming", async () => {

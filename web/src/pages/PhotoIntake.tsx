@@ -19,7 +19,7 @@ import {
   RECORD_KIND_LABEL,
 } from "@pets/core/domain";
 import { strings } from "@pets/core/strings";
-import { ChoiceGroup, Field } from "@/components/Field";
+import { ChoiceGroup, Field, Legend } from "@/components/Field";
 import { ErrorState, Loading, Notice } from "@/components/Feedback";
 import { Page } from "@/components/Page";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -389,12 +389,16 @@ function ProposalCard({
     if (!draft.date) next.date = R.dateRequired;
     if (proposal.kind === "vaccine" && !draft.diseases.length)
       next.diseases = R.diseasesRequired;
-    if (
-      proposal.kind === "vaccine" &&
-      draft.lotExpiry.trim() &&
-      !monthValue(draft.lotExpiry)
-    )
-      next.lotExpiry = R.monthInvalid;
+    if (proposal.kind === "vaccine") {
+      // The label and the stamp of the paper card (ADR-0011): what the
+      // reading left unread, the tutor types before confirming.
+      if (!draft.brand.trim()) next.brand = R.brandRequired;
+      if (!draft.lot.trim()) next.lot = R.lotRequired;
+      if (!draft.lotExpiry.trim()) next.lotExpiry = R.lotExpiryRequired;
+      else if (!monthValue(draft.lotExpiry)) next.lotExpiry = R.monthInvalid;
+      if (!draft.vetName.trim()) next.vetName = R.vetRequired;
+      if (!draft.vetCrmv.trim()) next.vetCrmv = R.crmvRequired;
+    }
     if (proposal.kind === "antiparasitic" && !draft.parasite)
       next.parasite = strings.app.required;
     if (proposal.kind === "weight" && !parseKg(draft.kg)) next.kg = R.kgInvalid;
@@ -414,7 +418,7 @@ function ProposalCard({
         date: draft.date,
         brand: draft.brand.trim(),
         lot: draft.lot.trim(),
-        lot_expiry: draft.lotExpiry.trim() ? (monthValue(draft.lotExpiry) ?? "") : "",
+        lot_expiry: monthValue(draft.lotExpiry) ?? "",
         diseases: draft.diseases as VaccineIn["diseases"],
         vet_name: draft.vetName.trim(),
         vet_crmv: draft.vetCrmv.trim(),
@@ -474,7 +478,7 @@ function ProposalCard({
     label: string,
     field: { read: boolean },
   ) => (
-    <Field label={label} error={errors[key]}>
+    <Field label={label} required={proposal.kind === "vaccine"} error={errors[key]}>
       {(control) => (
         <>
           <Input
@@ -494,7 +498,7 @@ function ProposalCard({
       className="flex flex-col gap-4 rounded-2xl border bg-card p-4"
     >
       <h3 className="font-semibold">{title}</h3>
-      <Field label={R.date} error={errors.date}>
+      <Field label={R.date} required error={errors.date}>
         {(control) => (
           <>
             <Input
@@ -511,7 +515,7 @@ function ProposalCard({
       {proposal.kind === "vaccine" ? (
         <>
           <fieldset className="flex flex-col gap-2">
-            <legend className="mb-1.5 text-sm font-medium">{R.diseases}</legend>
+            <Legend required>{R.diseases}</Legend>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {(catalog.data?.[animal.species] ?? []).map((disease) => (
                 <label
@@ -543,7 +547,7 @@ function ProposalCard({
           {text("brand", R.brand, proposal.brand)}
           <div className="grid grid-cols-2 gap-3">
             {text("lot", R.lot, proposal.lot)}
-            <Field label={R.lotExpiry} error={errors.lotExpiry}>
+            <Field label={R.lotExpiry} required error={errors.lotExpiry}>
               {(control) => (
                 <>
                   {/* A picker on phones; plain text, typed "09/2027", where the
@@ -567,6 +571,7 @@ function ProposalCard({
         <>
           <ChoiceGroup
             label={R.parasite}
+            required
             name={`parasite-${proposal.index}`}
             value={draft.parasite || undefined}
             onChange={(v) => set("parasite", v)}
@@ -582,7 +587,7 @@ function ProposalCard({
       ) : null}
 
       {proposal.kind === "weight" ? (
-        <Field label={R.weightKg} error={errors.kg}>
+        <Field label={R.weightKg} required error={errors.kg}>
           {(control) => (
             <>
               <Input

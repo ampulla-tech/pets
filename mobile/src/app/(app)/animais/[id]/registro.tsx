@@ -180,15 +180,20 @@ function RecordForm({
     let body: Record<string, unknown> = { date };
     if (kind === "vaccine") {
       const expiry = readMonth(v("lot_expiry"));
-      const unchangedExpiry = record?.kind === "vaccine" && v("lot_expiry") === formatMonth(record.lot_expiry);
       found.diseases = diseases.length ? null : strings.records.diseasesRequired;
-      found.lot_expiry = expiry === false && !unchangedExpiry ? strings.records.monthInvalid : null;
+      // The label and the stamp of the paper card (ADR-0011).
+      found.brand = v("brand").trim() ? null : strings.records.brandRequired;
+      found.lot = v("lot").trim() ? null : strings.records.lotRequired;
+      found.lot_expiry =
+        expiry === null ? strings.records.lotExpiryRequired : expiry === false ? strings.records.monthInvalid : null;
+      found.vet_name = v("vet_name").trim() ? null : strings.records.vetRequired;
+      found.vet_crmv = v("vet_crmv").trim() ? null : strings.records.crmvRequired;
       body = {
         ...body,
         diseases,
         brand: v("brand").trim(),
         lot: v("lot").trim(),
-        lot_expiry: unchangedExpiry && record?.kind === "vaccine" ? record.lot_expiry : expiry || "",
+        lot_expiry: expiry || "",
         repeat_on: repeatOn || null,
         repeat_on_origin: originOf(repeatOn || null),
         vet_name: v("vet_name").trim(),
@@ -277,14 +282,13 @@ function RecordForm({
   }
 
   const date = (
-    <Field label={strings.records.date} error={errors.date}>
+    <Field label={strings.records.date} required error={errors.date}>
       <DateInput testID="date" value={v("date")} onChange={set("date")} invalid={!!errors.date} />
     </Field>
   );
   const repeatOn = (
     <Field
       label={strings.records.repeatOn}
-      optional
       error={errors.repeat_on}
       hint={
         record && "repeat_on_origin" in record && record.repeat_on_origin === "inferred" && v("repeat_on") === dayText(record.repeat_on)
@@ -297,8 +301,8 @@ function RecordForm({
       <DateInput testID="repeat-on" value={v("repeat_on")} onChange={set("repeat_on")} invalid={!!errors.repeat_on} />
     </Field>
   );
-  const text = (name: string, label: string, opts: { optional?: boolean; multiline?: boolean } = { optional: true }) => (
-    <Field label={label} optional={opts.optional} error={errors[name]}>
+  const text = (name: string, label: string, opts: { required?: boolean; multiline?: boolean } = {}) => (
+    <Field label={label} required={opts.required} error={errors[name]}>
       <Input testID={name} value={v(name)} onChangeText={set(name)} multiline={opts.multiline} invalid={!!errors[name]} />
     </Field>
   );
@@ -312,7 +316,7 @@ function RecordForm({
         {date}
         {kind === "vaccine" ? (
           <>
-            <Field label={strings.records.diseases} error={errors.diseases}>
+            <Field label={strings.records.diseases} required error={errors.diseases}>
               {catalog.isPending ? <Loading /> : null}
               {pickDiseases ? (
                 <MultiSelect
@@ -339,19 +343,19 @@ function RecordForm({
                 </View>
               )}
             </Field>
-            {text("brand", strings.records.brand)}
-            {text("lot", strings.records.lot)}
-            <Field label={strings.records.lotExpiry} optional error={errors.lot_expiry}>
+            {text("brand", strings.records.brand, { required: true })}
+            {text("lot", strings.records.lot, { required: true })}
+            <Field label={strings.records.lotExpiry} required error={errors.lot_expiry}>
               <MonthInput testID="lot-expiry" value={v("lot_expiry")} onChange={set("lot_expiry")} invalid={!!errors.lot_expiry} />
             </Field>
             {repeatOn}
-            {text("vet_name", strings.records.vet)}
-            {text("vet_crmv", strings.records.crmv)}
+            {text("vet_name", strings.records.vet, { required: true })}
+            {text("vet_crmv", strings.records.crmv, { required: true })}
           </>
         ) : null}
         {kind === "antiparasitic" ? (
           <>
-            <Field label={strings.records.parasite}>
+            <Field label={strings.records.parasite} required>
               <Segmented
                 testID="parasite"
                 value={parasite}
@@ -372,21 +376,21 @@ function RecordForm({
           </>
         ) : null}
         {kind === "weight" ? (
-          <Field label={strings.records.weightKg} error={errors.kg}>
+          <Field label={strings.records.weightKg} required error={errors.kg}>
             <Input testID="kg" value={v("kg")} onChangeText={set("kg")} keyboardType="decimal-pad" invalid={!!errors.kg} />
           </Field>
         ) : null}
-        {kind === "note" ? text("text", strings.records.text, { multiline: true }) : null}
+        {kind === "note" ? text("text", strings.records.text, { required: true, multiline: true }) : null}
         {kind === "visit" ? (
           <>
             {text("clinic", strings.records.clinic)}
             {text("vet_name", strings.records.vet)}
             {text("reason", strings.records.reason)}
-            {text("notes", strings.records.notes, { optional: true, multiline: true })}
+            {text("notes", strings.records.notes, { multiline: true })}
           </>
         ) : null}
         {attachable ? (
-          <Field label={kind === "visit" ? strings.records.attachments : strings.records.photo} optional>
+          <Field label={kind === "visit" ? strings.records.attachments : strings.records.photo}>
             {presetAttachments.length ? <Notice>{strings.records.fromPhoto}</Notice> : null}
             <FilePicker
               files={files}

@@ -986,7 +986,7 @@ export type VaccineConfirm = {
   /**
    * Brand
    */
-  brand?: string;
+  brand: string;
   /**
    * Date
    */
@@ -1019,11 +1019,11 @@ export type VaccineConfirm = {
   /**
    * Lot
    */
-  lot?: string;
+  lot: string;
   /**
    * Lot Expiry
    */
-  lot_expiry?: string;
+  lot_expiry: string;
   /**
    * Repeat On
    */
@@ -1035,11 +1035,11 @@ export type VaccineConfirm = {
   /**
    * Vet Crmv
    */
-  vet_crmv?: string;
+  vet_crmv: string;
   /**
    * Vet Name
    */
-  vet_name?: string;
+  vet_name: string;
 };
 
 /**
@@ -1053,7 +1053,7 @@ export type VaccineIn = {
   /**
    * Brand
    */
-  brand?: string;
+  brand: string;
   /**
    * Date
    */
@@ -1082,11 +1082,11 @@ export type VaccineIn = {
   /**
    * Lot
    */
-  lot?: string;
+  lot: string;
   /**
    * Lot Expiry
    */
-  lot_expiry?: string;
+  lot_expiry: string;
   /**
    * Repeat On
    */
@@ -1098,11 +1098,11 @@ export type VaccineIn = {
   /**
    * Vet Crmv
    */
-  vet_crmv?: string;
+  vet_crmv: string;
   /**
    * Vet Name
    */
-  vet_name?: string;
+  vet_name: string;
 };
 
 /**

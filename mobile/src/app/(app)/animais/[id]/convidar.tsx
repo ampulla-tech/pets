@@ -81,7 +81,7 @@ export default function InviteScreen() {
 
   return (
     <Screen>
-      <Field label={strings.people.role}>
+      <Field label={strings.people.role} required>
         <Segmented
           testID="role"
           value={role}
@@ -94,7 +94,7 @@ export default function InviteScreen() {
         <Muted>{role === "tutor" ? strings.people.tutorHint : strings.people.guestHint}</Muted>
       </Field>
       {role === "guest" ? (
-        <Field label={strings.people.endsOn} optional hint={strings.people.endsOnHint} error={error}>
+        <Field label={strings.people.endsOn} hint={strings.people.endsOnHint} error={error}>
           <DateInput testID="ends-on" value={endsOn} onChange={setEndsOn} invalid={!!error} />
         </Field>
       ) : error ? (

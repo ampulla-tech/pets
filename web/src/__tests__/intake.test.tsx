@@ -151,6 +151,12 @@ describe("photo intake", () => {
         })) as HTMLInputElement
       ).checked,
     ).toBe(true);
+    // What was not read and is required stops the line until it is typed.
+    await user.click(within(line).getByRole("button", { name: "Confirmar" }));
+    expect(await within(line).findByText("Informe a partida.")).toBeTruthy();
+    expect(within(line).getByText("Informe o veterinário.")).toBeTruthy();
+    expect(api.to("POST /extractions/x1/proposals/0/confirm")).toHaveLength(0);
+    await user.type(within(line).getByLabelText("Partida"), "011/25");
     await user.type(within(line).getByLabelText("Veterinário"), "Dra. Exemplo");
     await user.click(within(line).getByRole("button", { name: "Confirmar" }));
     await waitFor(() =>
@@ -161,7 +167,7 @@ describe("photo intake", () => {
         kind: "vaccine",
         date: "2026-06-06",
         brand: "Felocell CVR-C",
-        lot: "",
+        lot: "011/25",
         lot_expiry: "2027-02",
         diseases: ["rhinotracheitis", "calicivirus", "panleukopenia"],
         vet_name: "Dra. Exemplo",
@@ -180,29 +186,48 @@ describe("photo intake", () => {
     expect(screen.getByText("Todas as linhas foram revistas.")).toBeTruthy();
   });
 
-  it.each([
-    ["an unread lot expiry, picked by the tutor", empty, "2027-05", "2027-05"],
-    ["a read lot expiry, emptied by the tutor", text("2027-02"), "", ""],
-  ])("confirms %s", async (_, read, picked, sent) => {
+  it("confirms an unread lot expiry, picked by the tutor", async () => {
     const api = mockApi({
       ...animalRoutes(animal()),
       "GET /extractions/x1": extraction({
         status: "ready",
-        proposals: [proposal({ lot_expiry: read })],
+        proposals: [
+          proposal({ lot: text("011/25"), lot_expiry: empty, vet_name: text("Dra. Ana") }),
+        ],
       }),
       "POST /extractions/x1/proposals/0/confirm": reply(201, {}),
     });
     const { user } = renderApp("/animais/a1/foto?leitura=x1");
     const line = await screen.findByRole("region", { name: "Linha 1: Vacina" });
+    await user.click(within(line).getByRole("button", { name: "Confirmar" }));
+    expect(await within(line).findByText("Informe o vencimento.")).toBeTruthy();
+    expect(api.to("POST /extractions/x1/proposals/0/confirm")).toHaveLength(0);
     fireEvent.change(within(line).getByLabelText("Vencimento do lote"), {
-      target: { value: picked },
+      target: { value: "2027-05" },
     });
     await user.click(within(line).getByRole("button", { name: "Confirmar" }));
     await waitFor(() =>
       expect(api.to("POST /extractions/x1/proposals/0/confirm")).toHaveLength(1),
     );
     expect(api.to("POST /extractions/x1/proposals/0/confirm")[0].json).toMatchObject({
-      record: { lot_expiry: sent },
+      record: { lot_expiry: "2027-05" },
     });
+  });
+
+  it("marks the five of a vaccine line as required, and not those of an antiparasitic", async () => {
+    mockApi({
+      ...animalRoutes(animal()),
+      "GET /extractions/x1": extraction({
+        status: "ready",
+        proposals: [proposal(), proposal({ index: 1, kind: "antiparasitic" })],
+      }),
+    });
+    renderApp("/animais/a1/foto?leitura=x1");
+    const line = await screen.findByRole("region", { name: "Linha 1: Vacina" });
+    for (const label of ["Marca / produto", "Partida", "Vencimento do lote", "Veterinário", "CRMV"])
+      expect(within(line).getByLabelText(label).getAttribute("aria-required")).toBe("true");
+    const other = screen.getByRole("region", { name: "Linha 2: Antiparasitário" });
+    for (const label of ["Remédio", "Dose", "Veterinário"])
+      expect(within(other).getByLabelText(label).getAttribute("aria-required")).toBeNull();
   });
 });

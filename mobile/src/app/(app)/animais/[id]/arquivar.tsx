@@ -46,7 +46,7 @@ export default function ArchiveScreen() {
     <Screen>
       {animal.data ? <Text className="text-xl font-bold">{animal.data.name}</Text> : null}
       <Notice>{strings.archive.intro}</Notice>
-      <Field label={strings.archive.reason}>
+      <Field label={strings.archive.reason} required>
         <Segmented
           testID="reason"
           value={reason}
@@ -57,7 +57,7 @@ export default function ArchiveScreen() {
           }))}
         />
       </Field>
-      <Field label={strings.archive.on} error={error}>
+      <Field label={strings.archive.on} required error={error}>
         <DateInput testID="archived-on" value={on} onChange={setOn} invalid={!!error} />
       </Field>
       <Button size="lg" label={strings.archive.confirm} busy={busy} onPress={archive} testID="confirm-archive" />

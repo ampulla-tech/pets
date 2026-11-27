@@ -1,7 +1,9 @@
 """Vaccines, antiparasitics, weights, notes and visits, by hand."""
 
-from animals.models import Attachment, Weight
-from conftest import CAT, DOG, jpeg_file, make_animal, pdf_file
+import pytest
+
+from animals.models import Attachment, Vaccine, Weight
+from conftest import CAT, DOG, LABEL, jpeg_file, make_animal, pdf_file
 
 RABMUNE = {
     "date": "2026-10-05",
@@ -48,12 +50,50 @@ def test_a_lot_expiry_that_is_not_a_month_is_refused(tutor):
         assert "lot_expiry" in str(response.json()), value
 
 
-def test_a_lot_expiry_is_a_month_or_empty(tutor):
+def test_a_lot_expiry_is_a_month(tutor):
     cat = make_animal(tutor, CAT)
-    for value in ("2027-09", "2027-12", ""):
+    for value in ("2027-09", "2027-12"):
         response = tutor.post(f"/animals/{cat['id']}/vaccines", {**RABMUNE, "lot_expiry": value})
         assert response.status_code == 201, value
         assert response.json()["lot_expiry"] == value
+
+
+REQUIRED = ["brand", "lot", "lot_expiry", "vet_name", "vet_crmv"]
+
+
+@pytest.mark.parametrize("field", REQUIRED)
+def test_a_vaccine_without_its_label_and_stamp_is_refused(tutor, field):
+    cat = make_animal(tutor, CAT)
+    base = f"/animals/{cat['id']}/vaccines"
+    missing = {k: v for k, v in RABMUNE.items() if k != field}
+    for body in (missing, {**RABMUNE, field: ""}, {**RABMUNE, field: "  "}):
+        response = tutor.post(base, body)
+        assert response.status_code == 422, body
+        assert field in str(response.json()), body
+    assert tutor.get(f"/animals/{cat['id']}/records").json() == []
+
+
+def test_the_label_and_stamp_are_kept_without_their_outer_spaces(tutor):
+    cat = make_animal(tutor, CAT)
+    body = {**RABMUNE, "brand": " Rabmune ", "vet_crmv": " CRMV-SC 01234 "}
+    created = tutor.post(f"/animals/{cat['id']}/vaccines", body).json()
+    assert (created["brand"], created["vet_crmv"]) == ("Rabmune", "CRMV-SC 01234")
+
+
+def test_a_vaccine_saved_before_without_a_brand_is_read_but_not_saved_again_without_one(tutor):
+    cat = make_animal(tutor, CAT)
+    created = tutor.post(f"/animals/{cat['id']}/vaccines", RABMUNE).json()
+    # As one saved before ADR-0011 could be: nothing was migrated.
+    Vaccine.objects.filter(id=created["id"]).update(
+        brand="", lot="", lot_expiry="", vet_name="", vet_crmv=""
+    )
+    [record] = tutor.get(f"/animals/{cat['id']}/records").json()
+    assert (record["brand"], record["lot_expiry"], record["vet_crmv"]) == ("", "", "")
+    path = f"/animals/{cat['id']}/vaccines/{created['id']}"
+    response = tutor.put(path, {**RABMUNE, "brand": ""})
+    assert response.status_code == 422
+    assert "brand" in str(response.json())
+    assert tutor.put(path, RABMUNE).status_code == 200
 
 
 def test_an_edit_cannot_store_a_lot_expiry_that_is_not_a_month(tutor):
@@ -68,7 +108,7 @@ def test_an_edit_cannot_store_a_lot_expiry_that_is_not_a_month(tutor):
 def test_a_combined_vaccine_keeps_every_disease(tutor):
     dog = make_animal(tutor, DOG)
     diseases = ["distemper", "infectious_hepatitis", "parvovirus", "parainfluenza", "leptospirosis"]
-    body = {"date": "2026-10-16", "brand": "Nobivac DHPPi+L", "diseases": diseases}
+    body = {**LABEL, "date": "2026-10-16", "brand": "Nobivac DHPPi+L", "diseases": diseases}
     response = tutor.post(f"/animals/{dog['id']}/vaccines", body)
     assert response.json()["diseases"] == diseases
 
@@ -76,7 +116,7 @@ def test_a_combined_vaccine_keeps_every_disease(tutor):
 def test_the_history_lists_every_kind_newest_first(tutor):
     dog = make_animal(tutor, DOG)
     base = f"/animals/{dog['id']}"
-    tutor.post(f"{base}/vaccines", {"date": "2026-10-16", "diseases": ["rabies"]})
+    tutor.post(f"{base}/vaccines", {**LABEL, "date": "2026-10-16", "diseases": ["rabies"]})
     tutor.post(f"{base}/weights", {"date": "2026-10-20", "kg": "3.1"})
     tutor.post(f"{base}/notes", {"date": "2026-10-18", "text": "Comeu bem."})
     kinds = [(r["kind"], r["date"]) for r in tutor.get(f"{base}/records").json()]

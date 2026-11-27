@@ -80,8 +80,17 @@ export function ProposalCard({
       repeat_on: next === false ? strings.records.dateRequired : null,
       kg: (p.kind === "weight" && !weight) || (kg.trim() && !weight) ? strings.records.kgInvalid : null,
       diseases: p.kind === "vaccine" && codes.length === 0 ? strings.records.diseasesRequired : null,
-      lot_expiry: p.kind === "vaccine" && expiry === false ? strings.records.monthInvalid : null,
     };
+    if (p.kind === "vaccine") {
+      // The label and the stamp of the paper card (ADR-0011): what the
+      // reading left unread, the tutor types before confirming.
+      found.brand = brand.trim() ? null : strings.records.brandRequired;
+      found.lot = lot.trim() ? null : strings.records.lotRequired;
+      found.lot_expiry =
+        expiry === null ? strings.records.lotExpiryRequired : expiry === false ? strings.records.monthInvalid : null;
+      found.vet_name = vet.trim() ? null : strings.records.vetRequired;
+      found.vet_crmv = crmv.trim() ? null : strings.records.crmvRequired;
+    }
     setErrors(found);
     if (Object.values(found).some(Boolean) || !day) return null;
     const origin = next ? (next === p.repeat_on.value && p.repeat_on.origin ? p.repeat_on.origin : "written") : "";
@@ -141,33 +150,46 @@ export function ProposalCard({
     }
   }
 
-  const textField = (label: string, value: string, set: (t: string) => void, source: { read: boolean }, id: string) => (
-    <Field label={label} hint={unread(source)}>
-      <Input testID={`${id}-${n}`} value={value} onChangeText={set} className={source.read ? "" : "border-soon"} />
+  const textField = (
+    label: string,
+    value: string,
+    set: (t: string) => void,
+    source: { read: boolean },
+    id: string,
+    error?: string | null,
+  ) => (
+    <Field label={label} required={p.kind === "vaccine"} hint={unread(source)} error={error}>
+      <Input
+        testID={`${id}-${n}`}
+        value={value}
+        onChangeText={set}
+        invalid={!!error}
+        className={error || source.read ? "" : "border-soon"}
+      />
     </Field>
   );
 
   return (
     <Card className="gap-3" testID={`proposal-${n}`}>
       <Text className="font-semibold">{strings.intake.lineTitle(n, RECORD_KIND_LABEL[p.kind])}</Text>
-      <Field label={strings.records.date} hint={unread(p.date)} error={errors.date}>
+      <Field label={strings.records.date} required hint={unread(p.date)} error={errors.date}>
         <DateInput testID={`date-${n}`} value={date} onChange={setDate} invalid={!!errors.date} />
       </Field>
       {p.kind === "vaccine" ? (
         <>
-          <Field label={strings.records.diseases} hint={unread(p.diseases)} error={errors.diseases}>
+          <Field label={strings.records.diseases} required hint={unread(p.diseases)} error={errors.diseases}>
             <MultiSelect value={codes} onChange={setCodes} options={diseases} testID={`diseases-${n}`} />
           </Field>
-          {textField(strings.records.brand, brand, setBrand, p.brand, "brand")}
-          {textField(strings.records.lot, lot, setLot, p.lot, "lot")}
-          <Field label={strings.records.lotExpiry} hint={unread(p.lot_expiry)} error={errors.lot_expiry}>
-            <MonthInput testID={`lot-expiry-${n}`} value={lotExpiry} onChange={setLotExpiry} />
+          {textField(strings.records.brand, brand, setBrand, p.brand, "brand", errors.brand)}
+          {textField(strings.records.lot, lot, setLot, p.lot, "lot", errors.lot)}
+          <Field label={strings.records.lotExpiry} required hint={unread(p.lot_expiry)} error={errors.lot_expiry}>
+            <MonthInput testID={`lot-expiry-${n}`} value={lotExpiry} onChange={setLotExpiry} invalid={!!errors.lot_expiry} />
           </Field>
         </>
       ) : null}
       {p.kind === "antiparasitic" ? (
         <>
-          <Field label={strings.records.parasite}>
+          <Field label={strings.records.parasite} required>
             <Segmented
               value={parasite}
               onChange={setParasite}
@@ -190,13 +212,14 @@ export function ProposalCard({
           >
             <DateInput testID={`repeat-on-${n}`} value={repeatOn} onChange={setRepeatOn} invalid={!!errors.repeat_on} />
           </Field>
-          {textField(strings.records.vet, vet, setVet, p.vet_name, "vet")}
-          {p.kind === "vaccine" ? textField(strings.records.crmv, crmv, setCrmv, p.vet_crmv, "crmv") : null}
+          {textField(strings.records.vet, vet, setVet, p.vet_name, "vet", errors.vet_name)}
+          {p.kind === "vaccine" ? textField(strings.records.crmv, crmv, setCrmv, p.vet_crmv, "crmv", errors.vet_crmv) : null}
         </>
       ) : null}
       {p.kind !== "vaccine" ? (
         <Field
           label={p.kind === "weight" ? strings.records.weightKg : strings.records.weightWithTreatment}
+          required={p.kind === "weight"}
           hint={unread(p.weight_kg)}
           error={errors.kg}
         >

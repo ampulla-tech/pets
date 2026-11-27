@@ -1848,7 +1848,7 @@
             "type": "array"
           },
           "brand": {
-            "default": "",
+            "minLength": 1,
             "title": "Brand",
             "type": "string"
           },
@@ -1889,13 +1889,12 @@
             "type": "string"
           },
           "lot": {
-            "default": "",
+            "minLength": 1,
             "title": "Lot",
             "type": "string"
           },
           "lot_expiry": {
-            "default": "",
-            "pattern": "^(?:[0-9]{4}-(?:0[1-9]|1[0-2]))?$",
+            "pattern": "^[0-9]{4}-(?:0[1-9]|1[0-2])$",
             "title": "Lot Expiry",
             "type": "string"
           },
@@ -1922,19 +1921,24 @@
             "type": "string"
           },
           "vet_crmv": {
-            "default": "",
+            "minLength": 1,
             "title": "Vet Crmv",
             "type": "string"
           },
           "vet_name": {
-            "default": "",
+            "minLength": 1,
             "title": "Vet Name",
             "type": "string"
           }
         },
         "required": [
           "date",
+          "brand",
+          "lot",
+          "lot_expiry",
           "diseases",
+          "vet_name",
+          "vet_crmv",
           "kind"
         ],
         "title": "VaccineConfirm",
@@ -1952,7 +1956,7 @@
             "type": "array"
           },
           "brand": {
-            "default": "",
+            "minLength": 1,
             "title": "Brand",
             "type": "string"
           },
@@ -1988,13 +1992,12 @@
             "type": "array"
           },
           "lot": {
-            "default": "",
+            "minLength": 1,
             "title": "Lot",
             "type": "string"
           },
           "lot_expiry": {
-            "default": "",
-            "pattern": "^(?:[0-9]{4}-(?:0[1-9]|1[0-2]))?$",
+            "pattern": "^[0-9]{4}-(?:0[1-9]|1[0-2])$",
             "title": "Lot Expiry",
             "type": "string"
           },
@@ -2021,19 +2024,24 @@
             "type": "string"
           },
           "vet_crmv": {
-            "default": "",
+            "minLength": 1,
             "title": "Vet Crmv",
             "type": "string"
           },
           "vet_name": {
-            "default": "",
+            "minLength": 1,
             "title": "Vet Name",
             "type": "string"
           }
         },
         "required": [
           "date",
-          "diseases"
+          "brand",
+          "lot",
+          "lot_expiry",
+          "diseases",
+          "vet_name",
+          "vet_crmv"
         ],
         "title": "VaccineIn",
         "type": "object"

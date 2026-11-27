@@ -317,6 +317,7 @@ function InviteDialog({
           <div className="flex flex-col gap-4">
             <ChoiceGroup
               label={P.role}
+              required
               name="invite-role"
               value={role}
               onChange={setRole}
@@ -326,7 +327,7 @@ function InviteDialog({
               ]}
             />
             {role === "guest" ? (
-              <Field label={P.endsOn} optional hint={P.endsOnHint}>
+              <Field label={P.endsOn} hint={P.endsOnHint}>
                 {(control) => (
                   <Input
                     {...control}

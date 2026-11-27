@@ -1,28 +1,41 @@
 import { useId, type ComponentProps, type ReactNode } from "react";
-import { strings } from "@pets/core/strings";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 /**
+ * The mark after the label of a required field: hidden from screen readers,
+ * which hear the control's own required state instead.
+ */
+export function RequiredMark() {
+  return (
+    <span aria-hidden="true" className="text-sm leading-none font-medium text-destructive">
+      *
+    </span>
+  );
+}
+
+/**
  * A labelled control with its hint and its error. The control is a render
- * prop that receives the id and the aria attributes to put on itself.
+ * prop that receives the id and the aria attributes to put on itself. A
+ * required field shows a `*` after its label; an optional one shows nothing.
  */
 export function Field({
   label,
   hint,
   error,
-  optional,
+  required,
   children,
   className,
 }: {
   label: ReactNode;
   hint?: ReactNode;
   error?: string;
-  optional?: boolean;
+  required?: boolean;
   children: (control: {
     id: string;
     "aria-invalid": boolean | undefined;
     "aria-describedby": string | undefined;
+    "aria-required": true | undefined;
   }) => ReactNode;
   className?: string;
 }) {
@@ -34,18 +47,17 @@ export function Field({
     .join(" ");
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      <Label htmlFor={id}>
-        {label}
-        {optional ? (
-          <span className="font-normal text-muted-foreground">
-            ({strings.app.optional})
-          </span>
-        ) : null}
-      </Label>
+      {/* The mark sits beside the label, not in it, so the control's name
+          stays the label alone. */}
+      <div className="flex items-center gap-1">
+        <Label htmlFor={id}>{label}</Label>
+        {required ? <RequiredMark /> : null}
+      </div>
       {children({
         id,
         "aria-invalid": error ? true : undefined,
         "aria-describedby": describedBy || undefined,
+        "aria-required": required ? true : undefined,
       })}
       {hint ? (
         <p id={hintId} className="text-xs text-muted-foreground">
@@ -70,8 +82,10 @@ export function ChoiceGroup<T extends string>({
   onChange,
   error,
   disabled,
+  required,
 }: {
   label: ReactNode;
+  required?: boolean;
   name: string;
   options: readonly { value: T; label: string; hint?: string }[];
   value: T | undefined;
@@ -83,12 +97,13 @@ export function ChoiceGroup<T extends string>({
   const stacked = options.some((o) => o.hint);
   return (
     <fieldset className="flex flex-col gap-1.5" disabled={disabled}>
-      <legend id={id} className="mb-1.5 text-sm font-medium">
+      <Legend id={id} required={required}>
         {label}
-      </legend>
+      </Legend>
       <div
         role="radiogroup"
         aria-labelledby={id}
+        aria-required={required ? true : undefined}
         className={cn("flex gap-2", stacked ? "flex-col" : "flex-wrap")}
       >
         {options.map((option) => (
@@ -118,6 +133,29 @@ export function ChoiceGroup<T extends string>({
       </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
     </fieldset>
+  );
+}
+
+/** The title of a group of controls, with the `*` when the group is required. */
+export function Legend({
+  id,
+  required,
+  children,
+}: {
+  id?: string;
+  required?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <legend id={id} className="mb-1.5 text-sm font-medium">
+      {children}
+      {required ? (
+        <>
+          {" "}
+          <RequiredMark />
+        </>
+      ) : null}
+    </legend>
   );
 }
 

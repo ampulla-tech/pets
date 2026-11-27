@@ -4,7 +4,7 @@ from datetime import date
 
 import pytest
 
-from conftest import CAT, make_animal, signup
+from conftest import CAT, LABEL, make_animal, signup
 from reminders import dispatch
 from reminders.models import Notice
 from tests.test_people import invite
@@ -18,6 +18,7 @@ def told(tutor, other):
     tutor.post(
         f"/animals/{cat['id']}/vaccines",
         {
+            **LABEL,
             "date": "2026-06-06",
             "brand": "Vanguard Plus",
             "diseases": ["rabies"],

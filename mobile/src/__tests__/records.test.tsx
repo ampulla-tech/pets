@@ -17,6 +17,14 @@ beforeEach(() => {
 
 const url = (q: string) => `/animais/${ANIMAL_ID}/registro?${q}`;
 
+/** The lot, its expiry and the vet's stamp of a new dose. */
+async function fillLabelAndStamp() {
+  await fireEvent.changeText(screen.getByTestId("lot"), "L2");
+  await fireEvent.changeText(screen.getByTestId("lot-expiry"), "012028");
+  await fireEvent.changeText(screen.getByTestId("vet_name"), "Dra. Ana");
+  await fireEvent.changeText(screen.getByTestId("vet_crmv"), "SP-1");
+}
+
 describe("the vaccine form", () => {
   it("offers only the species' diseases, several at once, and sends the photo as an attachment", async () => {
     picker.launchImageLibraryAsync.mockResolvedValueOnce({
@@ -37,13 +45,24 @@ describe("the vaccine form", () => {
 
     await fireEvent.press(screen.getByTestId("save-record"));
     expect(screen.getByText(strings.records.diseasesRequired)).toBeTruthy();
+    for (const message of [
+      strings.records.brandRequired,
+      strings.records.lotRequired,
+      strings.records.lotExpiryRequired,
+      strings.records.vetRequired,
+      strings.records.crmvRequired,
+    ])
+      expect(screen.getByText(message)).toBeTruthy();
+    expect(api.callsTo(`POST /animals/${ANIMAL_ID}/vaccines`)).toHaveLength(0);
 
     await fireEvent.changeText(screen.getByTestId("date"), "06112025");
     await fireEvent.press(screen.getByLabelText("Raiva"));
     await fireEvent.press(screen.getByLabelText("FeLV"));
     await fireEvent.changeText(screen.getByTestId("brand"), "Quantum");
+    await fireEvent.changeText(screen.getByTestId("lot"), "L1");
     await fireEvent.changeText(screen.getByTestId("lot-expiry"), "092027");
     await fireEvent.changeText(screen.getByTestId("repeat-on"), "06112026");
+    await fireEvent.changeText(screen.getByTestId("vet_name"), "Dra. Ana");
     await fireEvent.changeText(screen.getByTestId("vet_crmv"), "SP-1");
     await fireEvent.press(screen.getByTestId("pick-photos"));
     await fireEvent.press(screen.getByTestId("save-record"));
@@ -53,11 +72,11 @@ describe("the vaccine form", () => {
       date: "2025-11-06",
       diseases: ["rabies", "felv"],
       brand: "Quantum",
-      lot: "",
+      lot: "L1",
       lot_expiry: "2027-09",
       repeat_on: "2026-11-06",
       repeat_on_origin: "written",
-      vet_name: "",
+      vet_name: "Dra. Ana",
       vet_crmv: "SP-1",
       attachment_ids: ["att-1"],
     });
@@ -84,11 +103,19 @@ describe("the vaccine form", () => {
     expect(screen.getByTestId("lot").props.value).toBe("");
     await fireEvent.press(screen.getByTestId("change-diseases"));
     expect(screen.getByLabelText("FeLV").props.accessibilityState.checked).toBe(true);
+    // The new bottle's lot and the new visit's stamp are asked for.
+    await fireEvent.press(screen.getByTestId("save-record"));
+    expect(screen.getByText(strings.records.lotRequired)).toBeTruthy();
+    expect(screen.queryByText(strings.records.brandRequired)).toBeNull();
+    expect(api.callsTo(`POST /animals/${ANIMAL_ID}/vaccines`)).toHaveLength(0);
+    await fillLabelAndStamp();
     await fireEvent.press(screen.getByTestId("save-record"));
     await waitFor(() =>
       expect(api.callsTo(`POST /animals/${ANIMAL_ID}/vaccines`)[0].body).toMatchObject({
         brand: "Nobivac Feline",
         diseases: ["calicivirus", "felv"],
+        lot: "L2",
+        lot_expiry: "2028-01",
       }),
     );
   });
@@ -101,10 +128,36 @@ describe("the vaccine form", () => {
     await renderApp(url("tipo=vaccine&anexos=ph1,ph2"));
     expect(await screen.findByText(strings.records.fromPhoto)).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Raiva"));
+    await fireEvent.changeText(screen.getByTestId("brand"), "Quantum");
+    await fillLabelAndStamp();
     await fireEvent.press(screen.getByTestId("save-record"));
     await waitFor(() =>
       expect(api.callsTo(`POST /animals/${ANIMAL_ID}/vaccines`)[0].body).toMatchObject({ attachment_ids: ["ph1", "ph2"] }),
     );
+  });
+
+  it("an old dose saved without its label and stamp is completed before it is saved again", async () => {
+    const record = vaccine({ brand: "", lot: "", lot_expiry: "", vet_name: "", vet_crmv: "" });
+    const api = fakeApi({
+      ...animalRoutes(animal(), [record]),
+      [`PUT /animals/${ANIMAL_ID}/vaccines/v1`]: { body: record },
+    });
+    await renderApp(url("registro=v1"));
+    await fireEvent.press(await screen.findByTestId("save-record"));
+    expect(screen.getByText(strings.records.brandRequired)).toBeTruthy();
+    expect(screen.getByText(strings.records.lotExpiryRequired)).toBeTruthy();
+    expect(api.callsTo(`PUT /animals/${ANIMAL_ID}/vaccines/v1`)).toHaveLength(0);
+    await fireEvent.changeText(screen.getByTestId("brand"), "Quantum Raiva");
+    await fillLabelAndStamp();
+    await fireEvent.press(screen.getByTestId("save-record"));
+    await waitFor(() => expect(api.callsTo(`PUT /animals/${ANIMAL_ID}/vaccines/v1`)).toHaveLength(1));
+  });
+
+  it("a lot expiry that is not a month is refused, even unchanged", async () => {
+    fakeApi(animalRoutes(animal(), [vaccine({ lot_expiry: "set/27" })]));
+    await renderApp(url("registro=v1"));
+    await fireEvent.press(await screen.findByTestId("save-record"));
+    expect(screen.getByText(strings.records.monthInvalid)).toBeTruthy();
   });
 
   it("edits a dose, keeping its photos and the origin of an unchanged repeat-on, and deletes it", async () => {

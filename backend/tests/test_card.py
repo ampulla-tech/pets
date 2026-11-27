@@ -4,7 +4,8 @@ from datetime import date
 
 import pytest
 
-from conftest import CAT, DOG, jpeg_file, make_animal, pdf_text
+from animals.models import Vaccine
+from conftest import CAT, DOG, LABEL, jpeg_file, make_animal, pdf_text
 
 FELINE = ["rhinotracheitis", "calicivirus", "panleukopenia", "chlamydiosis"]
 
@@ -54,7 +55,7 @@ def gata(tutor, today):
             "vet_name": "Dra. Exemplo",
         },
     ):
-        assert tutor.post(f"/animals/{cat['id']}/vaccines", body).status_code == 201
+        assert tutor.post(f"/animals/{cat['id']}/vaccines", {**LABEL, **body}).status_code == 201
     return cat
 
 
@@ -141,7 +142,15 @@ def pacoca(tutor, today):
         ("weights", {"date": "2026-11-06", "kg": "8.4"}),
         ("notes", {"date": "2026-10-20", "text": "Coçando a orelha esquerda desde ontem."}),
     ):
-        assert tutor.post(f"{base}/{path}", body).status_code == 201
+        if path != "vaccines":
+            assert tutor.post(f"{base}/{path}", body).status_code == 201
+            continue
+        response = tutor.post(f"{base}/{path}", {**LABEL, **body})
+        assert response.status_code == 201
+        # Doses saved before ADR-0011: what the example leaves out stays empty.
+        Vaccine.objects.filter(id=response.json()["id"]).update(
+            **{field: "" for field in LABEL if field not in body}
+        )
     return dog
 
 
@@ -209,8 +218,10 @@ def test_a_vaccine_with_no_brand_is_named_by_its_diseases_and_a_dose_with_no_dat
 ):
     today(date(2026, 11, 6))
     dog = make_animal(tutor)
-    body = {"date": "2026-09-20", "diseases": ["rabies", "distemper"]}
+    body = {**LABEL, "date": "2026-09-20", "diseases": ["rabies", "distemper"]}
     assert tutor.post(f"/animals/{dog['id']}/vaccines", body).status_code == 201
+    # Saved before the brand was required (ADR-0011).
+    Vaccine.objects.update(brand="")
     card = tutor.get(f"/animals/{dog['id']}/card").json()
     [item] = card["sections"][0]["items"]
     assert (item["title"], item["current"], item["repeat_on"], item["state"]) == (

@@ -111,7 +111,7 @@ export function AnimalForm({
 
   return (
     <Screen>
-      <Field label={strings.animal.species} hint={speciesLocked ? strings.animal.speciesLocked : undefined}>
+      <Field label={strings.animal.species} required hint={speciesLocked ? strings.animal.speciesLocked : undefined}>
         <Segmented
           testID="species"
           value={species}
@@ -123,16 +123,16 @@ export function AnimalForm({
           ]}
         />
       </Field>
-      <Field label={strings.animal.name} error={errors.name}>
+      <Field label={strings.animal.name} required error={errors.name}>
         <Input testID="animal-name" value={name} onChangeText={setName} invalid={!!errors.name} />
       </Field>
-      <Field label={strings.animal.photo} optional>
+      <Field label={strings.animal.photo}>
         {animal?.photo_url && photo.length === 0 ? (
           <Image source={{ uri: animal.photo_url }} style={{ width: 96, height: 96, borderRadius: 16 }} />
         ) : null}
         <FilePicker files={photo} onChange={setPhoto} multiple={false} />
       </Field>
-      <Field label={strings.animal.breed} optional>
+      <Field label={strings.animal.breed}>
         <Input testID="breed" value={breed} onChangeText={setBreed} />
         <Pressable
           role="button"
@@ -143,7 +143,7 @@ export function AnimalForm({
           <Text className="text-sm">{strings.animal.noBreed}</Text>
         </Pressable>
       </Field>
-      <Field label={strings.animal.sex} optional>
+      <Field label={strings.animal.sex}>
         <Segmented
           testID="sex"
           value={sex}
@@ -167,13 +167,13 @@ export function AnimalForm({
           ]}
         />
       </Field>
-      <Field label={strings.animal.coat} optional>
+      <Field label={strings.animal.coat}>
         <Input testID="coat" value={coat} onChangeText={setCoat} />
       </Field>
-      <Field label={strings.animal.microchip} optional>
+      <Field label={strings.animal.microchip}>
         <Input testID="microchip" value={microchip} onChangeText={setMicrochip} keyboardType="number-pad" />
       </Field>
-      <Field label={strings.animal.birth} error={errors.birth}>
+      <Field label={strings.animal.birth} required error={errors.birth}>
         <Segmented
           testID="birth-precision"
           value={precision}
@@ -203,7 +203,7 @@ export function AnimalForm({
           />
         ) : null}
       </Field>
-      <Field label={strings.animal.adoptedOn} optional error={errors.adopted}>
+      <Field label={strings.animal.adoptedOn} error={errors.adopted}>
         <DateInput testID="adopted" value={adopted} onChange={(t) => setAdopted(maskDay(t))} invalid={!!errors.adopted} />
       </Field>
       {error ? (

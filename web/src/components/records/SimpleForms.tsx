@@ -52,10 +52,10 @@ export function WeightForm({ animal, record }: RecordFormProps<WeightOut>) {
   );
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
-      <Field label={R.date} error={errors.date?.message}>
+      <Field label={R.date} required error={errors.date?.message}>
         {(control) => <Input {...control} type="date" {...form.register("date")} />}
       </Field>
-      <Field label={R.weightKg} error={errors.kg?.message}>
+      <Field label={R.weightKg} required error={errors.kg?.message}>
         {(control) => (
           <Input
             {...control}
@@ -112,10 +112,10 @@ export function NoteForm({ animal, record }: RecordFormProps<NoteOut>) {
   );
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
-      <Field label={R.date} error={errors.date?.message}>
+      <Field label={R.date} required error={errors.date?.message}>
         {(control) => <Input {...control} type="date" {...form.register("date")} />}
       </Field>
-      <Field label={R.text} error={errors.text?.message}>
+      <Field label={R.text} required error={errors.text?.message}>
         {(control) => <TextArea {...control} rows={5} {...form.register("text")} />}
       </Field>
       {tutor ? (
