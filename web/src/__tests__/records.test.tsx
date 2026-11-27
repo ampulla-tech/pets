@@ -39,7 +39,9 @@ describe("vaccine", () => {
     await user.click(within(group).getByRole("checkbox", { name: "Raiva" }));
     await user.type(screen.getByLabelText(/Marca/), "Nobivac");
     await user.type(screen.getByLabelText(/Partida/), "A12");
-    await user.type(screen.getByLabelText(/Vencimento do lote/), "09/2027");
+    fireEvent.change(screen.getByLabelText(/Vencimento do lote/), {
+      target: { value: "2027-09" },
+    });
     fireEvent.change(screen.getByLabelText(/Repetir em/), {
       target: { value: "2027-10-20" },
     });
@@ -127,9 +129,9 @@ describe("vaccine", () => {
     });
     const { user } = renderApp("/animais/a1/registros/v1");
     expect(await screen.findByText("lido da linha de baixo")).toBeTruthy();
-    expect((screen.getByLabelText(/Vencimento do lote/) as HTMLInputElement).value).toBe(
-      "09/2027",
-    );
+    const expiry = screen.getByLabelText(/Vencimento do lote/) as HTMLInputElement;
+    expect(expiry.type).toBe("month");
+    expect(expiry.value).toBe("2027-09");
     await user.clear(screen.getByLabelText(/Partida/));
     await user.type(screen.getByLabelText(/Partida/), "B7");
     await user.click(screen.getByRole("button", { name: "Salvar" }));
@@ -141,6 +143,20 @@ describe("vaccine", () => {
       repeat_on_origin: "inferred",
       lot_expiry: "2027-09",
     });
+  });
+
+  it("edits a vaccine and empties its lot expiry", async () => {
+    const record = vaccine();
+    const api = mockApi({
+      ...animalRoutes(cat, [record]),
+      "PUT /animals/a1/vaccines/v1": record,
+    });
+    const { user } = renderApp("/animais/a1/registros/v1");
+    const expiry = (await screen.findByLabelText(/Vencimento do lote/)) as HTMLInputElement;
+    fireEvent.change(expiry, { target: { value: "" } });
+    await user.click(screen.getByRole("button", { name: "Salvar" }));
+    await waitFor(() => expect(api.to("PUT /animals/a1/vaccines/v1")).toHaveLength(1));
+    expect(api.to("PUT /animals/a1/vaccines/v1")[0].json).toMatchObject({ lot_expiry: "" });
   });
 
   it("deletes a vaccine after confirming", async () => {

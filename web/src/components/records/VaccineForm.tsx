@@ -8,7 +8,7 @@ import {
   type AttachmentOut,
   type VaccineIn,
 } from "@pets/core/api/generated";
-import { formatMonth, todayIso } from "@pets/core/domain";
+import { todayIso } from "@pets/core/domain";
 import { strings } from "@pets/core/strings";
 import { AttachmentsField } from "@/components/AttachmentsField";
 import { Field } from "@/components/Field";
@@ -61,7 +61,8 @@ export function VaccineForm({
       diseases: record?.diseases ?? last?.diseases ?? (subject ? [subject] : []),
       brand: record?.brand ?? last?.brand ?? "",
       lot: record?.lot ?? "",
-      lotExpiry: record?.lot_expiry ? formatMonth(record.lot_expiry) : "",
+      // The month picker's own value, "2027-09": the API stores no other form.
+      lotExpiry: record?.lot_expiry ?? "",
       repeatOn: record?.repeat_on ?? "",
       vetName: record?.vet_name ?? "",
       vetCrmv: record?.vet_crmv ?? "",
@@ -156,9 +157,11 @@ export function VaccineForm({
         </Field>
         <Field label={R.lotExpiry} optional error={errors.lotExpiry?.message}>
           {(control) => (
+            // A picker on phones; plain text, typed "09/2027", where the
+            // browser has none (Safari and Firefox on a computer).
             <Input
               {...control}
-              inputMode="numeric"
+              type="month"
               placeholder={R.monthPlaceholder}
               {...form.register("lotExpiry")}
             />
