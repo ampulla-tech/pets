@@ -193,6 +193,12 @@ export const strings = {
     kgInvalid: "Digite o peso em kg, por exemplo 4,9.",
     textRequired: "Escreva a anotação.",
     monthInvalid: "Use mês e ano, por exemplo 09/2027.",
+    /** The label and the stamp a vaccine is saved with (ADR-0011). */
+    brandRequired: "Informe a marca.",
+    lotRequired: "Informe a partida.",
+    lotExpiryRequired: "Informe o vencimento.",
+    vetRequired: "Informe o veterinário.",
+    crmvRequired: "Informe o CRMV.",
     monthPlaceholder: "MM/AAAA",
     uploading: "Enviando…",
     uploadFailed: "O envio do arquivo falhou. Tente de novo.",

@@ -7,7 +7,7 @@ from datetime import date
 
 import pytest
 
-from conftest import CAT, DOG, make_animal
+from conftest import CAT, DOG, LABEL, make_animal
 
 DHPPI_L = ["distemper", "infectious_hepatitis", "parvovirus", "parainfluenza", "leptospirosis"]
 
@@ -41,6 +41,7 @@ def cards(tutor, today):
         response = tutor.post(
             f"/animals/{animal['id']}/vaccines",
             {
+                **LABEL,
                 "date": day,
                 "brand": brand,
                 "diseases": diseases,
@@ -84,7 +85,9 @@ def test_the_cards_carry_the_badge(tutor, cards):
 def test_no_reminder_is_computed_without_repeat_on(tutor, today):
     today(date(2026, 10, 31))
     cat = make_animal(tutor, CAT)
-    tutor.post(f"/animals/{cat['id']}/vaccines", {"date": "2026-10-05", "diseases": ["rabies"]})
+    tutor.post(
+        f"/animals/{cat['id']}/vaccines", {**LABEL, "date": "2026-10-05", "diseases": ["rabies"]}
+    )
     [reminder] = tutor.get(f"/animals/{cat['id']}/reminders").json()
     assert (reminder["state"], reminder["due_on"]) == ("no_date", None)
 

@@ -8,12 +8,13 @@ import pytest
 from django.core import mail
 
 from animals.models import Animal
-from conftest import CAT, make_animal, signup
+from conftest import CAT, LABEL, make_animal, signup
 from reminders import dispatch
 from reminders.models import Delivery, ExpoDevice, Notice, NoticeItem, WebPushSubscription
 from tests.test_people import invite
 
 RABIES = {
+    **LABEL,
     "date": "2026-06-06",
     "brand": "Bioraiva Pet",
     "diseases": ["rabies"],
@@ -69,7 +70,7 @@ def test_a_day_the_job_missed_is_caught_up_once(household):
 def test_a_new_rabies_dose_stops_the_reminder(household, tutor):
     tutor.post(
         f"/animals/{household['id']}/vaccines",
-        {"date": "2027-06-15", "diseases": ["rabies"], "repeat_on": "2028-06-15"},
+        {**LABEL, "date": "2027-06-15", "diseases": ["rabies"], "repeat_on": "2028-06-15"},
     )
     dispatch.run(date(2027, 6, 20))
     assert len(mail.outbox) == 0
@@ -104,6 +105,7 @@ def test_a_combined_vaccine_is_one_vaccine_in_one_notice(tutor):
     tutor.post(
         f"/animals/{cat['id']}/vaccines",
         {
+            **LABEL,
             "date": "2026-06-06",
             "brand": "Felocell",
             "diseases": ["rhinotracheitis", "calicivirus"],

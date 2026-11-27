@@ -6,10 +6,10 @@ from typing import Annotated, Literal
 from uuid import UUID
 
 from ninja import Schema
-from pydantic import Field
+from pydantic import Field, StringConstraints
 
 from animals.diseases import DiseaseCode
-from animals.months import MONTH_OR_EMPTY
+from animals.months import MONTH_ONLY
 
 
 class ErrorOut(Schema):
@@ -107,17 +107,24 @@ class RecordBase(Schema):
     can_edit: bool
 
 
+Filled = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+"""Text that must say something: refused empty or blank, kept without its outer spaces."""
+
+
 class VaccineIn(Schema):
+    # The label and the stamp of the paper card: required on every save, by
+    # hand or from a reading (ADR-0011). A vaccine saved before may hold them
+    # empty, and is read as it is.
     date: date
-    brand: str = ""
-    lot: str = ""
-    # A month, "2027-09", or empty (ADR-0010).
-    lot_expiry: str = Field("", pattern=MONTH_OR_EMPTY)
+    brand: Filled
+    lot: Filled
+    # A month, "2027-09" (ADR-0010).
+    lot_expiry: str = Field(pattern=MONTH_ONLY)
     diseases: list[DiseaseCode] = Field(min_length=1)
     repeat_on: date | None = None
     repeat_on_origin: Literal["written", "inferred", ""] = ""
-    vet_name: str = ""
-    vet_crmv: str = ""
+    vet_name: Filled
+    vet_crmv: Filled
     attachment_ids: list[UUID] = []
 
 

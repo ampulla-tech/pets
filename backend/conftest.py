@@ -150,6 +150,17 @@ CAT = {
 }
 
 
+LABEL = {
+    "brand": "Rabmune",
+    "lot": "014/25",
+    "lot_expiry": "2027-06",
+    "vet_name": "Dra. Exemplo",
+    "vet_crmv": "CRMV-SC 00000",
+}
+"""The label and the stamp every vaccine is saved with (ADR-0011); a test that
+cares about one of them overrides it."""
+
+
 def make_animal(api: Api, body=None) -> dict:
     response = api.post("/animals", body or DOG)
     assert response.status_code == 201, response.content

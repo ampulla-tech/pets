@@ -461,7 +461,7 @@ export const zUnreadOut = z.object({
  */
 export const zVaccineConfirm = z.object({
   attachment_ids: z.array(z.uuid()).optional().default([]),
-  brand: z.string().optional().default(""),
+  brand: z.string().min(1),
   date: z.iso.date(),
   diseases: z
     .array(
@@ -486,16 +486,12 @@ export const zVaccineConfirm = z.object({
     )
     .min(1),
   kind: z.literal("vaccine"),
-  lot: z.string().optional().default(""),
-  lot_expiry: z
-    .string()
-    .regex(/^(?:[0-9]{4}-(?:0[1-9]|1[0-2]))?$/)
-    .optional()
-    .default(""),
+  lot: z.string().min(1),
+  lot_expiry: z.string().regex(/^[0-9]{4}-(?:0[1-9]|1[0-2])$/),
   repeat_on: z.iso.date().nullish(),
   repeat_on_origin: z.enum(["written", "inferred", ""]).optional().default(""),
-  vet_crmv: z.string().optional().default(""),
-  vet_name: z.string().optional().default(""),
+  vet_crmv: z.string().min(1),
+  vet_name: z.string().min(1),
 });
 
 /**
@@ -503,7 +499,7 @@ export const zVaccineConfirm = z.object({
  */
 export const zVaccineIn = z.object({
   attachment_ids: z.array(z.uuid()).optional().default([]),
-  brand: z.string().optional().default(""),
+  brand: z.string().min(1),
   date: z.iso.date(),
   diseases: z
     .array(
@@ -527,16 +523,12 @@ export const zVaccineIn = z.object({
       ]),
     )
     .min(1),
-  lot: z.string().optional().default(""),
-  lot_expiry: z
-    .string()
-    .regex(/^(?:[0-9]{4}-(?:0[1-9]|1[0-2]))?$/)
-    .optional()
-    .default(""),
+  lot: z.string().min(1),
+  lot_expiry: z.string().regex(/^[0-9]{4}-(?:0[1-9]|1[0-2])$/),
   repeat_on: z.iso.date().nullish(),
   repeat_on_origin: z.enum(["written", "inferred", ""]).optional().default(""),
-  vet_crmv: z.string().optional().default(""),
-  vet_name: z.string().optional().default(""),
+  vet_crmv: z.string().min(1),
+  vet_name: z.string().min(1),
 });
 
 /**

@@ -34,7 +34,15 @@ describe("required fields", () => {
     mockApi(animalRoutes(cat));
     renderApp("/animais/a1/registrar/vacina");
     await screen.findByRole("group", { name: "Contra o quê" });
-    expectRequired(screen.getByLabelText("Data"));
+    for (const label of [
+      "Data",
+      "Marca / produto",
+      "Partida",
+      "Vencimento do lote",
+      "Veterinário",
+      "CRMV",
+    ])
+      expectRequired(screen.getByLabelText(label));
     expectGroupRequired("Contra o quê");
     expectOptional(screen.getByLabelText("Repetir em"));
     expect(screen.queryByText(/opcional/)).toBeNull();

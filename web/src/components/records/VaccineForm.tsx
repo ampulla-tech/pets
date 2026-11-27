@@ -25,14 +25,16 @@ const R = strings.records;
 const schema = z.object({
   date: z.string().min(1, R.dateRequired),
   diseases: z.array(z.string()).min(1, R.diseasesRequired),
-  brand: z.string(),
-  lot: z.string(),
-  lotExpiry: z
-    .string()
-    .refine((v) => !v.trim() || monthValue(v) !== null, R.monthInvalid),
+  // The label and the stamp of the paper card (ADR-0011).
+  brand: z.string().trim().min(1, R.brandRequired),
+  lot: z.string().trim().min(1, R.lotRequired),
+  lotExpiry: z.string().superRefine((v, ctx) => {
+    if (!v.trim()) ctx.addIssue({ code: "custom", message: R.lotExpiryRequired });
+    else if (monthValue(v) === null) ctx.addIssue({ code: "custom", message: R.monthInvalid });
+  }),
   repeatOn: z.string(),
-  vetName: z.string(),
-  vetCrmv: z.string(),
+  vetName: z.string().trim().min(1, R.vetRequired),
+  vetCrmv: z.string().trim().min(1, R.crmvRequired),
 });
 type Values = z.infer<typeof schema>;
 
@@ -79,13 +81,13 @@ export function VaccineForm({
         date: values.date,
         // The codes come from the catalog of the animal's species.
         diseases: values.diseases as VaccineIn["diseases"],
-        brand: values.brand.trim(),
-        lot: values.lot.trim(),
-        lot_expiry: values.lotExpiry.trim() ? (monthValue(values.lotExpiry) ?? "") : "",
+        brand: values.brand,
+        lot: values.lot,
+        lot_expiry: monthValue(values.lotExpiry) ?? "",
         repeat_on: values.repeatOn || null,
         repeat_on_origin: values.repeatOn ? (inferred ? "inferred" : "written") : "",
-        vet_name: values.vetName.trim(),
-        vet_crmv: values.vetCrmv.trim(),
+        vet_name: values.vetName,
+        vet_crmv: values.vetCrmv,
         attachment_ids: files.map((f) => f.id),
       };
       return record
@@ -148,14 +150,14 @@ export function VaccineForm({
           <p className="text-sm text-destructive">{errors.diseases.message}</p>
         ) : null}
       </fieldset>
-      <Field label={R.brand}>
+      <Field label={R.brand} required error={errors.brand?.message}>
         {(control) => <Input {...control} {...form.register("brand")} />}
       </Field>
       <div className="grid grid-cols-2 gap-3">
-        <Field label={R.lot}>
+        <Field label={R.lot} required error={errors.lot?.message}>
           {(control) => <Input {...control} {...form.register("lot")} />}
         </Field>
-        <Field label={R.lotExpiry} error={errors.lotExpiry?.message}>
+        <Field label={R.lotExpiry} required error={errors.lotExpiry?.message}>
           {(control) => (
             // A picker on phones; plain text, typed "09/2027", where the
             // browser has none (Safari and Firefox on a computer).
@@ -175,10 +177,10 @@ export function VaccineForm({
         {(control) => <Input {...control} type="date" {...form.register("repeatOn")} />}
       </Field>
       <div className="grid grid-cols-2 gap-3">
-        <Field label={R.vet}>
+        <Field label={R.vet} required error={errors.vetName?.message}>
           {(control) => <Input {...control} {...form.register("vetName")} />}
         </Field>
-        <Field label={R.crmv}>
+        <Field label={R.crmv} required error={errors.vetCrmv?.message}>
           {(control) => <Input {...control} {...form.register("vetCrmv")} />}
         </Field>
       </div>

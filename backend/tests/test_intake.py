@@ -6,7 +6,7 @@ import pytest
 from langchain_core.messages import AIMessage
 
 from animals.models import Vaccine, Weight
-from conftest import CAT, DOG, jpeg_file, make_animal
+from conftest import CAT, DOG, LABEL, jpeg_file, make_animal
 from intake.models import Extraction
 from intake.process import claim_next, process
 from intake.reading import CardReading, ReadResult, read_card
@@ -101,6 +101,9 @@ def confirm_body(proposal, **changes):
         "diseases": proposal["diseases"]["value"],
         "repeat_on": proposal["repeat_on"]["value"],
         "repeat_on_origin": proposal["repeat_on"]["origin"] or "",
+        # What the reading left unread, the tutor types before confirming.
+        "vet_name": proposal["vet_name"]["value"] or "Dra. Exemplo",
+        "vet_crmv": proposal["vet_crmv"]["value"] or "CRMV-SC 00000",
     }
     return {"record": {**body, **changes}}
 
@@ -125,6 +128,20 @@ def test_confirming_four_of_five_writes_four_records_with_the_same_photos(tutor,
     assert photo_sets == {frozenset(__import__("uuid").UUID(p["id"]) for p in sent["photos"])}
     reviewed = [p["review"] for p in tutor.get(f"/extractions/{sent['id']}").json()["proposals"]]
     assert reviewed == ["confirmed"] * 4 + ["discarded"]
+
+
+@pytest.mark.parametrize("missing", ["brand", "lot", "lot_expiry", "vet_name", "vet_crmv"])
+def test_a_vaccine_line_is_not_confirmed_without_its_label_and_stamp(tutor, cat, missing):
+    sent = send_photos(tutor, cat)
+    process(Extraction.objects.get(id=sent["id"]), reader=fake_reader(FIVE))
+    proposal = tutor.get(f"/extractions/{sent['id']}").json()["proposals"][2]
+    response = tutor.post(
+        f"/extractions/{sent['id']}/proposals/2/confirm", confirm_body(proposal, **{missing: ""})
+    )
+    assert response.status_code == 422
+    assert missing in str(response.json())
+    assert Vaccine.objects.count() == 0
+    assert tutor.get(f"/extractions/{sent['id']}").json()["proposals"][2]["review"] == "pending"
 
 
 def test_a_line_is_reviewed_only_once(tutor, cat):
@@ -181,6 +198,7 @@ def test_the_failure_path_fills_by_hand_with_the_photo_attached(tutor, cat):
     created = tutor.post(
         f"/animals/{cat['id']}/vaccines",
         {
+            **LABEL,
             "date": "2026-06-06",
             "diseases": ["rabies"],
             "attachment_ids": [photo],

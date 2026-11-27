@@ -389,12 +389,16 @@ function ProposalCard({
     if (!draft.date) next.date = R.dateRequired;
     if (proposal.kind === "vaccine" && !draft.diseases.length)
       next.diseases = R.diseasesRequired;
-    if (
-      proposal.kind === "vaccine" &&
-      draft.lotExpiry.trim() &&
-      !monthValue(draft.lotExpiry)
-    )
-      next.lotExpiry = R.monthInvalid;
+    if (proposal.kind === "vaccine") {
+      // The label and the stamp of the paper card (ADR-0011): what the
+      // reading left unread, the tutor types before confirming.
+      if (!draft.brand.trim()) next.brand = R.brandRequired;
+      if (!draft.lot.trim()) next.lot = R.lotRequired;
+      if (!draft.lotExpiry.trim()) next.lotExpiry = R.lotExpiryRequired;
+      else if (!monthValue(draft.lotExpiry)) next.lotExpiry = R.monthInvalid;
+      if (!draft.vetName.trim()) next.vetName = R.vetRequired;
+      if (!draft.vetCrmv.trim()) next.vetCrmv = R.crmvRequired;
+    }
     if (proposal.kind === "antiparasitic" && !draft.parasite)
       next.parasite = strings.app.required;
     if (proposal.kind === "weight" && !parseKg(draft.kg)) next.kg = R.kgInvalid;
@@ -414,7 +418,7 @@ function ProposalCard({
         date: draft.date,
         brand: draft.brand.trim(),
         lot: draft.lot.trim(),
-        lot_expiry: draft.lotExpiry.trim() ? (monthValue(draft.lotExpiry) ?? "") : "",
+        lot_expiry: monthValue(draft.lotExpiry) ?? "",
         diseases: draft.diseases as VaccineIn["diseases"],
         vet_name: draft.vetName.trim(),
         vet_crmv: draft.vetCrmv.trim(),
@@ -474,7 +478,7 @@ function ProposalCard({
     label: string,
     field: { read: boolean },
   ) => (
-    <Field label={label} error={errors[key]}>
+    <Field label={label} required={proposal.kind === "vaccine"} error={errors[key]}>
       {(control) => (
         <>
           <Input
@@ -543,7 +547,7 @@ function ProposalCard({
           {text("brand", R.brand, proposal.brand)}
           <div className="grid grid-cols-2 gap-3">
             {text("lot", R.lot, proposal.lot)}
-            <Field label={R.lotExpiry} error={errors.lotExpiry}>
+            <Field label={R.lotExpiry} required error={errors.lotExpiry}>
               {(control) => (
                 <>
                   {/* A picker on phones; plain text, typed "09/2027", where the
