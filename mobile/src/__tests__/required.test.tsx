@@ -22,7 +22,7 @@ describe("required fields", () => {
     fakeApi(animalRoutes(animal()));
     await renderApp(`/animais/${ANIMAL_ID}/registro?tipo=vaccine`);
     await screen.findByTestId("date");
-    expect(requiredLabels()).toEqual([R.date, R.diseases]);
+    expect(requiredLabels()).toEqual([R.date, R.diseases, R.brand, R.lot, R.lotExpiry, R.vet, R.crmv]);
     expect(screen.getByTestId("date").props.accessibilityHint).toBe(strings.app.required);
     expect(screen.getByTestId("repeat-on").props.accessibilityHint).toBeUndefined();
     expect(screen.queryByText(/opcional/)).toBeNull();

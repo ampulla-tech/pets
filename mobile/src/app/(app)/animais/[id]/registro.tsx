@@ -180,15 +180,20 @@ function RecordForm({
     let body: Record<string, unknown> = { date };
     if (kind === "vaccine") {
       const expiry = readMonth(v("lot_expiry"));
-      const unchangedExpiry = record?.kind === "vaccine" && v("lot_expiry") === formatMonth(record.lot_expiry);
       found.diseases = diseases.length ? null : strings.records.diseasesRequired;
-      found.lot_expiry = expiry === false && !unchangedExpiry ? strings.records.monthInvalid : null;
+      // The label and the stamp of the paper card (ADR-0011).
+      found.brand = v("brand").trim() ? null : strings.records.brandRequired;
+      found.lot = v("lot").trim() ? null : strings.records.lotRequired;
+      found.lot_expiry =
+        expiry === null ? strings.records.lotExpiryRequired : expiry === false ? strings.records.monthInvalid : null;
+      found.vet_name = v("vet_name").trim() ? null : strings.records.vetRequired;
+      found.vet_crmv = v("vet_crmv").trim() ? null : strings.records.crmvRequired;
       body = {
         ...body,
         diseases,
         brand: v("brand").trim(),
         lot: v("lot").trim(),
-        lot_expiry: unchangedExpiry && record?.kind === "vaccine" ? record.lot_expiry : expiry || "",
+        lot_expiry: expiry || "",
         repeat_on: repeatOn || null,
         repeat_on_origin: originOf(repeatOn || null),
         vet_name: v("vet_name").trim(),
@@ -338,14 +343,14 @@ function RecordForm({
                 </View>
               )}
             </Field>
-            {text("brand", strings.records.brand)}
-            {text("lot", strings.records.lot)}
-            <Field label={strings.records.lotExpiry} error={errors.lot_expiry}>
+            {text("brand", strings.records.brand, { required: true })}
+            {text("lot", strings.records.lot, { required: true })}
+            <Field label={strings.records.lotExpiry} required error={errors.lot_expiry}>
               <MonthInput testID="lot-expiry" value={v("lot_expiry")} onChange={set("lot_expiry")} invalid={!!errors.lot_expiry} />
             </Field>
             {repeatOn}
-            {text("vet_name", strings.records.vet)}
-            {text("vet_crmv", strings.records.crmv)}
+            {text("vet_name", strings.records.vet, { required: true })}
+            {text("vet_crmv", strings.records.crmv, { required: true })}
           </>
         ) : null}
         {kind === "antiparasitic" ? (
