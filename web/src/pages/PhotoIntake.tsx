@@ -19,7 +19,7 @@ import {
   RECORD_KIND_LABEL,
 } from "@pets/core/domain";
 import { strings } from "@pets/core/strings";
-import { ChoiceGroup, Field } from "@/components/Field";
+import { ChoiceGroup, Field, Legend } from "@/components/Field";
 import { ErrorState, Loading, Notice } from "@/components/Feedback";
 import { Page } from "@/components/Page";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -494,7 +494,7 @@ function ProposalCard({
       className="flex flex-col gap-4 rounded-2xl border bg-card p-4"
     >
       <h3 className="font-semibold">{title}</h3>
-      <Field label={R.date} error={errors.date}>
+      <Field label={R.date} required error={errors.date}>
         {(control) => (
           <>
             <Input
@@ -511,7 +511,7 @@ function ProposalCard({
       {proposal.kind === "vaccine" ? (
         <>
           <fieldset className="flex flex-col gap-2">
-            <legend className="mb-1.5 text-sm font-medium">{R.diseases}</legend>
+            <Legend required>{R.diseases}</Legend>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {(catalog.data?.[animal.species] ?? []).map((disease) => (
                 <label
@@ -567,6 +567,7 @@ function ProposalCard({
         <>
           <ChoiceGroup
             label={R.parasite}
+            required
             name={`parasite-${proposal.index}`}
             value={draft.parasite || undefined}
             onChange={(v) => set("parasite", v)}
@@ -582,7 +583,7 @@ function ProposalCard({
       ) : null}
 
       {proposal.kind === "weight" ? (
-        <Field label={R.weightKg} error={errors.kg}>
+        <Field label={R.weightKg} required error={errors.kg}>
           {(control) => (
             <>
               <Input

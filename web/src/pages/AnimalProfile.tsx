@@ -533,6 +533,7 @@ function ArchiveDialog({ animal, onClose }: { animal: AnimalOut; onClose: () => 
         </DialogHeader>
         <ChoiceGroup
           label={strings.archive.reason}
+          required
           name="archive-reason"
           value={reason}
           onChange={setReason}
@@ -542,7 +543,7 @@ function ArchiveDialog({ animal, onClose }: { animal: AnimalOut; onClose: () => 
             { value: "other", label: ARCHIVE_REASON_LABEL.other },
           ]}
         />
-        <Field label={strings.archive.on}>
+        <Field label={strings.archive.on} required>
           {(control) => (
             <Input
               {...control}

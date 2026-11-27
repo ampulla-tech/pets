@@ -178,7 +178,7 @@ export const strings = {
     product: "Remédio",
     dose: "Dose",
     weightKg: "Peso (kg)",
-    weightWithTreatment: "Peso no dia (opcional, vira um registro de peso)",
+    weightWithTreatment: "Peso no dia (vira um registro de peso)",
     text: "Anotação",
     clinic: "Clínica",
     reason: "Motivo",

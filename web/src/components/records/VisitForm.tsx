@@ -57,19 +57,19 @@ export function VisitForm({ animal, record }: RecordFormProps<VisitOut>) {
   );
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
-      <Field label={R.date} error={errors.date?.message}>
+      <Field label={R.date} required error={errors.date?.message}>
         {(control) => <Input {...control} type="date" {...form.register("date")} />}
       </Field>
-      <Field label={R.clinic} optional>
+      <Field label={R.clinic}>
         {(control) => <Input {...control} {...form.register("clinic")} />}
       </Field>
-      <Field label={R.vet} optional>
+      <Field label={R.vet}>
         {(control) => <Input {...control} {...form.register("vetName")} />}
       </Field>
-      <Field label={R.reason} optional>
+      <Field label={R.reason}>
         {(control) => <Input {...control} {...form.register("reason")} />}
       </Field>
-      <Field label={R.notes} optional>
+      <Field label={R.notes}>
         {(control) => <TextArea {...control} rows={4} {...form.register("notes")} />}
       </Field>
       <AttachmentsField animalId={animal.id} value={files} onChange={setFiles} />

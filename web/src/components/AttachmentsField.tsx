@@ -79,12 +79,7 @@ export function AttachmentsField({
 
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-sm font-medium">
-        {label}{" "}
-        <span className="font-normal text-muted-foreground">
-          ({strings.app.optional})
-        </span>
-      </span>
+      <span className="text-sm font-medium">{label}</span>
       {value.length ? (
         <ul className="flex flex-col gap-2">
           {value.map((attachment) => (

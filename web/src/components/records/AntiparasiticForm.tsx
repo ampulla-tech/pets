@@ -91,7 +91,7 @@ export function AntiparasiticForm({
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
-      <Field label={R.date} error={errors.date?.message}>
+      <Field label={R.date} required error={errors.date?.message}>
         {(control) => <Input {...control} type="date" {...form.register("date")} />}
       </Field>
       <Controller
@@ -100,6 +100,7 @@ export function AntiparasiticForm({
         render={({ field }) => (
           <ChoiceGroup
             label={R.parasite}
+            required
             name="parasite"
             value={field.value}
             onChange={field.onChange}
@@ -110,20 +111,19 @@ export function AntiparasiticForm({
           />
         )}
       />
-      <Field label={R.product} optional>
+      <Field label={R.product}>
         {(control) => <Input {...control} {...form.register("product")} />}
       </Field>
-      <Field label={R.dose} optional>
+      <Field label={R.dose}>
         {(control) => <Input {...control} {...form.register("dose")} />}
       </Field>
       <Field
         label={R.repeatOn}
-        optional
         hint={repeatOn ? (inferred ? R.repeatInferred : undefined) : R.noRepeat}
       >
         {(control) => <Input {...control} type="date" {...form.register("repeatOn")} />}
       </Field>
-      <Field label={R.vet} optional>
+      <Field label={R.vet}>
         {(control) => <Input {...control} {...form.register("vetName")} />}
       </Field>
       <Field label={R.weightWithTreatment} error={errors.weight?.message}>

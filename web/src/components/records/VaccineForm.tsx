@@ -11,7 +11,7 @@ import {
 import { todayIso } from "@pets/core/domain";
 import { strings } from "@pets/core/strings";
 import { AttachmentsField } from "@/components/AttachmentsField";
-import { Field } from "@/components/Field";
+import { Field, Legend } from "@/components/Field";
 import { Loading, Notice } from "@/components/Feedback";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -110,11 +110,11 @@ export function VaccineForm({
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
       {fromPhoto ? <Notice>{R.fromPhoto}</Notice> : null}
       {last ? <Notice>{R.fromLastDose}</Notice> : null}
-      <Field label={R.date} error={errors.date?.message}>
+      <Field label={R.date} required error={errors.date?.message}>
         {(control) => <Input {...control} type="date" {...form.register("date")} />}
       </Field>
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1.5 text-sm font-medium">{R.diseases}</legend>
+        <Legend required>{R.diseases}</Legend>
         {pickDiseases ? null : (
           <div className="flex items-center justify-between gap-3 rounded-lg border border-input bg-card px-3 py-2.5">
             <p className="min-w-0 text-sm">{chosenLabels}</p>
@@ -148,14 +148,14 @@ export function VaccineForm({
           <p className="text-sm text-destructive">{errors.diseases.message}</p>
         ) : null}
       </fieldset>
-      <Field label={R.brand} optional>
+      <Field label={R.brand}>
         {(control) => <Input {...control} {...form.register("brand")} />}
       </Field>
       <div className="grid grid-cols-2 gap-3">
-        <Field label={R.lot} optional>
+        <Field label={R.lot}>
           {(control) => <Input {...control} {...form.register("lot")} />}
         </Field>
-        <Field label={R.lotExpiry} optional error={errors.lotExpiry?.message}>
+        <Field label={R.lotExpiry} error={errors.lotExpiry?.message}>
           {(control) => (
             // A picker on phones; plain text, typed "09/2027", where the
             // browser has none (Safari and Firefox on a computer).
@@ -170,16 +170,15 @@ export function VaccineForm({
       </div>
       <Field
         label={R.repeatOn}
-        optional
         hint={repeatOn ? (inferred ? R.repeatInferred : undefined) : R.noRepeat}
       >
         {(control) => <Input {...control} type="date" {...form.register("repeatOn")} />}
       </Field>
       <div className="grid grid-cols-2 gap-3">
-        <Field label={R.vet} optional>
+        <Field label={R.vet}>
           {(control) => <Input {...control} {...form.register("vetName")} />}
         </Field>
-        <Field label={R.crmv} optional>
+        <Field label={R.crmv}>
           {(control) => <Input {...control} {...form.register("vetCrmv")} />}
         </Field>
       </div>
