@@ -45,17 +45,20 @@ input[type="radio"] {
 }
 
 /*
- * iOS Safari draws a date field with its native appearance, which carries its
- * own minimum width and height and ignores `width: 100%`: the field spills out
- * of its card. Dropping the appearance makes it size like any other input; the
- * value is pinned left because WebKit centres it once the appearance is gone.
+ * iOS Safari draws a date or month field with its native appearance, which
+ * carries its own minimum width and height and ignores `width: 100%`: the field
+ * spills out of its card, or out of its column in a two-column row. Dropping
+ * the appearance makes it size like any other input; the value is pinned left
+ * because WebKit centres it once the appearance is gone.
  */
-input[type="date"] {
+input[type="date"],
+input[type="month"] {
   -webkit-appearance: none;
   appearance: none;
 }
 
-input[type="date"]::-webkit-date-and-time-value {
+input[type="date"]::-webkit-date-and-time-value,
+input[type="month"]::-webkit-date-and-time-value {
   text-align: left;
   min-height: 1.5em;
 }
