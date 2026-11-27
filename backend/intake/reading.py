@@ -22,6 +22,7 @@ from typing import Any, Literal, TypedDict
 from pydantic import BaseModel, ConfigDict, Field
 
 from animals.diseases import DISEASES, PARASITES, codes_for
+from animals.months import is_month
 
 # ── The structured output ───────────────────────────────────────────────────
 
@@ -141,6 +142,12 @@ def _text(field_: dict) -> dict:
     return {"value": value, "read": True}
 
 
+def _month(field_: dict) -> dict:
+    """A lot expiry: YYYY-MM or unread, so the API never receives another form (ADR-0010)."""
+    cleaned = _text(field_)
+    return cleaned if cleaned["read"] and is_month(cleaned["value"]) else _empty()
+
+
 def _date(field_: dict) -> dict:
     value = (field_.get("value") or "").strip() if isinstance(field_, dict) else ""
     if not field_.get("read", False) or not _ISO.match(value):
@@ -156,8 +163,9 @@ def clean(proposal: dict, species: str) -> dict:
     kind = proposal.get("kind")
     out: dict[str, Any] = {"kind": kind}
     out["date"] = _date(proposal.get("date") or {})
-    for name in ("brand", "lot", "lot_expiry", "vet_name", "vet_crmv", "dose"):
+    for name in ("brand", "lot", "vet_name", "vet_crmv", "dose"):
         out[name] = _text(proposal.get(name) or {})
+    out["lot_expiry"] = _month(proposal.get("lot_expiry") or {})
     repeat = proposal.get("repeat_on") or {}
     cleaned = _date(repeat)
     origin = repeat.get("origin") if cleaned["read"] else None

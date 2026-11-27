@@ -295,6 +295,29 @@ def test_a_dog_reading_keeps_only_dog_diseases():
     assert proposal["diseases"]["value"] == ["rabies"]
 
 
+@pytest.mark.parametrize(
+    "read, expected",
+    [
+        ("2026-05", {"value": "2026-05", "read": True}),
+        (" 2026-05 ", {"value": "2026-05", "read": True}),
+        ("MAI/26", {"value": None, "read": False}),
+        ("05/2026", {"value": None, "read": False}),
+        ("2026-13", {"value": None, "read": False}),
+        ("2026-5", {"value": None, "read": False}),
+        ("maio de 2026", {"value": None, "read": False}),
+    ],
+)
+def test_a_lot_expiry_that_is_not_a_month_is_read_as_unread(read, expected):
+    from intake.reading import clean
+
+    raw = vaccine_proposal("2026-10-16", "x", ["rabies"], None)
+    raw["lot_expiry"] = field(read)
+    raw["lot"] = field("014/25")
+    proposal = clean(raw, "cat")
+    assert proposal["lot_expiry"] == expected
+    assert proposal["lot"] == {"value": "014/25", "read": True}
+
+
 def test_only_a_tutor_sends_photos_of_an_active_animal(tutor, other):
     dog = make_animal(tutor, DOG)
     response = other.upload(f"/animals/{dog['id']}/extractions", [jpeg_file()])
