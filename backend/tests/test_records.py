@@ -40,6 +40,31 @@ def test_a_vaccine_needs_at_least_one_disease(tutor):
     assert response.status_code == 422
 
 
+def test_a_lot_expiry_that_is_not_a_month_is_refused(tutor):
+    cat = make_animal(tutor, CAT)
+    for value in ("09/2027", "092027", "2027-9", "2027-00", "2027-13", "set 27", " 2027-09"):
+        response = tutor.post(f"/animals/{cat['id']}/vaccines", {**RABMUNE, "lot_expiry": value})
+        assert response.status_code == 422, value
+        assert "lot_expiry" in str(response.json()), value
+
+
+def test_a_lot_expiry_is_a_month_or_empty(tutor):
+    cat = make_animal(tutor, CAT)
+    for value in ("2027-09", "2027-12", ""):
+        response = tutor.post(f"/animals/{cat['id']}/vaccines", {**RABMUNE, "lot_expiry": value})
+        assert response.status_code == 201, value
+        assert response.json()["lot_expiry"] == value
+
+
+def test_an_edit_cannot_store_a_lot_expiry_that_is_not_a_month(tutor):
+    cat = make_animal(tutor, CAT)
+    created = tutor.post(f"/animals/{cat['id']}/vaccines", RABMUNE).json()
+    path = f"/animals/{cat['id']}/vaccines/{created['id']}"
+    assert tutor.put(path, {**RABMUNE, "lot_expiry": "06/2027"}).status_code == 422
+    records = tutor.get(f"/animals/{cat['id']}/records").json()
+    assert [r["lot_expiry"] for r in records] == ["2027-06"]
+
+
 def test_a_combined_vaccine_keeps_every_disease(tutor):
     dog = make_animal(tutor, DOG)
     diseases = ["distemper", "infectious_hepatitis", "parvovirus", "parainfluenza", "leptospirosis"]

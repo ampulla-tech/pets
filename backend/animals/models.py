@@ -196,7 +196,7 @@ class Record(models.Model):
 class Vaccine(Record):
     brand = models.CharField(max_length=120, blank=True)
     lot = models.CharField(max_length=60, blank=True)
-    # As printed on the label, normalised to YYYY-MM when it is a month.
+    # A month, YYYY-MM, or empty: the API refuses anything else (ADR-0010).
     lot_expiry = models.CharField(max_length=20, blank=True)
     diseases = models.JSONField(default=list)
     repeat_on = models.DateField(null=True, blank=True)

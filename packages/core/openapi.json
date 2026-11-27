@@ -1895,6 +1895,7 @@
           },
           "lot_expiry": {
             "default": "",
+            "pattern": "^(?:[0-9]{4}-(?:0[1-9]|1[0-2]))?$",
             "title": "Lot Expiry",
             "type": "string"
           },
@@ -1993,6 +1994,7 @@
           },
           "lot_expiry": {
             "default": "",
+            "pattern": "^(?:[0-9]{4}-(?:0[1-9]|1[0-2]))?$",
             "title": "Lot Expiry",
             "type": "string"
           },

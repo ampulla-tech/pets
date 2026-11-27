@@ -9,6 +9,7 @@ from ninja import Schema
 from pydantic import Field
 
 from animals.diseases import DiseaseCode
+from animals.months import MONTH_OR_EMPTY
 
 
 class ErrorOut(Schema):
@@ -110,7 +111,8 @@ class VaccineIn(Schema):
     date: date
     brand: str = ""
     lot: str = ""
-    lot_expiry: str = ""
+    # A month, "2027-09", or empty (ADR-0010).
+    lot_expiry: str = Field("", pattern=MONTH_OR_EMPTY)
     diseases: list[DiseaseCode] = Field(min_length=1)
     repeat_on: date | None = None
     repeat_on_origin: Literal["written", "inferred", ""] = ""

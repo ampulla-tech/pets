@@ -351,7 +351,7 @@ def _fill_vaccine(record: Vaccine, animal: Animal, payload: VaccineIn) -> None:
     record.date = payload.date
     record.brand = payload.brand.strip()
     record.lot = payload.lot.strip()
-    record.lot_expiry = payload.lot_expiry.strip()
+    record.lot_expiry = payload.lot_expiry
     record.diseases = _check_diseases(animal, payload.diseases)
     record.repeat_on = payload.repeat_on
     record.repeat_on_origin = payload.repeat_on_origin if payload.repeat_on else ""
