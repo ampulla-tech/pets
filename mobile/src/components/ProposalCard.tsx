@@ -150,12 +150,12 @@ export function ProposalCard({
   return (
     <Card className="gap-3" testID={`proposal-${n}`}>
       <Text className="font-semibold">{strings.intake.lineTitle(n, RECORD_KIND_LABEL[p.kind])}</Text>
-      <Field label={strings.records.date} hint={unread(p.date)} error={errors.date}>
+      <Field label={strings.records.date} required hint={unread(p.date)} error={errors.date}>
         <DateInput testID={`date-${n}`} value={date} onChange={setDate} invalid={!!errors.date} />
       </Field>
       {p.kind === "vaccine" ? (
         <>
-          <Field label={strings.records.diseases} hint={unread(p.diseases)} error={errors.diseases}>
+          <Field label={strings.records.diseases} required hint={unread(p.diseases)} error={errors.diseases}>
             <MultiSelect value={codes} onChange={setCodes} options={diseases} testID={`diseases-${n}`} />
           </Field>
           {textField(strings.records.brand, brand, setBrand, p.brand, "brand")}
@@ -167,7 +167,7 @@ export function ProposalCard({
       ) : null}
       {p.kind === "antiparasitic" ? (
         <>
-          <Field label={strings.records.parasite}>
+          <Field label={strings.records.parasite} required>
             <Segmented
               value={parasite}
               onChange={setParasite}
@@ -197,6 +197,7 @@ export function ProposalCard({
       {p.kind !== "vaccine" ? (
         <Field
           label={p.kind === "weight" ? strings.records.weightKg : strings.records.weightWithTreatment}
+          required={p.kind === "weight"}
           hint={unread(p.weight_kg)}
           error={errors.kg}
         >

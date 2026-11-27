@@ -18,7 +18,6 @@ export const strings = {
     confirm: "Confirmar",
     genericError: "Algo deu errado. Tente de novo.",
     offline: "Sem conexão com o servidor.",
-    optional: "opcional",
     required: "Obrigatório.",
     notFound: "Não encontramos esta página.",
     goHome: "Ir para o início",

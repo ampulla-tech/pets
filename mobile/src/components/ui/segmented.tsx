@@ -1,5 +1,6 @@
 import { Pressable, View } from "react-native";
 
+import { useRequiredHint } from "@/components/ui/field";
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +18,7 @@ export function Segmented<T extends string>({
   disabled?: boolean;
   testID?: string;
 }) {
+  const required = useRequiredHint();
   return (
     <View testID={testID} role="radiogroup" className="flex-row flex-wrap gap-2">
       {options.map((option) => {
@@ -25,6 +27,7 @@ export function Segmented<T extends string>({
           <Pressable
             key={option.value}
             role="radio"
+            {...required}
             accessibilityState={{ selected, checked: selected, disabled }}
             aria-checked={selected}
             disabled={disabled}
@@ -57,6 +60,7 @@ export function MultiSelect({
   onChange(value: string[]): void;
   testID?: string;
 }) {
+  const required = useRequiredHint();
   return (
     <View testID={testID} className="flex-row flex-wrap gap-2">
       {options.map((option) => {
@@ -65,6 +69,7 @@ export function MultiSelect({
           <Pressable
             key={option.value}
             role="checkbox"
+            {...required}
             aria-checked={checked}
             accessibilityState={{ checked }}
             accessibilityLabel={option.label}
