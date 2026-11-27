@@ -14,7 +14,6 @@ import {
 } from "@pets/core/api/generated";
 import { getExtractionOptions, getExtractionQueryKey } from "@pets/core/api/query";
 import {
-  formatMonth,
   parseKg,
   PARASITE_LABEL,
   RECORD_KIND_LABEL,
@@ -337,7 +336,8 @@ function draftOf(p: ProposalOut): Draft {
     date: p.date.value ?? "",
     brand: p.brand.value ?? "",
     lot: p.lot.value ?? "",
-    lotExpiry: p.lot_expiry.value ? formatMonth(p.lot_expiry.value) : "",
+    // The month picker's own value, "2027-09": the reading gives no other form.
+    lotExpiry: p.lot_expiry.value ?? "",
     diseases: p.kind === "vaccine" ? p.diseases.value : [],
     repeatOn: p.repeat_on.value ?? "",
     vetName: p.vet_name.value ?? "",
@@ -546,8 +546,11 @@ function ProposalCard({
             <Field label={R.lotExpiry} error={errors.lotExpiry}>
               {(control) => (
                 <>
+                  {/* A picker on phones; plain text, typed "09/2027", where the
+                      browser has none (Safari and Firefox on a computer). */}
                   <Input
                     {...control}
+                    type="month"
                     value={draft.lotExpiry}
                     placeholder={R.monthPlaceholder}
                     onChange={(e) => set("lotExpiry", e.target.value)}

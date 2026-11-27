@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { mockApi, reply } from "./api";
 import { renderApp } from "./render";
 import { animal, animalRoutes } from "./fixtures";
@@ -139,6 +139,9 @@ describe("photo intake", () => {
     const { user } = renderApp("/animais/a1/foto?leitura=x1");
     const line = await screen.findByRole("region", { name: "Linha 1: Vacina" });
     expect((within(line).getByLabelText("Partida") as HTMLInputElement).value).toBe("");
+    const expiry = within(line).getByLabelText("Vencimento do lote") as HTMLInputElement;
+    expect(expiry.type).toBe("month");
+    expect(expiry.value).toBe("2027-02");
     expect(within(line).getAllByText("não lido: confira no papel")).toHaveLength(2); // lot, vet
     expect(within(line).getByText("lido da linha de baixo")).toBeTruthy();
     expect(
@@ -175,5 +178,31 @@ describe("photo intake", () => {
     await user.click(within(weightLine).getByRole("button", { name: "Descartar" }));
     expect(await screen.findByText("Descartado")).toBeTruthy();
     expect(screen.getByText("Todas as linhas foram revistas.")).toBeTruthy();
+  });
+
+  it.each([
+    ["an unread lot expiry, picked by the tutor", empty, "2027-05", "2027-05"],
+    ["a read lot expiry, emptied by the tutor", text("2027-02"), "", ""],
+  ])("confirms %s", async (_, read, picked, sent) => {
+    const api = mockApi({
+      ...animalRoutes(animal()),
+      "GET /extractions/x1": extraction({
+        status: "ready",
+        proposals: [proposal({ lot_expiry: read })],
+      }),
+      "POST /extractions/x1/proposals/0/confirm": reply(201, {}),
+    });
+    const { user } = renderApp("/animais/a1/foto?leitura=x1");
+    const line = await screen.findByRole("region", { name: "Linha 1: Vacina" });
+    fireEvent.change(within(line).getByLabelText("Vencimento do lote"), {
+      target: { value: picked },
+    });
+    await user.click(within(line).getByRole("button", { name: "Confirmar" }));
+    await waitFor(() =>
+      expect(api.to("POST /extractions/x1/proposals/0/confirm")).toHaveLength(1),
+    );
+    expect(api.to("POST /extractions/x1/proposals/0/confirm")[0].json).toMatchObject({
+      record: { lot_expiry: sent },
+    });
   });
 });
